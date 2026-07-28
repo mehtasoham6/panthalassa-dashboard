@@ -1,0 +1,228 @@
+import type { ModelInputs } from "../../model/index.js";
+
+export interface SliderConfig {
+  key: keyof ModelInputs;
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  step: number;
+  default: number;
+  /** Displayed/edited value is raw * displayScale (e.g. fractions shown as %). */
+  displayScale?: number;
+  decimals?: number;
+  helpText?: string;
+}
+
+export interface SliderGroupConfig {
+  title: string;
+  description: string;
+  sliders: SliderConfig[];
+}
+
+export const SLIDER_GROUPS: SliderGroupConfig[] = [
+  {
+    title: "Target & economics",
+    description: "What the fleet must deliver, over what horizon, at what discount rate.",
+    sliders: [
+      {
+        key: "target_capacity_gw",
+        label: "Target saleable compute capacity",
+        unit: "GW",
+        min: 0.1,
+        max: 100,
+        step: 0.1,
+        default: 1,
+        decimals: 1,
+      },
+      {
+        key: "analysis_period_years",
+        label: "Analysis period",
+        unit: "years",
+        min: 3,
+        max: 15,
+        step: 1,
+        default: 5,
+        decimals: 0,
+      },
+      {
+        key: "real_discount_rate",
+        label: "Discount rate",
+        unit: "%",
+        min: 0.02,
+        max: 0.1,
+        step: 0.005,
+        default: 0.06,
+        displayScale: 100,
+        decimals: 1,
+      },
+    ],
+  },
+  {
+    title: "Node physical design",
+    description: "The single node's compute payload, hull, and onboard storage.",
+    sliders: [
+      {
+        key: "payload_rating_kw",
+        label: "Installed compute payload",
+        unit: "kW",
+        min: 100,
+        max: 300,
+        step: 10,
+        default: 200,
+        decimals: 0,
+      },
+      {
+        key: "hull_diameter_m",
+        label: "Hull diameter",
+        unit: "m",
+        min: 10,
+        max: 20,
+        step: 1,
+        default: 20,
+        decimals: 0,
+      },
+      {
+        key: "battery_duration_hours",
+        label: "Battery duration",
+        unit: "hours",
+        min: 0.25,
+        max: 4,
+        step: 0.25,
+        default: 0.5,
+        decimals: 2,
+      },
+    ],
+  },
+  {
+    title: "Operations & service",
+    description: "Where the node operates and how long it stays in the fleet.",
+    sliders: [
+      {
+        key: "sea_park_distance_km",
+        label: "Distance from port to sea park",
+        unit: "km",
+        min: 500,
+        max: 4000,
+        step: 100,
+        default: 1500,
+        decimals: 0,
+      },
+      {
+        key: "node_lifetime_years",
+        label: "Node lifetime",
+        unit: "years",
+        min: 5,
+        max: 30,
+        step: 1,
+        default: 20,
+        decimals: 0,
+      },
+    ],
+  },
+  {
+    title: "Reliability",
+    description: "Chip-level and whole-node failure behavior.",
+    sliders: [
+      {
+        key: "chip_failure_rate_annual",
+        label: "Chip degradation rate",
+        unit: "% / server-yr",
+        min: 0.005,
+        max: 0.1,
+        step: 0.005,
+        default: 0.01,
+        displayScale: 100,
+        decimals: 1,
+        helpText: "Reduces expected delivered output continuously from the moment a node is restored, well before hot spares are exhausted -- so it raises required fleet size even between service trips.",
+      },
+      {
+        key: "hotSpareShare",
+        label: "Hot spares",
+        unit: "% of payload",
+        min: 0,
+        max: 0.2,
+        step: 0.025,
+        default: 0.1,
+        displayScale: 100,
+        decimals: 1,
+        helpText: "Share of installed payload held as best-effort capacity. Sets the surprise-service trigger threshold -- it does not add hardware.",
+      },
+      {
+        key: "node_failure_rate_annual",
+        label: "Unexpected node failure rate",
+        unit: "% / node-yr",
+        min: 0.005,
+        max: 0.1,
+        step: 0.005,
+        default: 0.03,
+        displayScale: 100,
+        decimals: 1,
+      },
+    ],
+  },
+  {
+    title: "Cost assumptions",
+    description: "Unit costs for the three largest capital line items.",
+    sliders: [
+      {
+        key: "finished_hull_cost_usd_per_tonne",
+        label: "Finished hull cost",
+        unit: "$ / tonne",
+        min: 1500,
+        max: 10000,
+        step: 500,
+        default: 2000,
+        decimals: 0,
+      },
+      {
+        key: "pto_cost_usd_per_kw",
+        label: "PTO cost",
+        unit: "$ / kW",
+        min: 50,
+        max: 500,
+        step: 25,
+        default: 200,
+        decimals: 0,
+      },
+      {
+        key: "compute_hardware_cost_usd_per_kw",
+        label: "Compute hardware cost",
+        unit: "$ / kW",
+        min: 10000,
+        max: 30000,
+        step: 1000,
+        default: 15000,
+        decimals: 0,
+      },
+    ],
+  },
+  {
+    title: "Workload & data transfer",
+    description: "External network traffic generated by delivered compute, and its transfer cost.",
+    sliders: [
+      {
+        key: "workloadBandwidthIntensityMbpsPerKw",
+        label: "Workload bandwidth intensity",
+        unit: "Mbps / kW",
+        min: 0.005,
+        max: 0.10,
+        step: 0.005,
+        default: 0.03,
+        decimals: 3,
+      },
+      {
+        key: "dataTransferCostPerGb",
+        label: "Data-transfer cost",
+        unit: "$ / GB",
+        min: 0.10,
+        max: 2.00,
+        step: 0.05,
+        default: 1.0,
+        decimals: 2,
+      },
+    ],
+  },
+];
+
+export const ALL_SLIDERS: SliderConfig[] = SLIDER_GROUPS.flatMap((g) => g.sliders);
