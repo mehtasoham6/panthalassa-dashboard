@@ -6,6 +6,10 @@ export const CONST = {
   payload_swap_dock_days: 1,
   node_maintenance_interval_years: 5,
   node_maintenance_dock_days: 7,
+  // If a surprise payload-service visit would ordinarily complete within this
+  // many years of the next fixed maintenance date, the two are consolidated
+  // into one combined visit instead of two separate trips.
+  maintenance_consolidation_window_years: 0.5,
   end_to_end_efficiency: 0.85,
   pto_payload_multiplier: 1.5,
   // Revised per project decision -- was 0.70/0.20/0.07/0.03, originally

@@ -140,12 +140,49 @@ The representative wave-flux profile is:
 | --- | --- | --- | --- |
 | Dockside service | 1 day payload-only; 7 days full maintenance | 0 kW/m | Zero output. |
 | Tug to deep water | tug_distance_km / tug_speed_km_per_day | 0 -> 40 kW/m | Integrate the capped output over the linear wave-flux ramp. |
-| Outbound self-propulsion | self_propulsion_distance_km / self_propulsion_speed_km_per_day | 40 -> 75 kW/m | Integrate by leg; often at the payload cap for the entire leg. |
-| Sea-park operation | Time remaining between events | 100 kW/m | Constant output at the applicable cap. |
-| Return self-propulsion | Same as outbound self-propulsion | 75 -> 40 kW/m | Use the reverse profile when the node remains productive; some failure modes set output to zero. |
+| Outbound self-propulsion | self_propulsion_distance_km / self_propulsion_speed_km_per_day | 40 -> 100 kW/m | Integrate by leg; often at the payload cap for the entire leg. Ramps continuously into the sea-park value (no discontinuity). |
+| Sea-park operation | Time remaining between events | Historical (Copernicus WAVERYS) distribution, not a fixed 100 kW/m -- see Section 3.1a | Resource-adjusted: healthy compute x the sea-park wave-resource capacity factor. |
+| Return self-propulsion | Same as outbound self-propulsion | 100 -> 40 kW/m | Use the reverse profile when the node remains productive; some failure modes set output to zero. |
 | Tug from deep water to port | Same as outbound tug leg | 40 -> 0 kW/m | Use the reverse profile when productive; set to zero when the event disables compute. |
 
 The model calculates the energy generated during each stage and adds the stages together. It does not create a row for every hour or day.
+
+## 3.1a Sea-park wave-resource correction (Copernicus WAVERYS)
+
+The tug and self-propulsion legs above keep the deterministic wave-flux ramps (0/40/100 kW/m) exactly as described -- transit time is short (~30 days one-way) relative to how long the node dwells at the sea park (often years), so historical wave variability is only modeled for the sea-park stage itself.
+
+**Data.** Copernicus Marine Global Ocean Waves Reanalysis (WAVERYS), product `GLOBAL_MULTIYEAR_WAV_001_032`, dataset `cmems_mod_glo_wav_my_0.2deg_PT3H-i`, at the fixed representative sea-park point ~53.6 S, 133.6 E (high-resource Southern Ocean south of Australia; not a slider), 1980-2025, 3-hourly `VHM0` (significant wave height, m) and `VTM10` (mean wave period, s). Preprocessed once (`scripts/preprocess_waverys.py`) into a static, already-filtered flux series (`src/model/data/waverysSeaPark.json`) -- no NetCDF parsing happens at runtime.
+
+$$
+\text{Wave flux}_{\text{kW/m}} = 0.49 \times \text{VHM0}^2 \times \text{VTM10}
+$$
+
+Observations with a missing/non-finite VHM0 or VTM10 are dropped. Over the 1980-2025 record at this point: 134,409 valid 3-hourly observations, mean incident flux ~107.9 kW/m.
+
+**Raw wave-resource capacity factor** (the only wave-resource number displayed on the dashboard): pass every historical flux observation through the *same* hull/CWR/efficiency/PTO/payload conversion as Section 3.2, then take the mean relative to installed payload:
+
+```python
+wave_only_compute_power_kw = min(capture_coefficient * wave_flux_kw_per_m, power_cap_kw)
+raw_wave_resource_cf = mean(wave_only_compute_power_kw over all historical observations) / payload_rating_kw
+```
+
+At the slider defaults this is ~96.45%. Because `capture_coefficient` depends on hull diameter and `power_cap_kw`/the denominator depend on payload, raising payload without also raising capture *lowers* this factor (stronger waves become required to run the larger installed capacity); it is recomputed via a one-time sort + prefix sum over the historical distribution, so it updates live with any capture- or load-relevant slider.
+
+**Battery smoothing (internal only, never displayed).** A simplified, favorable episode-level approximation -- not a minute-by-minute simulation -- walks the chronological 3-hourly record once, finds consecutive-observation episodes where wave-only power falls below installed payload, and credits each episode `min(episodeShortfallEnergy, payload_rating_kw * battery_duration_hours)` of recovered energy (assuming: battery full at each episode's start, full recharge from surplus between episodes, lossless charge/discharge, sufficient discharge power, no degradation). Averaged over the whole record this gives a `battery_recovery_fraction`, and:
+
+```python
+effective_sea_park_cf = min(1.0, raw_wave_resource_cf + battery_recovery_fraction)
+```
+
+At the default 0.5-hour battery this is ~96.66%. Battery duration affects only this internal factor, never `raw_wave_resource_cf`.
+
+**Sea-park scheduled energy** replaces the old "constant 100 kW/m, effectively always available" assumption:
+
+```python
+sea_park_energy_kwh = healthy_compute_energy_kwh(age_range) * effective_sea_park_cf
+```
+
+where `healthy_compute_energy_kwh` is the same continuous chip-degradation integral used elsewhere (Section 4.1) -- i.e. the resource factor is applied as a constant derate on the health curve rather than re-solving a health-vs-instantaneous-wave crossover against the full historical record at every point on the curve (a deliberate, slightly conservative simplification: as healthy compute declines, the same wave resource would in reality find it marginally easier to power the smaller remaining load). Modes 2/3's lost-output counterfactual (Section 4.2) uses this same `effective_sea_park_cf`-adjusted rate; Modes 4/5 are unaffected (their loss formula has no sea-park-time component). No other part of the cost/PV model changes directly -- the lower resource-adjusted output propagates only through delivered energy -> fleet sizing -> the existing fleet-scaled cost lines.
 
 ## 3.2 Convert wave conditions into usable compute power
 
@@ -1062,20 +1099,29 @@ lifecycle_cost_per_target_watt_usd = (
 )
 ```
 
-The levelized delivered-compute cost discounts both cost and delivered energy on the same annual schedule.
+Total lifecycle cost, present value, and cost-per-target-watt above all remain the integrated, compute-inclusive data-center metrics: they still contain compute hardware capex, failed-chip replacement, workload data-transfer cost, and everything else the dashboard has always charged against the target fleet, over the dashboard's `analysis_period_years`.
+
+## 8.1 Power-system LCOE (a separate, compute-agnostic calculation)
+
+The dashboard's headline "LCOE" is *not* a levelized cost of delivered compute energy -- it is a conventional power-generation LCOE for the node's non-compute power platform only, evaluated over one representative node's full economic life (`node_lifetime_years`, not `analysis_period_years`), independent of target fleet capacity and whole-node fleet rounding:
 
 $$
-\text{Levelized compute cost}
+\text{LCOE}
 =
-\frac{\sum_t C_t/(1+r)^t}
-{\sum_t E_t/(1+r)^t}
+\frac{\sum_{t=0}^{L} C^{\text{power}}_t/(1+r)^t}
+{\sum_{t=0}^{L} E^{\text{power}}_t/(1+r)^t \Big/ 1000}
+\quad\text{where } L = \text{node\_lifetime\_years}
 $$
 
 ```python
-levelized_cost_of_delivered_compute_energy_usd_per_mwh = (
-    discounted_cost_usd / discounted_delivered_energy_mwh
+lcoe_usd_per_mwh = (
+    discounted_power_system_cost_usd / discounted_power_system_energy_mwh
 )
 ```
+
+`C^{power}_t` (see `src/model/lcoe.ts`) includes only the non-compute node cost (~$410,000 at defaults: hull + PTO + battery + onboard systems, excluding compute hardware) at $t=0$; periodic physical maintenance on its nominal five-year cadence (never moved earlier to combine with a compute-service trip, unlike the integrated model's Section 3.5 six-month rule); Modes 2/3 non-chip whole-node failure repair/tug cost; Mode 4/5 replacement cost using the same remaining-economic-life factor as Section 7.2 but applied to the non-compute node cost only; Mode 5 cleanup; and retirement at $t=L$. `E^{power}_t` uses the same route/sea-park physical and WAVERYS wave-resource logic as Sections 3.1-3.2, but with NO chip-health term at all -- compute degradation, hot-spare exhaustion, surprise service, and payload-only dock time never appear in this schedule. Modes 2/3 still reduce `E^{power}_t` (they are physical failures); Modes 4/5 use the existing unadjusted deployment-ramp energy treatment, same as Section 4.2.
+
+Because it excludes compute capex/replacement/workload cost and is normalized to one node over its own economic life, LCOE is comparable across payload/hull configurations the way a conventional power-plant LCOE would be -- and, unlike total lifecycle cost, does not move with `target_capacity_gw`, `analysis_period_years`, or any purely compute-side slider (chip hazard, hot spares, compute hardware $/kW, workload bandwidth/transfer cost).
 
 # 9. Worked example A: all slider defaults
 
@@ -1302,7 +1348,7 @@ $$
 }
 $$
 
-The levelized delivered-compute cost is approximately $483.68/MWh.
+(This worked example predates the current compute-health/service-schedule engine and Copernicus wave-resource correction, so its dollar figures above are illustrative only, not a live regression target -- see tests/regression/exampleA.test.ts for current numbers. Note also that "levelized cost" here is no longer a delivered-compute metric at all: see Section 8.1 for the current power-system LCOE, which does not scale with this worked example's fleet/target sizing.)
 
 # 10. Worked example B: high chip failure and a two-year payload interval
 
@@ -1460,7 +1506,7 @@ $$
 }
 $$
 
-The levelized delivered-compute cost is approximately $643.18/MWh.
+(As with Worked Example A, this figure predates the current engine; see Section 8.1 -- "levelized cost" is now the compute-agnostic power-system LCOE, unaffected by this example's chip-hazard change.)
 
 ## 10.6 Side-by-side interpretation
 
@@ -1517,7 +1563,8 @@ Only these variables should be bound to public dashboard controls. Displayed per
 | pto_payload_multiplier | 1.5 | multiplier | PTO rating is derived as 1.5 times payload rating. |
 | failure_block_kw | 2 | kW | Compute capacity represented by one failed server or failure block. |
 | surprise_service_threshold_fraction | 0.10 | fraction of guaranteed capacity | Guaranteed-capacity shortfall that triggers an unscheduled payload-service trip. |
-| wave_route_profile | 0 -> 40 -> 75 -> 100 | kW/m | Fixed representative progression from dock, to deep-water transfer, to late transit, to sea park. |
+| wave_route_profile | 0 -> 40 -> 100 -> 100 -> 40 -> 0 | kW/m | Fixed representative progression from dock, to deep-water transfer, to sea park (self-propulsion ramps continuously into the sea-park value; no discontinuity), through the return leg. |
+| sea_park_wave_resource | Copernicus WAVERYS, 1980-2025, ~53.6 S 133.6 E | historical distribution | Replaces a flat 100 kW/m assumption for the sea-park stage only; see Section 3.1a. Route legs above are unaffected. |
 | mode_2_weight | 0.7896 | fraction | Share of aggregate node failures that are non-chip machinery failures which disable useful output but preserve self-propulsion and control. |
 | mode_3_weight | 0.1961 | fraction | Share of aggregate node failures that require tug retrieval. |
 | mode_4_weight | 0.01415 | fraction | Share of aggregate node failures that are unrecoverable deep-water losses. |

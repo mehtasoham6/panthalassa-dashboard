@@ -22,22 +22,16 @@ describe("Workload data-transfer cost", () => {
     );
   });
 
-  it("at defaults: workload cost ~= $591.395 million undiscounted, ~$498.813 million present value", () => {
+  it("at defaults: workload cost ~= $591.403 million undiscounted, ~$498.820 million present value", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.395, 0);
-    expect(r.presentValue.present_value_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(498.813, 0);
+    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.403, 0);
+    expect(r.presentValue.present_value_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(498.820, 0);
   });
 
-  it("levelized-cost check: raises the levelized cost by exactly 450 * intensity * $/GB ($13.50/MWh at defaults)", () => {
+  it("workload data transfer never affects power-system LCOE (LCOE is compute/workload-agnostic; see lcoe.test.ts)", () => {
     const withWorkload = runModel(DEFAULT_INPUTS);
     const withoutWorkload = runModel({ ...DEFAULT_INPUTS, workloadBandwidthIntensityMbpsPerKw: 0, dataTransferCostPerGb: 0 });
-    const workloadCostPerMwh =
-      450 * DEFAULT_INPUTS.workloadBandwidthIntensityMbpsPerKw * DEFAULT_INPUTS.dataTransferCostPerGb;
-    expect(workloadCostPerMwh).toBeCloseTo(13.5, 6);
-    expect(
-      withWorkload.presentValue.levelized_cost_of_delivered_compute_energy_usd_per_mwh -
-        withoutWorkload.presentValue.levelized_cost_of_delivered_compute_energy_usd_per_mwh,
-    ).toBeCloseTo(13.5, 4);
+    expect(withWorkload.lcoe.lcoe_usd_per_mwh).toBe(withoutWorkload.lcoe.lcoe_usd_per_mwh);
   });
 
   it("workload cost is zero when either slider is zero, and scales linearly with each", () => {

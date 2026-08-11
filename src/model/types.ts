@@ -78,6 +78,38 @@ export interface DerivedQuantities {
   capture_coefficient: number;
   outbound_days: number;
   outbound_energy_kwh: number;
+  /**
+   * Historical (Copernicus WAVERYS, 1980-2025) sea-park wave-resource
+   * capacity factor: mean wave-only compute power / installed payload, at
+   * the current hull/efficiency/PTO/payload sliders. The only wave-resource
+   * number ever displayed on the dashboard. See src/model/waverys.ts.
+   */
+  raw_wave_resource_cf: number;
+  /**
+   * Internal-only: raw_wave_resource_cf plus an episode-level battery
+   * smoothing approximation (capped at 1.0), used to schedule sea-park
+   * energy. Never displayed as a second dashboard capacity-factor metric.
+   */
+  effective_sea_park_cf: number;
+}
+
+/**
+ * Power-system LCOE (Levelized Cost of Electricity): a standalone,
+ * compute-agnostic metric for the node's non-compute power-generating
+ * platform, evaluated over one full generating-asset economic life
+ * (node_lifetime_years) for a single representative position. Independent
+ * of the dashboard's analysis-period/target-fleet-capacity sliders and of
+ * all chip-health/compute-service logic. See lcoe.ts.
+ */
+export interface LcoeResult {
+  lcoe_usd_per_mwh: number;
+  /** Always equal to node_lifetime_years -- LCOE's own horizon, not the dashboard's analysis period. */
+  lcoe_horizon_years: number;
+  present_value_power_system_cost_usd: number;
+  present_value_electrical_energy_mwh: number;
+  /** index 0 = year 0 (t=0, initial capital) .. index lcoe_horizon_years = end of economic life (retirement). */
+  yearly_power_system_cost_usd: number[];
+  yearly_electrical_energy_kwh: number[];
 }
 
 export interface ModelResult {
@@ -139,6 +171,7 @@ export interface ModelResult {
     present_value_workload_data_transfer_cost_usd: number;
     lifecycle_cost_per_target_watt_usd: number;
     yearly_delivered_energy_mwh: number[]; // index 0 = year 0 .. T
-    levelized_cost_of_delivered_compute_energy_usd_per_mwh: number;
   };
+  /** Power-system LCOE ($/MWh) -- see LcoeResult. Not a levelized cost of delivered COMPUTE energy; do not use for compute-cost comparisons. */
+  lcoe: LcoeResult;
 }

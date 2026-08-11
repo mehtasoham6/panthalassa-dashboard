@@ -1,14 +1,18 @@
 /**
  * Journey-stage energy integration (Section 3.2-3.4).
  *
- * The representative wave-flux profile (Section 3.1) is: dockside 0 kW/m;
- * tug to deep water 0 -> 40 kW/m; outbound self-propulsion 40 -> 75 kW/m;
- * sea-park operation 100 kW/m constant; return self-propulsion 75 -> 40 kW/m;
- * tug from deep water to port 40 -> 0 kW/m.
+ * The representative wave-flux profile (Section 3.1, revised) is: dockside
+ * 0 kW/m; tug to deep water 0 -> 40 kW/m; outbound self-propulsion
+ * 40 -> 100 kW/m; sea-park operation 100 kW/m constant; return
+ * self-propulsion 100 -> 40 kW/m; tug from deep water to port 40 -> 0 kW/m.
+ * The self-propulsion legs ramp continuously to/from the sea-park value --
+ * there is no discontinuity at the sea-park boundary (self-propulsion
+ * previously topped out at 75 kW/m before jumping to the 100 kW/m sea-park
+ * value; it now connects exactly).
  *
  * Full generality is kept (rather than hard-coding "self-propulsion legs are
  * always capped") because at the extremes of the slider ranges (small hull,
- * large payload) full_output_flux_kw_per_m can exceed 75 kW/m, which would
+ * large payload) full_output_flux_kw_per_m can exceed 100 kW/m, which would
  * put every leg below cap or crossing it. The spec's split-integration
  * formula is written for a flux ramp that *increases* through the cap
  * (the outbound tug leg); the return tug leg *decreases* through the cap,
@@ -19,7 +23,6 @@
 export const WAVE_FLUX = {
   dock: 0,
   deepWaterTransfer: 40,
-  lateTransit: 75,
   seaPark: 100,
 } as const;
 
@@ -90,7 +93,7 @@ interface OutboundLegInputs extends CapParams {
   one_way_self_propulsion_days: number;
 }
 
-/** Tug (0 -> 40 kW/m) then self-propulsion (40 -> 75 kW/m) — the standard outbound leg. */
+/** Tug (0 -> 40 kW/m) then self-propulsion (40 -> 100 kW/m) — the standard outbound leg. */
 export function computeOutboundLegEnergyKwh(inputs: OutboundLegInputs): number {
   const tugEnergy = rampLegEnergyKwh(
     WAVE_FLUX.dock,
@@ -100,17 +103,17 @@ export function computeOutboundLegEnergyKwh(inputs: OutboundLegInputs): number {
   );
   const selfPropEnergy = rampLegEnergyKwh(
     WAVE_FLUX.deepWaterTransfer,
-    WAVE_FLUX.lateTransit,
+    WAVE_FLUX.seaPark,
     inputs.one_way_self_propulsion_days,
     inputs,
   );
   return tugEnergy + selfPropEnergy;
 }
 
-/** Self-propulsion (75 -> 40 kW/m) then tug (40 -> 0 kW/m) — the standard return leg. */
+/** Self-propulsion (100 -> 40 kW/m) then tug (40 -> 0 kW/m) — the standard return leg. */
 export function computeReturnLegEnergyKwh(inputs: OutboundLegInputs): number {
   const selfPropEnergy = rampLegEnergyKwh(
-    WAVE_FLUX.lateTransit,
+    WAVE_FLUX.seaPark,
     WAVE_FLUX.deepWaterTransfer,
     inputs.one_way_self_propulsion_days,
     inputs,
@@ -173,7 +176,7 @@ export function computeOutboundLegEnergyKwhPartial(
   const selfPropBudget = budgetDays - inputs.one_way_tug_days;
   const selfPropEnergy = partialRampLegEnergyKwh(
     WAVE_FLUX.deepWaterTransfer,
-    WAVE_FLUX.lateTransit,
+    WAVE_FLUX.seaPark,
     inputs.one_way_self_propulsion_days,
     selfPropBudget,
     inputs,
@@ -183,7 +186,7 @@ export function computeOutboundLegEnergyKwhPartial(
 
 /**
  * Energy for the first `budgetDays` of a standard return leg (self-propulsion
- * 75 -> 40 kW/m, then tug 40 -> 0 kW/m).
+ * 100 -> 40 kW/m, then tug 40 -> 0 kW/m).
  */
 export function computeReturnLegEnergyKwhPartial(
   inputs: OutboundLegInputs,
@@ -195,7 +198,7 @@ export function computeReturnLegEnergyKwhPartial(
 
   if (budgetDays <= inputs.one_way_self_propulsion_days) {
     return partialRampLegEnergyKwh(
-      WAVE_FLUX.lateTransit,
+      WAVE_FLUX.seaPark,
       WAVE_FLUX.deepWaterTransfer,
       inputs.one_way_self_propulsion_days,
       budgetDays,
@@ -203,7 +206,7 @@ export function computeReturnLegEnergyKwhPartial(
     );
   }
   const selfPropEnergy = rampLegEnergyKwh(
-    WAVE_FLUX.lateTransit,
+    WAVE_FLUX.seaPark,
     WAVE_FLUX.deepWaterTransfer,
     inputs.one_way_self_propulsion_days,
     inputs,
@@ -298,14 +301,14 @@ function rampLegSegments(fluxStart: number, fluxEnd: number, durationDays: numbe
 export function outboundLegSegments(inputs: OutboundLegInputs): LegSegment[] {
   return [
     ...rampLegSegments(WAVE_FLUX.dock, WAVE_FLUX.deepWaterTransfer, inputs.one_way_tug_days, inputs),
-    ...rampLegSegments(WAVE_FLUX.deepWaterTransfer, WAVE_FLUX.lateTransit, inputs.one_way_self_propulsion_days, inputs),
+    ...rampLegSegments(WAVE_FLUX.deepWaterTransfer, WAVE_FLUX.seaPark, inputs.one_way_self_propulsion_days, inputs),
   ];
 }
 
 /** Chronologically ordered segments for a standard return leg (self-propulsion then tug). */
 export function returnLegSegments(inputs: OutboundLegInputs): LegSegment[] {
   return [
-    ...rampLegSegments(WAVE_FLUX.lateTransit, WAVE_FLUX.deepWaterTransfer, inputs.one_way_self_propulsion_days, inputs),
+    ...rampLegSegments(WAVE_FLUX.seaPark, WAVE_FLUX.deepWaterTransfer, inputs.one_way_self_propulsion_days, inputs),
     ...rampLegSegments(WAVE_FLUX.deepWaterTransfer, WAVE_FLUX.dock, inputs.one_way_tug_days, inputs),
   ];
 }
@@ -343,7 +346,7 @@ export function outboundLegSegmentsPartial(inputs: OutboundLegInputs, budgetDays
   const selfPropBudget = budgetDays - inputs.one_way_tug_days;
   const selfPropSegments = partialRampLegSegments(
     WAVE_FLUX.deepWaterTransfer,
-    WAVE_FLUX.lateTransit,
+    WAVE_FLUX.seaPark,
     inputs.one_way_self_propulsion_days,
     selfPropBudget,
     inputs,

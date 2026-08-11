@@ -1,5 +1,6 @@
 import { CONST } from "./constants.js";
 import type { ChipFailureResult, DerivedQuantities, ModelInputs, ModelResult } from "./types.js";
+import { remainingLifeIntegral } from "./remainingLife.js";
 
 /**
  * Section 8 present value / unit-cost outputs, plus the annual cost/energy
@@ -88,8 +89,12 @@ export function computePresentValueAndUnitCosts(
     CONST.tug_cost_usd_per_day *
     ((2 * inputs.sea_park_distance_km) / CONST.tug_speed_km_per_day + derived.one_way_tug_days);
   const replacement_deployment_tug_cost_usd = expectedTotalLossEventsFleet * tug_50km_leg_cost_usd;
-  const fleet_complete_payload_replacement_cost_usd = expectedTotalLossEventsFleet * compute_hardware_cost_usd;
-  const mode_4_5_non_compute_replacement_cost_usd = expectedTotalLossEventsFleet * costs.non_compute_node_cost_usd;
+  // Modes 4/5 full-node replacement cost is NOT part of the uniform spread
+  // below -- it's allocated year-by-year against the remaining-economic-life
+  // factor instead (same total-loss event rate, but front-loaded since the
+  // factor decays within each planned generation) -- see the loop after
+  // this block. Tug/logistics and catastrophic-cleanup costs are unrelated
+  // to node age and stay uniformly spread.
   const unexpected_mechanical_repair_cost_usd =
     CONST.disabling_mechanical_repair_cost_usd *
     N_fleet *
@@ -102,13 +107,23 @@ export function computePresentValueAndUnitCosts(
     mode_2_tug_cost_usd +
     mode_3_tug_cost_usd +
     replacement_deployment_tug_cost_usd +
-    fleet_complete_payload_replacement_cost_usd +
-    mode_4_5_non_compute_replacement_cost_usd +
     unexpected_mechanical_repair_cost_usd +
     mode_5_catastrophic_cost_usd_total;
   const uniformPerYear = uniformRateTotal / Tend;
   for (let y = 1; y <= Tend; y++) {
     yearlyCost[y]! += uniformPerYear;
+  }
+
+  // Modes 4/5 full-node replacement cost, allocated per year using the exact
+  // average remaining-life factor over that year (age resets each planned
+  // generation). Summed across all years this reproduces
+  // expectedTotalLossEventsFleet * fullNodeCost * avgRemainingLifeFraction
+  // exactly, matching costs.ts's undiscounted total.
+  const totalLossRatePerYearFleet = N_fleet * (modeLosses.mode_4_rate_annual + modeLosses.mode_5_rate_annual);
+  for (let y = 1; y <= Tend; y++) {
+    const yearRemainingLifeIntegral = remainingLifeIntegral(y - 1, y, inputs.node_lifetime_years);
+    yearlyCost[y]! += totalLossRatePerYearFleet * compute_hardware_cost_usd * yearRemainingLifeIntegral;
+    yearlyCost[y]! += totalLossRatePerYearFleet * costs.non_compute_node_cost_usd * yearRemainingLifeIntegral;
   }
 
   // 4. Node retirement: credited at each completed-lifetime boundary year (rare; zero at both worked-example defaults).
@@ -121,19 +136,18 @@ export function computePresentValueAndUnitCosts(
     }
   }
 
-  // Present value and unit-cost outputs
+  // Present value and unit-cost outputs. (No levelized-cost-of-delivered-
+  // compute metric here -- LCOE is now a separate, compute-agnostic
+  // power-system calculation; see lcoe.ts.)
   const r = inputs.real_discount_rate;
   let presentValueTotal = 0;
-  let discountedEnergyMwh = 0;
   for (let t = 0; t < numBuckets; t++) {
     const factor = Math.pow(1 + r, t);
     presentValueTotal += yearlyCost[t]! / factor;
-    discountedEnergyMwh += yearlyEnergyMwh[t]! / factor;
   }
 
   const lifecycle_cost_per_target_watt_usd =
     costs.total_node_fleet_cost_usd / (inputs.target_capacity_gw * 1_000_000_000);
-  const levelized_cost_of_delivered_compute_energy_usd_per_mwh = presentValueTotal / discountedEnergyMwh;
 
   return {
     yearly_cost_usd: yearlyCost,
@@ -141,6 +155,5 @@ export function computePresentValueAndUnitCosts(
     present_value_workload_data_transfer_cost_usd: presentValueWorkload,
     lifecycle_cost_per_target_watt_usd,
     yearly_delivered_energy_mwh: yearlyEnergyMwh,
-    levelized_cost_of_delivered_compute_energy_usd_per_mwh,
   };
 }

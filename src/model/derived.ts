@@ -1,6 +1,7 @@
 import { CONST } from "./constants.js";
 import type { DerivedQuantities, ModelInputs } from "./types.js";
-import { computeOutboundLegEnergyKwh } from "./energy.js";
+import { outboundLegSegments, processSegments, type BatteryState } from "./energy.js";
+import { rawWaveResourceCF, effectiveSeaParkCF } from "./waverys.js";
 
 /** Section 2.1 and Appendix A.3: quantities derived once from the sliders. */
 export function computeDerived(inputs: ModelInputs): DerivedQuantities {
@@ -28,13 +29,36 @@ export function computeDerived(inputs: ModelInputs): DerivedQuantities {
   const full_output_flux_kw_per_m = power_cap_kw / capture_coefficient;
 
   const outbound_days = one_way_tug_days + one_way_self_propulsion_days;
-  const outbound_energy_kwh = computeOutboundLegEnergyKwh({
-    one_way_tug_days,
-    one_way_self_propulsion_days,
-    power_cap_kw,
-    capture_coefficient,
-    full_output_flux_kw_per_m,
-  });
+  // Every departure from port starts with a fully charged battery (see
+  // chipFailures.ts's per-departure reset), so the reference outbound leg
+  // used by Modes 2-5 (a single redeployment trip, credited back against
+  // each failure event) reflects that same fresh-battery assist during the
+  // initial weak-wave ramp -- not a pure, battery-blind wave calculation.
+  const battery_capacity_kwh = inputs.payload_rating_kw * inputs.battery_duration_hours;
+  const departureBattery: BatteryState = { socKwh: battery_capacity_kwh };
+  const outbound_energy_kwh = processSegments(
+    outboundLegSegments({
+      one_way_tug_days,
+      one_way_self_propulsion_days,
+      power_cap_kw,
+      capture_coefficient,
+      full_output_flux_kw_per_m,
+    }),
+    departureBattery,
+    battery_capacity_kwh,
+  ).deliveredEnergyKwh;
+
+  // Copernicus WAVERYS sea-park wave-resource capacity factor (Section 3.1
+  // extension): raw_wave_resource_cf is the sole dashboard-facing metric;
+  // effective_sea_park_cf additionally folds in the episode-level battery
+  // smoothing approximation and is used only to schedule sea-park energy.
+  const seaParkResourceParams = {
+    captureCoefficient: capture_coefficient,
+    powerCapKw: power_cap_kw,
+    payloadRatingKw: inputs.payload_rating_kw,
+  };
+  const raw_wave_resource_cf = rawWaveResourceCF(seaParkResourceParams);
+  const effective_sea_park_cf = effectiveSeaParkCF(seaParkResourceParams, battery_capacity_kwh);
 
   return {
     capture_width_ratio,
@@ -51,5 +75,7 @@ export function computeDerived(inputs: ModelInputs): DerivedQuantities {
     capture_coefficient,
     outbound_days,
     outbound_energy_kwh,
+    raw_wave_resource_cf,
+    effective_sea_park_cf,
   };
 }

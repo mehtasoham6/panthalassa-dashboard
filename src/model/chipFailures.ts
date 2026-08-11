@@ -4,7 +4,6 @@ import {
   outboundLegSegments,
   outboundLegSegmentsPartial,
   returnLegSegments,
-  seaParkLegSegments,
   processSegments,
   type BatteryState,
   type LegSegment,
@@ -24,23 +23,47 @@ import {
  *  2. A surprise service trip departs once healthy capacity first reaches
  *     the guaranteed share, P*(1-h): triggerAgeYears = -ln(1-h)/lambda
  *     (Infinity if lambda=0 -- no chip-triggered surprise service).
- *  3. Fixed full-node maintenance remains anchored at years 5, 10, 15, ...,
- *     independent of the trigger. After every restoration, whichever of
- *     {hot-spare-exhaustion date, next fixed-maintenance date} comes first
- *     governs; if a surprise trip's return+dock window reaches the fixed
- *     date, the two visits merge into one 7-day combined visit.
+ *  3. Fixed full-node maintenance is nominally anchored at years 5, 10, 15,
+ *     ..., independent of the trigger, but that date isn't rigid: after
+ *     every restoration, whichever of {hot-spare-exhaustion date, next fixed
+ *     -maintenance date} comes first governs; if a standalone surprise
+ *     payload-service visit would complete within
+ *     `CONST.maintenance_consolidation_window_years` (6 months) before the
+ *     next fixed-maintenance date -- or at/after it -- the two consolidate
+ *     into one combined 7-day visit, and the 5-year clock then resets from
+ *     that actual combined-service date, not the superseded calendar date.
+ *     A surprise trip more than 6 months out is never delayed to wait for
+ *     the later maintenance date; it stays a standalone 1-day visit and the
+ *     planned maintenance date is untouched.
  *  4. At every visit (surprise or fixed), only the capacity that has
  *     actually failed by service time is replaced: P*(1-exp(-lambda*age)).
  *     Health is always fully restored to P; there is no partial/carried
  *     replacement policy.
- *  5. Delivered power at any instant is min(healthyCapacityKw, power
- *     available after the existing wave/PTO/battery system) -- see
- *     `creditSegmentWithHealth` / `creditSeaParkWithHealth` below. Since the
+ *  5. Delivered power at any instant during ROUTE travel (tug/self-propulsion
+ *     legs) is min(healthyCapacityKw, power available after the existing
+ *     wave/PTO/battery system) -- see `creditRampSegment` below. Since the
  *     PTO is always sized above the payload, the equipment cap equals P
  *     exactly, so compute health binds immediately (for any age>0) whenever
  *     the wave resource alone would otherwise hit the cap; during
  *     wave-limited (gap) time, wave power governs unless degradation has
  *     become severe enough to fall below it too.
+ *  5b. At SEA PARK, delivered power is healthyCapacityKw(age) *
+ *     effective_sea_park_cf -- a historical-WAVERYS-derived capacity factor
+ *     (see waverys.ts and `creditSeaPark` below) applied as a constant
+ *     multiplicative derate on the health curve, rather than re-solving a
+ *     health-vs-instantaneous-wave crossover against the full 3-hourly
+ *     record at every point on the curve. This is intentionally slightly
+ *     conservative: as healthy compute declines, the same wave resource
+ *     would in reality find it marginally easier to power the (smaller)
+ *     remaining load, which this simplification does not credit.
+ *  6. The battery starts every port departure -- initial deployment and
+ *     every redeployment after dockside service -- fully charged. SOC then
+ *     carries chronologically stage to stage until the next departure; it
+ *     is never reset mid-cycle. This lets a full battery cover part of the
+ *     weak-wave shortfall during the initial outbound ramp. This chronological
+ *     per-node battery only ever interacts with ROUTE legs -- the sea-park
+ *     stage's own (separate, config-level, episode-based) battery smoothing
+ *     approximation is already folded into effective_sea_park_cf.
  *
  * Boundary conventions (see the accompanying report): a trigger age shorter
  * than the outbound travel time is clamped to "surprise departure no
@@ -179,81 +202,38 @@ function creditRampSegments(
 }
 
 /**
- * Credits a (potentially multi-year) sea-park stretch of constant wave
- * power, applying the exact health-vs-wave crossover and splitting the
- * result across calendar years for correct cost/PV timing.
+ * Credits a (potentially multi-year) sea-park stretch. Delivered power is
+ * healthyCapacityKw(age) * effectiveSeaParkCF -- the historical-WAVERYS
+ * capacity factor (raw wave-resource CF plus the episode-level battery
+ * recovery approximation, see waverys.ts) applied as a constant derate on
+ * the closed-form health-decay integral, split across calendar years for
+ * correct cost/PV timing. No wave-vs-health crossover solve and no
+ * chronological-battery interaction here: the sea-park resource correction
+ * is a separate, config-level effect already folded into effectiveSeaParkCF
+ * (see module docs, point 5b) -- the per-node route battery is untouched.
  */
 function creditSeaPark(
   seaParkDays: number,
   age: number,
   absTime: number,
-  battery: BatteryState,
-  batteryCapacityKwh: number,
   P: number,
   lambda: number,
-  capParams: CapParams,
+  effectiveSeaParkCF: number,
   totals: Totals,
   Tend: number,
 ): { age: number; absTime: number } {
   if (seaParkDays <= 0) return { age, absTime };
-  const segs = seaParkLegSegments(seaParkDays, capParams);
   const ageEnd = age + seaParkDays / 365;
   const absEnd = absTime + seaParkDays / 365;
-  if (segs.length === 0) return { age: ageEnd, absTime: absEnd };
-  const seg = segs[0]!;
 
-  const creditWaveChunk = (a: number, b: number) => {
-    const days = (b - a) * 365;
-    const perDay = seg.days > 0 ? seg.deliveredEnergyKwh / seg.days : 0;
-    const perDayPotential = seg.days > 0 ? seg.potentialKwh / seg.days : 0;
-    const chunkSeg: LegSegment = { kind: seg.kind, days, deliveredEnergyKwh: perDay * days, potentialKwh: perDayPotential * days };
-    const r = processSegments([chunkSeg], battery, batteryCapacityKwh);
-    totals.chipAdjustedEnergyKwh += r.deliveredEnergyKwh;
-    return r.deliveredEnergyKwh;
-  };
-  const creditHealthyChunk = (ageA: number, ageB: number, chargeFromPotential: boolean, chunkDays: number) => {
-    const kwh = degradationHealthyEnergy(ageA, ageB, P, lambda);
+  forEachYearChunk(absTime, absEnd, Tend, (a, b, yi) => {
+    const chunkAgeA = age + (a - absTime);
+    const chunkAgeB = age + (b - absTime);
+    const kwh = degradationHealthyEnergy(chunkAgeA, chunkAgeB, P, lambda) * effectiveSeaParkCF;
     totals.chipAdjustedEnergyKwh += kwh;
-    if (chargeFromPotential) {
-      const perDayPotential = seg.days > 0 ? seg.potentialKwh / seg.days : 0;
-      const charge = Math.min(perDayPotential * chunkDays, batteryCapacityKwh - battery.socKwh);
-      battery.socKwh += charge;
-    }
-    return kwh;
-  };
+    totals.yearlyDeliveredEnergyKwh[yi]! += kwh;
+  });
 
-  if (lambda === 0 || seg.kind === "atcap") {
-    // atcap: health always binds for age>0 (crossing age == 0); lambda=0: health never binds (reduces to pure wave/battery).
-    forEachYearChunk(absTime, absEnd, Tend, (a, b, yi) => {
-      const chunkDays = (b - a) * 365;
-      const chunkAgeA = age + (a - absTime);
-      const chunkAgeB = age + (b - absTime);
-      const kwh = lambda === 0 ? creditWaveChunk(a, b) : creditHealthyChunk(chunkAgeA, chunkAgeB, seg.kind === "atcap", chunkDays);
-      totals.yearlyDeliveredEnergyKwh[yi]! += kwh;
-    });
-    return { age: ageEnd, absTime: absEnd };
-  }
-
-  // gap sea-park: find the exact crossing age (constant wave power, so this is exact).
-  const waveAvgKw = seg.deliveredEnergyKwh / (seg.days * 24);
-  const aStar = waveAvgKw >= P ? Infinity : -Math.log(Math.max(waveAvgKw, 1e-12) / P) / lambda;
-  const crossAge = Math.max(age, Math.min(ageEnd, aStar));
-  const crossAbs = absTime + (crossAge - age);
-
-  if (crossAbs > absTime) {
-    forEachYearChunk(absTime, crossAbs, Tend, (a, b, yi) => {
-      const kwh = creditWaveChunk(a, b);
-      totals.yearlyDeliveredEnergyKwh[yi]! += kwh;
-    });
-  }
-  if (crossAbs < absEnd) {
-    forEachYearChunk(crossAbs, absEnd, Tend, (a, b, yi) => {
-      const chunkAgeA = age + (a - absTime);
-      const chunkAgeB = age + (b - absTime);
-      const kwh = creditHealthyChunk(chunkAgeA, chunkAgeB, false, 0);
-      totals.yearlyDeliveredEnergyKwh[yi]! += kwh;
-    });
-  }
   return { age: ageEnd, absTime: absEnd };
 }
 
@@ -283,7 +263,9 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
   const payloadDockYears = CONST.payload_swap_dock_days / CONST.days_per_year;
   const maintenanceDockYears = CONST.node_maintenance_dock_days / CONST.days_per_year;
   const batteryCapacityKwh = P * inputs.battery_duration_hours;
-  const battery: BatteryState = { socKwh: 0 };
+  // Reset to full at the top of every loop iteration (every port departure) below.
+  const battery: BatteryState = { socKwh: batteryCapacityKwh };
+  const effectiveSeaParkCF = derived.effective_sea_park_cf;
 
   // Fixed shape (durations, capped/wave energy per segment) is the same every occurrence.
   const outboundSegments = outboundLegSegments(legInputs);
@@ -297,6 +279,10 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
 
   for (let iterations = 0; iterations < 10_000; iterations++) {
     if (s >= Tend - 1e-12) break;
+
+    // Every departure from port -- initial deployment and every redeployment
+    // after dockside service -- starts with a fully charged battery.
+    battery.socKwh = batteryCapacityKwh;
 
     // Outbound leg, truncated at the analysis horizon if it would run past it.
     const daysUntilTend = (Tend - s) * CONST.days_per_year;
@@ -312,7 +298,14 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
     // Earliest a surprise return can depart: the trigger age, but never before arrival at sea park
     // (the model has no notion of reversing mid-outbound-transit -- see module docs).
     const triggerDepartAbs = Math.max(s + triggerAgeYears, arrivalAbs);
-    const surpriseWillHappen = triggerDepartAbs < nextMaintenanceTime - 1e-9;
+    // The trigger date itself must also fall within the horizon -- otherwise
+    // (now that nextMaintenanceTime can be pushed out past Tend by a
+    // consolidation) the surprise-cycle branch below would credit sea-park
+    // and return energy for calendar time beyond the analysis period before
+    // its own horizon check ever ran. When the trigger is beyond Tend, fall
+    // through to the fixed-maintenance-only path, whose horizon clamp
+    // already handles "just keep operating through the end" correctly.
+    const surpriseWillHappen = triggerDepartAbs < nextMaintenanceTime - 1e-9 && triggerDepartAbs < Tend - 1e-9;
 
     if (!surpriseWillHappen) {
       // Fixed-maintenance-only cycle.
@@ -320,14 +313,14 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
         // Maintenance would complete at/after the horizon: excluded (boundary rule).
         // The return trip is never launched; the node just operates at sea park through the horizon.
         const seaParkDays = Math.max(0, (Tend - arrivalAbs) * CONST.days_per_year);
-        creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, battery, batteryCapacityKwh, P, lambda, capParams, totals, Tend);
+        creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, P, lambda, effectiveSeaParkCF, totals, Tend);
         break;
       }
 
       const dockYears = maintenanceDockYears;
       const returnStartAbs = nextMaintenanceTime - returnYears - dockYears;
       const seaParkDays = Math.max(0, (returnStartAbs - arrivalAbs) * CONST.days_per_year);
-      const seaPark = creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, battery, batteryCapacityKwh, P, lambda, capParams, totals, Tend);
+      const seaPark = creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, P, lambda, effectiveSeaParkCF, totals, Tend);
 
       if (returnStartAbs < arrivalAbs - 1e-9) {
         // Degenerate: no runway to sea-park before the return must begin. Stop rather than loop.
@@ -350,13 +343,16 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
       continue;
     }
 
-    // Surprise-triggered cycle (possibly merged with fixed maintenance).
+    // Surprise-triggered cycle, consolidated with fixed maintenance if the
+    // standalone payload-only visit would complete within the consolidation
+    // window before the next fixed-maintenance date (or at/after it).
     const ordinaryCompletion = triggerDepartAbs + returnYears + payloadDockYears;
-    const isCombined = nextMaintenanceTime <= ordinaryCompletion + 1e-9;
+    const isCombined =
+      nextMaintenanceTime - ordinaryCompletion <= CONST.maintenance_consolidation_window_years + 1e-9;
     const dockYears = isCombined ? maintenanceDockYears : payloadDockYears;
 
     const seaParkDays = Math.max(0, (triggerDepartAbs - arrivalAbs) * CONST.days_per_year);
-    const seaPark = creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, battery, batteryCapacityKwh, P, lambda, capParams, totals, Tend);
+    const seaPark = creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, P, lambda, effectiveSeaParkCF, totals, Tend);
 
     const returnResult = creditRampSegments(returnSegments, seaPark.age, seaPark.absTime, battery, batteryCapacityKwh, P, lambda, totals, Tend);
     const ageAtService = returnResult.age;
@@ -377,7 +373,9 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
     if (isCombined) {
       totals.maintenanceEvents += 1;
       totals.yearlyScheduledFullMaintenanceEvents[yearIndexFor(completionAbs, Tend)]! += 1;
-      nextMaintenanceTime += CONST.node_maintenance_interval_years;
+      // Reset the 5-year clock from the actual combined service date, not
+      // the superseded calendar date it replaced.
+      nextMaintenanceTime = completionAbs + CONST.node_maintenance_interval_years;
     }
 
     s = completionAbs;

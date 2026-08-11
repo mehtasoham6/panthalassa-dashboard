@@ -1,5 +1,7 @@
 import { CONST } from "./constants.js";
 import type { ChipFailureResult, DerivedQuantities, ModelInputs, ModelResult } from "./types.js";
+import { averageRemainingLifeFraction } from "./remainingLife.js";
+import { computeNodeUnitCosts } from "./nodeUnitCosts.js";
 
 /**
  * Section 7 / Appendix A.5 cost model.
@@ -26,20 +28,10 @@ export function computeCosts(
   fleetDeliveredEnergyKwh: number,
 ): ModelResult["costs"] {
   // 7.1 Cost of one newly built node
-  const hull_steel_mass_tonnes =
-    (CONST.reference_hull_steel_mass_tonnes * inputs.hull_diameter_m) / CONST.reference_hull_diameter_m;
-  const hull_cost_usd = hull_steel_mass_tonnes * inputs.finished_hull_cost_usd_per_tonne;
-  const pto_cost_usd = derived.pto_rating_kw * inputs.pto_cost_usd_per_kw;
-  const battery_capacity_kwh = inputs.payload_rating_kw * inputs.battery_duration_hours;
-  const battery_cost_usd =
-    battery_capacity_kwh * CONST.battery_pack_cost_usd_per_kwh +
-    inputs.payload_rating_kw * CONST.battery_power_system_cost_usd_per_kw;
-  const compute_hardware_cost_usd = inputs.payload_rating_kw * inputs.compute_hardware_cost_usd_per_kw;
-  const onboard_systems_cost_usd = CONST.onboard_systems_cost_usd_per_node;
-
-  const physical_node_cost_usd =
-    hull_cost_usd + pto_cost_usd + battery_cost_usd + onboard_systems_cost_usd + compute_hardware_cost_usd;
-  const non_compute_node_cost_usd = physical_node_cost_usd - compute_hardware_cost_usd;
+  const { physical_node_cost_usd, compute_hardware_cost_usd, non_compute_node_cost_usd } = computeNodeUnitCosts(
+    inputs,
+    derived,
+  );
 
   const total_planned_physical_node_cost_usd = physical_node_cost_usd * N_fleet * node_generations;
 
@@ -50,7 +42,17 @@ export function computeCosts(
 
   const expected_total_loss_events_fleet =
     N_fleet * inputs.analysis_period_years * (modeLosses.mode_4_rate_annual + modeLosses.mode_5_rate_annual);
-  const fleet_complete_payload_replacement_cost_usd = expected_total_loss_events_fleet * compute_hardware_cost_usd;
+
+  // Modes 4/5 economic replacement cost is scaled by the node's average
+  // remaining straight-line economic life (age resets each planned
+  // generation): a loss near the end of its planned life substitutes for a
+  // future generation purchase, so it costs less in expectation than
+  // destroying a brand-new node. Applied identically to the compute and
+  // non-compute pieces below so together they total (avg fraction) x one
+  // full new node, never double-counted.
+  const avgRemainingLifeFraction = averageRemainingLifeFraction(0, inputs.analysis_period_years, inputs.node_lifetime_years);
+  const fleet_complete_payload_replacement_cost_usd =
+    expected_total_loss_events_fleet * compute_hardware_cost_usd * avgRemainingLifeFraction;
 
   const total_compute_replacement_cost_usd =
     fleet_compute_replacement_cost_usd + fleet_complete_payload_replacement_cost_usd;
@@ -83,7 +85,8 @@ export function computeCosts(
 
   const unexpected_tug_cost_usd = mode_1_2_tug_cost_usd + mode_3_tug_cost_usd + replacement_deployment_tug_cost_usd;
 
-  const mode_4_5_non_compute_replacement_cost_usd = expected_total_loss_events_fleet * non_compute_node_cost_usd;
+  const mode_4_5_non_compute_replacement_cost_usd =
+    expected_total_loss_events_fleet * non_compute_node_cost_usd * avgRemainingLifeFraction;
 
   const unexpected_mechanical_repair_cost_usd =
     CONST.disabling_mechanical_repair_cost_usd *

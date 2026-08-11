@@ -1,5 +1,5 @@
 import type { ModelResult } from "../../model/index.js";
-import { formatNumber, formatUsdCompact, formatUsdPerUnit } from "../lib/formatters.js";
+import { formatNumber, formatPercent, formatUsdCompact, formatUsdPerUnit } from "../lib/formatters.js";
 import styles from "./ResultsHeader.module.css";
 
 interface Props {
@@ -42,14 +42,19 @@ export function ResultsHeader({ result, isPending }: Props) {
       sub: `Avg., vs. ${result.inputs.payload_rating_kw} kW installed payload`,
     },
     {
+      label: "Wave resource capacity factor",
+      value: formatPercent(result.derived.raw_wave_resource_cf, 1),
+      sub: "Average output the waves provide, as a share of the node's maximum possible output.",
+    },
+    {
       label: "Cost per target watt",
       value: formatUsdPerUnit(result.presentValue.lifecycle_cost_per_target_watt_usd, 2),
       sub: `Per watt of ${result.inputs.target_capacity_gw} GW target capacity`,
     },
     {
-      label: "Levelized cost",
-      value: `${formatUsdPerUnit(result.presentValue.levelized_cost_of_delivered_compute_energy_usd_per_mwh, 2)}/MWh`,
-      sub: "Discounted cost over discounted delivered energy",
+      label: "LCOE",
+      value: `${formatUsdPerUnit(result.lcoe.lcoe_usd_per_mwh, 2)}/MWh`,
+      sub: "What it costs to generate one MWh of electricity, not counting compute equipment.",
     },
   ];
 

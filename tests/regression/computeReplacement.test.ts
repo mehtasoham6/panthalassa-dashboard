@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runModel } from "../../src/model/index.js";
 import { computeDerived } from "../../src/model/derived.js";
+import { averageRemainingLifeFraction } from "../../src/model/remainingLife.js";
 import { DEFAULT_INPUTS } from "../../src/model/types.js";
 
 // Direct tests for the unified compute-health / service-schedule engine
@@ -53,21 +54,21 @@ describe("output declines before any trip is triggered", () => {
   });
 });
 
-describe("a surprise service restores health without moving the fixed maintenance date", () => {
-  it("10% hot spares, 10% hazard, 10-year horizon: 8 surprise visits occur alongside an UNMOVED, separate year-5 fixed maintenance visit (9 distinct physical trips total -- no merge)", () => {
+describe("a surprise service restores health, and near-coincident fixed maintenance dates now consolidate into the same trip (6-month window)", () => {
+  it("10% hot spares, 10% hazard, 10-year horizon: 8 surprise visits occur, and BOTH the year-5 and year-10 fixed-maintenance dates happen to fall within 6 months of a nearby surprise visit, so both consolidate (8 distinct physical trips total, not 10)", () => {
     const inputs = { ...DEFAULT_INPUTS, hotSpareShare: 0.10, chip_failure_rate_annual: 0.10, analysis_period_years: 10 };
     const r = runModel(inputs);
     expect(r.chip.expected_mode_1_surprise_service_event_count_per_position).toBe(8);
-    expect(r.chip.scheduled_node_maintenance_event_count_per_position).toBe(1);
-    expect(r.chip.yearly_scheduled_full_maintenance_events[4]).toBe(1);
+    expect(r.chip.scheduled_node_maintenance_event_count_per_position).toBe(2);
+    expect(r.chip.yearly_scheduled_full_maintenance_events[4]).toBe(1); // year 5, consolidated with a surprise visit
+    expect(r.chip.yearly_scheduled_full_maintenance_events[9]).toBe(1); // year 10, consolidated with a surprise visit
 
-    // The key check: none of the 8 surprise trips absorbed the fixed-maintenance date -- had
-    // one merged, expected_mode_1_physical_tug_round_trips_per_position would be 8 (deduplicated),
-    // not 9 (8 surprise + 1 fully separate fixed-maintenance trip). This confirms the 5-year
-    // calendar was neither skipped nor folded into a nearby surprise visit.
-    expect(r.chip.expected_mode_1_physical_tug_round_trips_per_position).toBe(9);
+    // Both fixed-maintenance dates were absorbed into a nearby surprise trip (the 6-month
+    // consolidation window), so total physical trips equals the surprise-visit count, not
+    // surprise + maintenance (which would double-count the two combined visits).
+    expect(r.chip.expected_mode_1_physical_tug_round_trips_per_position).toBe(8);
     expect(r.chip.expected_mode_1_physical_tug_round_trips_per_position).toBe(
-      r.chip.expected_mode_1_surprise_service_event_count_per_position + r.chip.scheduled_node_maintenance_event_count_per_position,
+      r.chip.expected_mode_1_surprise_service_event_count_per_position,
     );
   });
 });
@@ -112,16 +113,20 @@ describe("merged surprise and fixed visits avoid duplicate trips and costs", () 
 });
 
 describe("Modes 4 and 5 still require full payload replacement", () => {
-  it("fleet_complete_payload_replacement_cost_usd and mode_4_5_non_compute_replacement_cost_usd follow the expected total-loss-event formula, independent of the compute-health engine", () => {
+  it("fleet_complete_payload_replacement_cost_usd and mode_4_5_non_compute_replacement_cost_usd follow the expected total-loss-event formula, scaled by the average remaining-economic-life fraction (Change 4), independent of the compute-health engine", () => {
     const inputs = { ...DEFAULT_INPUTS, node_failure_rate_annual: 0.10 };
     const r = runModel(inputs);
     const computeHwCost = inputs.payload_rating_kw * inputs.compute_hardware_cost_usd_per_kw;
     const expectedEvents =
       r.N_fleet * inputs.analysis_period_years * (r.modeLosses.mode_4_rate_annual + r.modeLosses.mode_5_rate_annual);
+    const avgRemainingLifeFraction = averageRemainingLifeFraction(0, inputs.analysis_period_years, inputs.node_lifetime_years);
 
-    expect(r.costs.lineItems.fleet_complete_payload_replacement_cost_usd).toBeCloseTo(expectedEvents * computeHwCost, 2);
+    expect(r.costs.lineItems.fleet_complete_payload_replacement_cost_usd).toBeCloseTo(
+      expectedEvents * computeHwCost * avgRemainingLifeFraction,
+      2,
+    );
     expect(r.costs.lineItems.mode_4_5_non_compute_replacement_cost_usd).toBeCloseTo(
-      expectedEvents * r.costs.non_compute_node_cost_usd,
+      expectedEvents * r.costs.non_compute_node_cost_usd * avgRemainingLifeFraction,
       2,
     );
     expect(r.costs.lineItems.fleet_complete_payload_replacement_cost_usd).toBeGreaterThan(0);

@@ -4,6 +4,7 @@ import { computeModeLosses } from "./nodeFailureModes.js";
 import { computeFleetSizing, computePurchases } from "./fleet.js";
 import { computeCosts } from "./costs.js";
 import { computePresentValueAndUnitCosts } from "./presentValue.js";
+import { computeLcoe } from "./lcoe.js";
 import type { ModelInputs, ModelResult } from "./types.js";
 
 export * from "./types.js";
@@ -32,6 +33,11 @@ export function runModel(inputs: ModelInputs): ModelResult {
     node_generations,
   );
 
+  // Power-system LCOE: a parallel, compute-agnostic calculation over one
+  // node's economic life -- deliberately independent of chip health, the
+  // dashboard analysis period, and fleet/target sizing above. See lcoe.ts.
+  const lcoe = computeLcoe(inputs, derived);
+
   return {
     inputs,
     derived,
@@ -45,5 +51,6 @@ export function runModel(inputs: ModelInputs): ModelResult {
     planned_node_purchases,
     costs,
     presentValue,
+    lcoe,
   };
 }

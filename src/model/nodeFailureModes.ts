@@ -15,14 +15,21 @@ export function computeModeLosses(
   const outboundEnergyKwh = derived.outbound_energy_kwh;
   const returnDays = derived.one_way_journey_days;
   const powerCapKw = derived.power_cap_kw;
+  // Modes 2/3's lost-time window (return transit + repair + redeploy transit)
+  // is credited against the same resource-adjusted sea-park counterfactual
+  // the rest of the model schedules (Copernicus WAVERYS correction -- see
+  // waverys.ts / derived.effective_sea_park_cf), not a nominal
+  // always-available full-cap rate. Modes 4/5 keep their existing
+  // deployment-ramp-only treatment (unrelated to sea-park time), unchanged.
+  const seaParkAdjustedCapKw = powerCapKw * derived.effective_sea_park_cf;
 
   const mode_2_loss_per_event_kwh =
-    24 * powerCapKw * (returnDays + CONST.mode_2_repair_days + outboundDays) - outboundEnergyKwh;
+    24 * seaParkAdjustedCapKw * (returnDays + CONST.mode_2_repair_days + outboundDays) - outboundEnergyKwh;
 
   const tugDispatchDays = inputs.sea_park_distance_km / CONST.tug_speed_km_per_day;
   const towBackDays = inputs.sea_park_distance_km / CONST.tug_speed_km_per_day;
   const mode_3_loss_per_event_kwh =
-    24 * powerCapKw * (tugDispatchDays + towBackDays + CONST.mode_3_repair_days + outboundDays) -
+    24 * seaParkAdjustedCapKw * (tugDispatchDays + towBackDays + CONST.mode_3_repair_days + outboundDays) -
     outboundEnergyKwh;
 
   const mode_4_loss_per_event_kwh = 24 * powerCapKw * outboundDays - outboundEnergyKwh;
