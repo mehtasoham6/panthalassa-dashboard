@@ -50,6 +50,13 @@
   min-width: 0;
 }
 
+.topRow {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 20px;
+  align-items: start;
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
@@ -68,5 +75,9 @@
 
   .topbar {
     padding: 14px 16px;
+  }
+
+  .topRow {
+    grid-template-columns: 1fr;
   }
 }

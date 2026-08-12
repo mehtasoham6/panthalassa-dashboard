@@ -1,0 +1,150 @@
+.wrap {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.track {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 92px;
+}
+
+.endStage {
+  flex: 0 0 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+}
+
+.stageLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.stageCaption {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.connector {
+  flex: 0 0 auto;
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 4px;
+  overflow: hidden;
+  transition: flex-basis 0.4s ease;
+}
+
+.route {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--accent) 0,
+    var(--accent) 5px,
+    transparent 5px,
+    transparent 11px
+  );
+}
+
+.route::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent var(--accent);
+}
+
+.connectorCaption {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.seaPark {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.nodeIcon {
+  transition: transform 0.4s ease;
+  line-height: 0;
+}
+
+.nodeStats {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.statValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  transition: color 0.3s ease;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.batteryChip {
+  font-size: 9px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .endStage {
+    flex-basis: 36px;
+  }
+  .connectorCaption {
+    display: none;
+  }
+  .connector {
+    min-width: 18px;
+  }
+}

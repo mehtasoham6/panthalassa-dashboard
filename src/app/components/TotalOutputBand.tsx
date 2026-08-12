@@ -1,5 +1,5 @@
 import type { ModelResult } from "../../model/index.js";
-import { formatDataGb, formatNumber } from "../lib/formatters.js";
+import { formatNumber, formatUsdCompact } from "../lib/formatters.js";
 import styles from "./TotalOutputBand.module.css";
 
 interface Props {
@@ -25,9 +25,9 @@ export function TotalOutputBand({ result }: Props) {
         </div>
         <div className={styles.divider} />
         <div className={styles.half}>
-          <span className={styles.label}>Total workload data transferred</span>
-          <span className={`${styles.value} num`}>{formatDataGb(costs.total_workload_data_transferred_gb)}</span>
-          <span className={styles.sub}>Fleet-wide, over the analysis period</span>
+          <span className={styles.label}>Total lifecycle cost</span>
+          <span className={`${styles.value} num`}>{formatUsdCompact(costs.total_node_fleet_cost_usd)}</span>
+          <span className={styles.sub}>Undiscounted, over the analysis period</span>
         </div>
       </div>
     </div>

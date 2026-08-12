@@ -3,6 +3,9 @@ import { SliderPanel } from "./components/SliderPanel.js";
 import { TotalOutputBand } from "./components/TotalOutputBand.js";
 import { ResultsHeader } from "./components/ResultsHeader.js";
 import { CostBreakdown } from "./components/CostBreakdown.js";
+import { NodeJourney } from "./components/NodeJourney.js";
+import { CapacityFlow } from "./components/CapacityFlow.js";
+import { BaselineComparison } from "./components/BaselineComparison.js";
 import styles from "./App.module.css";
 
 export function App() {
@@ -22,6 +25,11 @@ export function App() {
 
         <main className={styles.main}>
           <TotalOutputBand result={result} />
+          <BaselineComparison result={result} />
+          <div className={styles.topRow}>
+            <NodeJourney result={result} />
+            <CapacityFlow result={result} />
+          </div>
           <ResultsHeader result={result} isPending={isPending} />
           <CostBreakdown result={result} />
         </main>
