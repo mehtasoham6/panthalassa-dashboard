@@ -34,7 +34,7 @@ export const DEFAULT_INPUTS: ModelInputs = {
   node_failure_rate_annual: 0.03,
   finished_hull_cost_usd_per_tonne: 2000,
   pto_cost_usd_per_kw: 200,
-  compute_hardware_cost_usd_per_kw: 15000,
+  compute_hardware_cost_usd_per_kw: 25000,
   workloadBandwidthIntensityMbpsPerKw: 0.03,
   dataTransferCostPerGb: 1.0,
 };

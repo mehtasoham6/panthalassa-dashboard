@@ -20,8 +20,16 @@ import { DEFAULT_INPUTS } from "../../src/model/types.js";
 //     constant 100 kW/m: healthy compute * effective_sea_park_cf (raw CF
 //     ~96.45% plus a small internal battery-smoothing bump, capped at 1.0,
 //     never displayed itself). Modes 2/3's lost-output counterfactual uses
-//     the same resource-adjusted rate. This is the dominant driver of the
-//     numbers below moving versus the prior (pre-WAVERYS) revision.
+//     the same resource-adjusted rate.
+//  6. Total lifecycle cost allocates capital cost by planned generation (see
+//     generationCapital.ts): the initial fleet (generation 0) is always
+//     charged in full, and later planned replacement generations are
+//     charged only their share of a full generation's capital cost that
+//     falls within the analysis horizon. At these defaults (5-year
+//     analysis, 20-year node life) there is only one planned generation, so
+//     this allocation is a no-op -- the totals below are the full,
+//     unprorated fleet cost, identical to charging every generation in
+//     full.
 //
 // At defaults, the trigger age (~10.54yr) is far beyond the 5-year horizon,
 // and the one fixed-maintenance boundary (year 5) coincides exactly with the
@@ -70,16 +78,16 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
   });
 
   it("per-node physical cost table (unaffected by the resource correction)", () => {
-    expect(r.costs.physical_node_cost_usd).toBeCloseTo(3_410_000, 0);
+    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_410_000, 0);
     expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(410_000, 0);
   });
 
-  it("planned physical fleet cost ~= $18.1207 billion", () => {
-    expect(r.costs.total_planned_physical_node_cost_usd).toBeCloseTo(18_120_740_000, -3);
+  it("planned physical fleet cost ~= $28.7487 billion", () => {
+    expect(r.costs.total_planned_physical_node_cost_usd).toBeCloseTo(28_748_740_000, -3);
   });
 
-  it("compute replacement ~= $62.772 million (Modes 4/5 complete-payload replacement only, remaining-life-depreciated -- no chip capacity has been replaced since no visit occurred)", () => {
-    expect(r.costs.total_compute_replacement_cost_usd / 1e6).toBeCloseTo(62.772, 1);
+  it("compute replacement ~= $104.619 million (Modes 4/5 complete-payload replacement only, remaining-life-depreciated -- no chip capacity has been replaced since no visit occurred)", () => {
+    expect(r.costs.total_compute_replacement_cost_usd / 1e6).toBeCloseTo(104.619, 1);
   });
 
   it("non-compute maintenance/failure ~= $99.736 million", () => {
@@ -90,26 +98,31 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
     expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.399, 0);
   });
 
-  it("dashboard cost buckets (billions), including the workload data-transfer bucket", () => {
-    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(16.005, 2);
+  it("dashboard cost buckets (billions), initial generation charged in full (only one planned generation at these defaults)", () => {
+    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(26.675, 2);
     expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(2.179, 2);
     expect(r.costs.buckets.non_compute_maintenance_failure_usd / 1e9).toBeCloseTo(0.0997, 3);
     expect(r.costs.buckets.workload_data_transfer_usd / 1e9).toBeCloseTo(0.591, 2);
   });
 
-  it("total undiscounted cost rounds to $18.87 billion", () => {
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(18.87, 1);
+  it("no residual/terminal-value metric exists anywhere in the costs result", () => {
+    expect(Object.keys(r.costs)).not.toContain("terminal_residual_value_usd");
+    expect(Object.keys(r.costs.lineItems)).not.toContain("terminal_residual_value_usd");
   });
 
-  it("annual cost schedule", () => {
-    const target = [18_129_596_666.67, 153_286_375.25, 150_938_430.78, 148_932_160.39, 146_937_739.02, 144_955_048.78];
+  it("undiscounted lifecycle cost rounds to $29.54 billion (initial fleet charged in full, pre-proration-era value)", () => {
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(29.54, 1);
+  });
+
+  it("annual cost schedule (no terminal credit at year 5/Tend)", () => {
+    const target = [28_757_596_666.67, 162_612_445.25, 159_786_240.78, 157_301_710.39, 154_829_029.02, 152_368_078.78];
     r.presentValue.yearly_cost_usd.forEach((v, i) => {
       expect(v).toBeCloseTo(target[i]!, -3);
     });
   });
 
-  it("present-value total cost ~= $18.758 billion", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(18.758, 2);
+  it("present-value lifecycle cost ~= $29.422 billion", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(29.422, 2);
   });
 
   it("power-system LCOE (compute-agnostic, over the 20-year node life, not the 5-year analysis period) lands in a sane $/MWh range", () => {

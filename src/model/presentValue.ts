@@ -1,12 +1,15 @@
 import { CONST } from "./constants.js";
 import type { ChipFailureResult, DerivedQuantities, ModelInputs, ModelResult } from "./types.js";
 import { remainingLifeIntegral } from "./remainingLife.js";
+import { generationCapitalFraction } from "./generationCapital.js";
 
 /**
  * Section 8 present value / unit-cost outputs, plus the annual cost/energy
  * allocation used to compute them (resolved spec clarification #2):
- *  - initial node generation -> cost year 0; later generations -> year
- *    (g-1)*node_lifetime_years;
+ *  - initial node generation (generation 0) -> cost year 0, always charged in
+ *    full; later generation g -> year g*node_lifetime_years, charged only its
+ *    generationCapitalFraction share of a full generation's capital cost
+ *    (see generationCapital.ts) -- no terminal residual credit anywhere;
  *  - Compute-service costs/energy (surprise trips + fixed maintenance) ->
  *    allocated via the chip module's own yearly breakdown (exact event/
  *    delivery timing from the schedule walk);
@@ -32,10 +35,17 @@ export function computePresentValueAndUnitCosts(
 
   const tug_50km_leg_cost_usd = CONST.tug_cost_usd_per_day * derived.one_way_tug_days;
 
-  // 1. Node generation purchases (+ each generation's initial deployment tug leg).
+  // 1. Node generation purchases (+ each generation's initial deployment tug
+  // leg). Generation 0 (the initial fleet) is always charged in full at year
+  // 0. Later planned generations are charged their fraction of a full
+  // generation's capital cost (see generationCapital.ts) at their own
+  // purchase time, discounted from there -- not charged in full and credited
+  // back later. The deployment tug leg is a discrete logistics event, not a
+  // capital category, so it stays unprorated.
   for (let g = 0; g < node_generations; g++) {
     const idx = Math.min(g * inputs.node_lifetime_years, Tend);
-    yearlyCost[idx]! += N_fleet * costs.physical_node_cost_usd;
+    const fraction = generationCapitalFraction(g, inputs.analysis_period_years, inputs.node_lifetime_years);
+    yearlyCost[idx]! += N_fleet * costs.physical_node_cost_usd * fraction;
     yearlyCost[idx]! += N_fleet * tug_50km_leg_cost_usd;
   }
 

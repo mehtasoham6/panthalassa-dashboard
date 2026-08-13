@@ -2,6 +2,7 @@ import { CONST } from "./constants.js";
 import type { ChipFailureResult, DerivedQuantities, ModelInputs, ModelResult } from "./types.js";
 import { averageRemainingLifeFraction } from "./remainingLife.js";
 import { computeNodeUnitCosts } from "./nodeUnitCosts.js";
+import { computeGenerationCapitalEquivalents } from "./generationCapital.js";
 
 /**
  * Section 7 / Appendix A.5 cost model.
@@ -33,7 +34,18 @@ export function computeCosts(
     derived,
   );
 
-  const total_planned_physical_node_cost_usd = physical_node_cost_usd * N_fleet * node_generations;
+  // Planned-generation capital attribution (see generationCapital.ts): the
+  // initial fleet (generation 0) is always charged in full; later planned
+  // replacement generations are attributed only in proportion to how much
+  // of their service life falls inside the analysis horizon. No terminal
+  // residual value or credit -- a later generation's capital is simply
+  // included at a fraction of its full cost from the outset.
+  const generationCapitalEquivalents = computeGenerationCapitalEquivalents(
+    node_generations,
+    inputs.analysis_period_years,
+    inputs.node_lifetime_years,
+  );
+  const total_planned_physical_node_cost_usd = physical_node_cost_usd * N_fleet * generationCapitalEquivalents;
 
   // 7.2 Compute replacement: only capacity that has actually failed by
   // service time is replaced (continuous kW, no block granularity).
@@ -121,7 +133,13 @@ export function computeCosts(
     CONST.workload_data_transfer_gb_per_mbps_kwh * inputs.workloadBandwidthIntensityMbpsPerKw * fleetDeliveredEnergyKwh;
   const total_workload_data_transfer_cost_usd = total_workload_data_transferred_gb * inputs.dataTransferCostPerGb;
 
-  // 7.4 Total undiscounted lifecycle cost
+  // 7.4 Total lifecycle cost: an economic cost-allocation metric for the
+  // selected analysis horizon. This is what eliminates the artificial
+  // near-full-generation cliff whenever analysis_period_years crosses a
+  // multiple of node_lifetime_years: a later generation's capital cost is
+  // included in proportion to how much of its service life the horizon
+  // actually uses, from the outset -- not charged in full and then credited
+  // back.
   const total_node_fleet_cost_usd =
     total_planned_physical_node_cost_usd +
     total_compute_replacement_cost_usd +
@@ -138,16 +156,25 @@ export function computeCosts(
     total_workload_data_transferred_gb,
     total_node_fleet_cost_usd,
     buckets: {
-      compute_and_replacement_usd: compute_hardware_cost_usd * N_fleet * node_generations + total_compute_replacement_cost_usd,
-      initial_non_compute_physical_usd: non_compute_node_cost_usd * N_fleet * node_generations,
+      // Capital categories reflect the same generation-capital-equivalents
+      // allocation as total_planned_physical_node_cost_usd above -- this is
+      // what keeps the visual cost breakdown smooth across node-life
+      // boundaries, with no separate residual-value category. Operating/
+      // repair/cleanup/workload buckets are untouched.
+      compute_and_replacement_usd:
+        compute_hardware_cost_usd * N_fleet * generationCapitalEquivalents + total_compute_replacement_cost_usd,
+      initial_non_compute_physical_usd: non_compute_node_cost_usd * N_fleet * generationCapitalEquivalents,
       non_compute_maintenance_failure_usd: total_non_compute_maintenance_failure_cost_usd,
       workload_data_transfer_usd: total_workload_data_transfer_cost_usd,
     },
     // Read-only exposure of already-computed intermediates (Section 7.3 / A.5
     // line items) -- no formula changes -- so presentation layers can build
     // their own categorizations without re-deriving cost math.
+    // compute_hardware_capex_usd already reflects the generation-capital
+    // proration (consistent with total_planned_physical_node_cost_usd
+    // above) -- there is no separate gross/net distinction to track.
     lineItems: {
-      compute_hardware_capex_usd: compute_hardware_cost_usd * N_fleet * node_generations,
+      compute_hardware_capex_usd: compute_hardware_cost_usd * N_fleet * generationCapitalEquivalents,
       fleet_compute_replacement_cost_usd,
       fleet_complete_payload_replacement_cost_usd,
       normal_tug_cost_usd,

@@ -10,7 +10,11 @@ import { DEFAULT_INPUTS } from "../../src/model/types.js";
 // event-count/timing behavior is unaffected by the Copernicus WAVERYS
 // sea-park resource correction (see exampleA.test.ts comment and
 // waverys.test.ts's "service-event timing is independent" check); only
-// delivered-energy and downstream fleet/cost totals move.
+// delivered-energy and downstream fleet/cost totals move. As in Example A,
+// there is only one planned generation at these defaults (5-year analysis,
+// 20-year node life), so the planned-generation capital allocation (see
+// generationCapital.ts) is a no-op and the totals below are the full,
+// unprorated fleet cost.
 describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/consolidation/depreciation/WAVERYS resource)", () => {
   const inputs = { ...DEFAULT_INPUTS, chip_failure_rate_annual: 0.10 };
   const r = runModel(inputs);
@@ -42,12 +46,12 @@ describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/
     expect(r.N_fleet).toBe(5473);
   });
 
-  it("planned physical fleet cost ~= $18.66293 billion", () => {
-    expect(r.costs.total_planned_physical_node_cost_usd / 1e9).toBeCloseTo(18.66293, 3);
+  it("planned physical fleet cost ~= $29.60893 billion", () => {
+    expect(r.costs.total_planned_physical_node_cost_usd / 1e9).toBeCloseTo(29.60893, 3);
   });
 
-  it("compute replacement ~= $7.1221 billion", () => {
-    expect(r.costs.total_compute_replacement_cost_usd / 1e9).toBeCloseTo(7.1221, 3);
+  it("compute replacement ~= $11.87017 billion", () => {
+    expect(r.costs.total_compute_replacement_cost_usd / 1e9).toBeCloseTo(11.87017, 3);
   });
 
   it("non-compute maintenance/failure ~= $243.011 million", () => {
@@ -58,19 +62,24 @@ describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/
     expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.368, 0);
   });
 
-  it("dashboard cost buckets (billions)", () => {
-    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(23.541, 2);
+  it("dashboard cost buckets (billions), initial generation charged in full (only one planned generation at these defaults)", () => {
+    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(39.235, 2);
     expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(2.244, 2);
     expect(r.costs.buckets.non_compute_maintenance_failure_usd / 1e9).toBeCloseTo(0.243, 2);
     expect(r.costs.buckets.workload_data_transfer_usd / 1e9).toBeCloseTo(0.591, 2);
   });
 
-  it("total undiscounted cost rounds to $26.62 billion (Appendix A.7 hard check)", () => {
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(26.62, 1);
+  it("no residual/terminal-value metric exists anywhere in the costs result", () => {
+    expect(Object.keys(r.costs)).not.toContain("terminal_residual_value_usd");
+    expect(Object.keys(r.costs.lineItems)).not.toContain("terminal_residual_value_usd");
   });
 
-  it("present-value total cost ~= $25.182 billion", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(25.182, 2);
+  it("undiscounted lifecycle cost rounds to $42.31 billion (Appendix A.7 hard check)", () => {
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(42.31, 1);
+  });
+
+  it("present-value lifecycle cost ~= $40.010 billion", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(40.010, 2);
   });
 
   it("power-system LCOE is identical to Example A's -- chip_failure_rate_annual is compute-only and never touches LCOE", () => {

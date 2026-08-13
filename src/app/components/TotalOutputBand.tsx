@@ -27,7 +27,11 @@ export function TotalOutputBand({ result }: Props) {
         <div className={styles.half}>
           <span className={styles.label}>Total lifecycle cost</span>
           <span className={`${styles.value} num`}>{formatUsdCompact(costs.total_node_fleet_cost_usd)}</span>
-          <span className={styles.sub}>Undiscounted, over the analysis period</span>
+          <span className={styles.sub}>
+            Undiscounted, over the analysis period. Initial fleet capital is charged in full; later planned
+            replacement capital is included in proportion to the replacement generation&apos;s service life used
+            within the selected analysis period.
+          </span>
         </div>
       </div>
     </div>

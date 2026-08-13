@@ -192,7 +192,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         min: 10000,
         max: 30000,
         step: 1000,
-        default: 15000,
+        default: 25000,
         decimals: 0,
       },
     ],

@@ -205,7 +205,7 @@ describe("existing failure rates, maintenance rules, remaining-life logic, and u
 
   it("per-node unit costs (physical_node_cost_usd, non_compute_node_cost_usd) are unaffected by the wave-resource correction", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.costs.physical_node_cost_usd).toBeCloseTo(3_410_000, 0);
+    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_410_000, 0);
     expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(410_000, 0);
   });
 });

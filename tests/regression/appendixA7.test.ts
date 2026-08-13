@@ -11,20 +11,25 @@ import { DEFAULT_INPUTS } from "../../src/model/types.js";
 // rate (3%/year), the unified compute-health/service-schedule engine
 // (continuous kW degradation, hot-spare-exhaustion trigger, fixed 5-year
 // maintenance, no periodic payload-swap interval), workload data-transfer
-// cost, and the Copernicus WAVERYS sea-park wave-resource correction (see
-// exampleA/B.test.ts, workloadCost.test.ts, and waverys.test.ts for the
-// full breakdown).
+// cost, the Copernicus WAVERYS sea-park wave-resource correction, and
+// planned-generation capital allocation (the initial fleet is always charged
+// in full; later planned replacement generations are charged only their
+// share of a full generation's capital cost that falls within the analysis
+// horizon -- see generationCapital.ts. At these defaults, node_generations
+// == 1, so the allocation is a no-op and the total below is the full,
+// unprorated fleet cost; see exampleA/B.test.ts, workloadCost.test.ts, and
+// waverys.test.ts for the full breakdown).
 describe("Appendix A.7 required regression checks", () => {
-  it("default inputs: N_fleet == 5314 and rounded total cost == $18.87 billion", () => {
+  it("default inputs: N_fleet == 5314 and rounded lifecycle cost == $29.54 billion", () => {
     const r = runModel(DEFAULT_INPUTS);
     expect(r.N_fleet).toBe(5314);
-    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(18.87, 2);
+    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(29.54, 2);
   });
 
-  it("high chip-degradation-hazard inputs: N_fleet == 5473 and rounded total cost == $26.62 billion", () => {
+  it("high chip-degradation-hazard inputs: N_fleet == 5473 and rounded lifecycle cost == $42.31 billion", () => {
     const r = runModel({ ...DEFAULT_INPUTS, chip_failure_rate_annual: 0.10 });
     expect(r.N_fleet).toBe(5473);
-    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(26.62, 2);
+    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(42.31, 2);
   });
 
   const scenarios: { label: string; inputs: typeof DEFAULT_INPUTS }[] = [

@@ -31,6 +31,11 @@ export function ResultsHeader({ result, isPending }: Props) {
       sub: `${formatNumber(result.planned_node_purchases)} nodes purchased over ${result.node_generations} generation${result.node_generations > 1 ? "s" : ""}`,
     },
     {
+      label: "Per-node cost",
+      value: formatUsdCompact(result.costs.physical_node_cost_usd),
+      sub: "Hull, PTO, battery, onboard systems, and compute -- one node, before replacement or maintenance.",
+    },
+    {
       label: "Wave resource capacity factor",
       value: formatPercent(result.derived.raw_wave_resource_cf, 1),
       sub: "Average output the waves provide, as a share of the node's maximum possible output.",
