@@ -1,0 +1,28 @@
+{
+  "description": "Exact reproduction target for McCalip's public terrestrial default case.",
+  "inputs": {
+    "years": 5,
+    "targetGW": 1,
+    "gasTurbineCapexPerKW": 1800,
+    "electricalCostPerW": 5.25,
+    "mechanicalCostPerW": 3,
+    "civilCostPerW": 2.5,
+    "networkCostPerW": 1.75,
+    "pue": 1.2,
+    "gasPricePerMMBtu": 4.3,
+    "heatRateBtuKwh": 6200,
+    "capacityFactor": 0.85
+  },
+  "outputs": {
+    "powerGenCost": 2160000000,
+    "infraCapex": 14660000000,
+    "energyMWh": 37230000,
+    "generationMWh": 44676000,
+    "fuelCostPerMWh": 26.66,
+    "fuelCostTotal": 1191062160,
+    "totalCost": 15851062160,
+    "costPerW": 15.85106216,
+    "lcoe": 425.76046629062586,
+    "gasConsumptionBCF": 276.9912
+  }
+}

@@ -1,20 +1,56 @@
-.wrap {
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  min-width: 0;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tileLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.tileValue {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.tileSub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.breakdownWrap {
   padding: 18px 20px 20px;
 }
 
-.titleRow {
+.breakdownTitleRow {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.title {
+.breakdownTitle {
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
-.totalValue {
+.breakdownTotal {
   font-size: 13px;
   color: var(--text-secondary);
 }
@@ -37,7 +73,7 @@
 
 .legend {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
   margin-top: 16px;
 }
@@ -78,4 +114,17 @@
 .legendPercent {
   font-size: 11px;
   color: var(--text-tertiary);
+}
+
+.legendDescription {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.boundary {
+  margin: 16px 4px 0;
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+  line-height: 1.5;
 }

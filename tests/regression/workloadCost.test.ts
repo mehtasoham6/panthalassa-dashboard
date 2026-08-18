@@ -22,10 +22,10 @@ describe("Workload data-transfer cost", () => {
     );
   });
 
-  it("at defaults: workload cost ~= $591.403 million undiscounted, ~$498.820 million present value", () => {
+  it("at defaults: workload cost ~= $591.403 million undiscounted, ~$473.025 million present value (8% real discount rate)", () => {
     const r = runModel(DEFAULT_INPUTS);
     expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.403, 0);
-    expect(r.presentValue.present_value_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(498.820, 0);
+    expect(r.presentValue.present_value_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(473.025, 0);
   });
 
   it("workload data transfer never affects power-system LCOE (LCOE is compute/workload-agnostic; see lcoe.test.ts)", () => {

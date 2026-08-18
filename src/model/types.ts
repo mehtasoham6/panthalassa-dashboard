@@ -23,7 +23,7 @@ export interface ModelInputs {
 export const DEFAULT_INPUTS: ModelInputs = {
   target_capacity_gw: 1,
   analysis_period_years: 5,
-  real_discount_rate: 0.06,
+  real_discount_rate: 0.08,
   payload_rating_kw: 200,
   battery_duration_hours: 0.5,
   hull_diameter_m: 20,

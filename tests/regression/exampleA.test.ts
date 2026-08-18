@@ -121,8 +121,8 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
     });
   });
 
-  it("present-value lifecycle cost ~= $29.422 billion", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(29.422, 2);
+  it("present-value lifecycle cost ~= $29.388 billion (8% real discount rate)", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(29.388, 2);
   });
 
   it("power-system LCOE (compute-agnostic, over the 20-year node life, not the 5-year analysis period) lands in a sane $/MWh range", () => {

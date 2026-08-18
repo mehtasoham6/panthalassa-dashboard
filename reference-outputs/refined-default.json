@@ -1,0 +1,21 @@
+{
+  "description": "Locked reference output for the consensus-refined 1 GW, 5-year terrestrial case (5.5% terrestrial real discount rate, 4%/yr chip failure rate -- both decoupled from Panthalassa's own values).",
+  "outputs": {
+    "targetAverageDeliveredComputeMw": 1000,
+    "averageFacilityElectricalLoadMw": 1200,
+    "ccgtNameplateCapacityMw": 1411.764705882353,
+    "annualDeliveredComputeMWh": 8760000,
+    "annualGeneratedElectricityMWh": 10512000,
+    "annualNaturalGasMMBtu": 67276800,
+    "fiveYearNaturalGasBcf": 324.3818707810993,
+    "initialCcgtCapexUsd": 3247058823.529412,
+    "initialFacilityCapexUsd": 12500000000,
+    "initialComputeCapexUsd": 25000000000,
+    "annualRecurringCostUsd": 1401252754.1176472,
+    "totalLifecycleCostUsd": 47753322594.11764,
+    "presentValueLifecycleCostUsd": 46730806705.856514,
+    "lifecycleCostPerTargetWattUsd": 47.75332259411764,
+    "powerSystemLcoeUsdPerMWh": 53.081993046631986,
+    "totalWorkloadDataTransferredGb": 591300000
+  }
+}

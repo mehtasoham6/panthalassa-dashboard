@@ -78,8 +78,8 @@ describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/
     expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(42.31, 1);
   });
 
-  it("present-value lifecycle cost ~= $40.010 billion", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(40.010, 2);
+  it("present-value lifecycle cost ~= $39.372 billion (8% real discount rate)", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(39.372, 2);
   });
 
   it("power-system LCOE is identical to Example A's -- chip_failure_rate_annual is compute-only and never touches LCOE", () => {

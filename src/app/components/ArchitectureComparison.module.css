@@ -1,0 +1,99 @@
+.wrap {
+  padding: 6px 20px 10px;
+}
+
+.headerRow,
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+}
+
+.headerRow {
+  padding: 10px 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cornerLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.colHeader {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.row {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowLabel {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.rowValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 640px) {
+  .headerRow {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "label label" "ocean terrestrial";
+    row-gap: 4px;
+    padding: 10px 0;
+  }
+
+  .rowLabel {
+    grid-area: label;
+    color: var(--text-tertiary);
+  }
+
+  .rowValue:nth-of-type(2) {
+    grid-area: ocean;
+  }
+
+  .rowValue:nth-of-type(3) {
+    grid-area: terrestrial;
+  }
+
+  .rowValue::before {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 1px;
+  }
+
+  .rowValue:nth-of-type(2)::before {
+    content: "Panthalassa";
+  }
+
+  .rowValue:nth-of-type(3)::before {
+    content: "Terrestrial";
+  }
+}

@@ -1,8 +1,23 @@
-import type { SliderConfig } from "../lib/sliderConfig.js";
 import styles from "./SliderControl.module.css";
 
+/**
+ * Deliberately not keyed to ModelInputs: shared with the terrestrial
+ * sidebar, which renders the exact same shape keyed to its own inputs.
+ */
+export interface GenericSliderConfig {
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  step: number;
+  default: number;
+  displayScale?: number;
+  decimals?: number;
+  helpText?: string;
+}
+
 interface Props {
-  config: SliderConfig;
+  config: GenericSliderConfig;
   value: number;
   onChange: (value: number) => void;
 }
