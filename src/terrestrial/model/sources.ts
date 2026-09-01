@@ -12,7 +12,7 @@ export interface ModelSource {
 
 export interface AssumptionProvenance {
   input: keyof TerrestrialArchitectureInputs;
-  defaultValue: number;
+  defaultValue: number | string;
   unit: string;
   sourceIds: string[];
   useInModel: string;
@@ -272,6 +272,60 @@ export const ASSUMPTION_PROVENANCE: readonly AssumptionProvenance[] = [
     sourceIds: ["mccalip_public_model", "turner_townsend_2025", "jll_outlook_2026"],
     useInModel: "Multiplied by installed IT watts; compute hardware and primary CCGT are excluded.",
     interpretation: "McCalip's total is retained because it lies inside current U.S. construction benchmarks; its weak component split is replaced by one bundled input.",
+    confidence: "medium",
+  },
+  {
+    input: "power_source",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.power_source,
+    unit: "categorical",
+    sourceIds: ["panthalassa_frozen_model"],
+    useInModel: "Selects which capacity-sizing/cost formula (CCGT-specific, or the shared renewable/geothermal formula) computeCapacity and computeCostsAndSchedules use.",
+    interpretation: "CCGT is retained as the default so existing comparisons are unaffected; it is a dashboard design choice, not a sourced numeric assumption.",
+    confidence: "high",
+  },
+  {
+    input: "renewable_capex_usd_per_kw",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.renewable_capex_usd_per_kw,
+    unit: "2026 USD/kW",
+    sourceIds: ["lazard_lcoe_2026"],
+    useInModel: "Multiplied by capacity-factor-adjusted generation nameplate for the selected renewable/geothermal power source; included in total cost.",
+    interpretation: "Lazard LCOE+ v19.0 per-technology capital-cost range (Solar PV—Utility, Wind—Onshore, Wind—Offshore, or Geothermal, depending on power_source). Default shown is Solar's own midpoint; switching power_source resets this to the selected technology's own midpoint.",
+    confidence: "medium",
+  },
+  {
+    input: "renewable_fixed_om_usd_per_kw_year",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.renewable_fixed_om_usd_per_kw_year,
+    unit: "USD/kW-year",
+    sourceIds: ["lazard_lcoe_2026"],
+    useInModel: "Annual recurring power-system cost on the selected renewable/geothermal power source's nameplate.",
+    interpretation: "Lazard LCOE+ v19.0 per-technology fixed O&M range, same technology-dependent default behavior as renewable_capex_usd_per_kw.",
+    confidence: "medium",
+  },
+  {
+    input: "renewable_capacity_factor",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.renewable_capacity_factor,
+    unit: "fraction",
+    sourceIds: ["lazard_lcoe_2026"],
+    useInModel: "Divides average facility load to size the selected renewable/geothermal power source's nameplate, and sets annual LCOE generation -- an energy-balance sizing, not a firm-delivery guarantee (see docs/SOURCES_AND_ASSUMPTIONS.md).",
+    interpretation: "Lazard LCOE+ v19.0 per-technology capacity-factor range.",
+    confidence: "medium",
+  },
+  {
+    input: "renewable_storage_capex_usd_per_kwh",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.renewable_storage_capex_usd_per_kwh,
+    unit: "USD/kWh",
+    sourceIds: ["lazard_lcoe_2026"],
+    useInModel: "Multiplied by battery capacity (2 kWh per kW of generation nameplate) for the three battery-paired power sources (Solar, Onshore Wind, Offshore Wind); included in total cost. Unused for CCGT/Geothermal.",
+    interpretation: "Lazard LCOE+ v19.0 Solar/Wind + Storage battery capex range. Lazard does not publish a Wind + Storage—Offshore table, so this range is reused (extrapolated, not directly sourced) for Offshore Wind.",
+    confidence: "low",
+  },
+  {
+    input: "geothermal_variable_om_usd_per_mwh",
+    defaultValue: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.geothermal_variable_om_usd_per_mwh,
+    unit: "USD/MWh",
+    sourceIds: ["lazard_lcoe_2026"],
+    useInModel: "Multiplied by annual generated electricity for the Geothermal power source only; Geothermal's closest analog to fuel.",
+    interpretation: "Lazard LCOE+ v19.0 Geothermal variable O&M range.",
     confidence: "medium",
   },
 ] as const;

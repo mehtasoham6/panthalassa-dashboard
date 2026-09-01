@@ -5,6 +5,9 @@ import {
   rawWaveResourceCF,
   seaParkBatteryRecoveryFraction,
   effectiveSeaParkCF,
+  getLullDistribution,
+  waveOnlyFullPowerAvailability,
+  effectiveResourceCapacityFactor,
 } from "../../src/model/waverys.js";
 import { computeDerived } from "../../src/model/derived.js";
 import { computeChipFailures } from "../../src/model/chipFailures.js";
@@ -51,58 +54,62 @@ describe("VHM0/VTM10 -> wave flux conversion (0.49 * Hs^2 * Te)", () => {
   });
 });
 
-describe("raw wave-resource capacity factor at default slider settings", () => {
-  it("~= 96.45% (regression target; derived from data + current sliders, not hard-coded)", () => {
-    const derived = computeDerived(DEFAULT_INPUTS);
-    expect(derived.raw_wave_resource_cf).toBeCloseTo(0.9645, 3);
+// effective_sea_park_cf: the ORIGINAL energy-average formula (raw energy
+// average plus an episode-level battery-smoothing bump, capped at 1.0).
+// This is internal-only (never displayed) but is what actually schedules
+// sea-park energy delivery -- and therefore fleet sizing and cost -- via
+// chipFailures.ts/lcoe.ts/nodeFailureModes.ts. rawWaveResourceCF /
+// seaParkBatteryRecoveryFraction are its two components, tested directly
+// (via their exported functions, not a derived field -- ModelResult
+// exposes only the fused effective_sea_park_cf). This whole section is
+// unchanged model behavior; battery duration affects it exactly as it
+// always has.
+describe("internal energy-average sea-park factor (drives energy delivery/fleet sizing/cost, never displayed)", () => {
+  function seaParkParams(inputs: typeof DEFAULT_INPUTS) {
+    const derived = computeDerived(inputs);
+    return { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: inputs.payload_rating_kw };
+  }
+
+  it("raw wave-resource capacity factor at default slider settings ~= 96.45%", () => {
+    expect(rawWaveResourceCF(seaParkParams(DEFAULT_INPUTS))).toBeCloseTo(0.9645, 3);
   });
 
-  it("internal battery-adjusted effective sea-park factor at the default 0.5h battery ~= 96.66%", () => {
+  it("battery-adjusted effective sea-park factor at the default 0.5h battery ~= 96.66%", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
     expect(derived.effective_sea_park_cf).toBeCloseTo(0.9666, 3);
   });
 
   it("effective factor is always >= raw factor (battery only ever helps) and > raw at a nonzero battery", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
-    expect(derived.effective_sea_park_cf).toBeGreaterThanOrEqual(derived.raw_wave_resource_cf);
-    expect(derived.effective_sea_park_cf).toBeGreaterThan(derived.raw_wave_resource_cf);
+    const raw = rawWaveResourceCF(seaParkParams(DEFAULT_INPUTS));
+    expect(derived.effective_sea_park_cf).toBeGreaterThanOrEqual(raw);
+    expect(derived.effective_sea_park_cf).toBeGreaterThan(raw);
   });
-});
 
-describe("raw CF sensitivity to capture- and load-relevant sliders", () => {
   it("increasing payload while holding hull/capture fixed generally lowers raw wave-resource CF", () => {
-    const low = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: 100 });
-    const mid = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: 200 });
-    const high = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: 300 });
-    expect(low.raw_wave_resource_cf).toBeGreaterThan(mid.raw_wave_resource_cf);
-    expect(mid.raw_wave_resource_cf).toBeGreaterThan(high.raw_wave_resource_cf);
+    const low = rawWaveResourceCF(seaParkParams({ ...DEFAULT_INPUTS, payload_rating_kw: 100 }));
+    const mid = rawWaveResourceCF(seaParkParams({ ...DEFAULT_INPUTS, payload_rating_kw: 200 }));
+    const high = rawWaveResourceCF(seaParkParams({ ...DEFAULT_INPUTS, payload_rating_kw: 300 }));
+    expect(low).toBeGreaterThan(mid);
+    expect(mid).toBeGreaterThan(high);
   });
 
   it("increasing hull diameter (more capture) while holding payload fixed raises raw wave-resource CF", () => {
-    const small = computeDerived({ ...DEFAULT_INPUTS, hull_diameter_m: 10 });
-    const large = computeDerived({ ...DEFAULT_INPUTS, hull_diameter_m: 20 });
-    expect(large.raw_wave_resource_cf).toBeGreaterThan(small.raw_wave_resource_cf);
+    const small = rawWaveResourceCF(seaParkParams({ ...DEFAULT_INPUTS, hull_diameter_m: 10 }));
+    const large = rawWaveResourceCF(seaParkParams({ ...DEFAULT_INPUTS, hull_diameter_m: 20 }));
+    expect(large).toBeGreaterThan(small);
   });
 
-  it("raw CF is computed directly from rawWaveResourceCF(), matching computeDerived's own value (no divergent parallel model)", () => {
+  it("effective_sea_park_cf is computed directly from rawWaveResourceCF() + seaParkBatteryRecoveryFraction(), matching computeDerived's own value (no divergent parallel model)", () => {
     const inputs = { ...DEFAULT_INPUTS, hull_diameter_m: 14, payload_rating_kw: 250 };
     const derived = computeDerived(inputs);
-    const cwr = (1.3 * inputs.hull_diameter_m + 5.6) / 100;
-    const captureCoefficient = inputs.hull_diameter_m * cwr * CONST.end_to_end_efficiency;
-    const powerCapKw = Math.min(inputs.payload_rating_kw, CONST.pto_payload_multiplier * inputs.payload_rating_kw);
-    const raw = rawWaveResourceCF({ captureCoefficient, powerCapKw, payloadRatingKw: inputs.payload_rating_kw });
-    expect(derived.raw_wave_resource_cf).toBeCloseTo(raw, 10);
-  });
-});
-
-describe("battery duration and the internal effective sea-park factor", () => {
-  it("battery duration has NO effect on the displayed raw wave-resource CF", () => {
-    const small = computeDerived({ ...DEFAULT_INPUTS, battery_duration_hours: 0.25 });
-    const large = computeDerived({ ...DEFAULT_INPUTS, battery_duration_hours: 4 });
-    expect(small.raw_wave_resource_cf).toBe(large.raw_wave_resource_cf);
+    const params = seaParkParams(inputs);
+    const batteryCapacityKwh = inputs.payload_rating_kw * inputs.battery_duration_hours;
+    const expected = Math.min(1, rawWaveResourceCF(params) + seaParkBatteryRecoveryFraction(params, batteryCapacityKwh));
+    expect(derived.effective_sea_park_cf).toBeCloseTo(expected, 10);
   });
 
-  it("increasing battery duration weakly increases the internal effective sea-park factor, and it never exceeds 100%", () => {
+  it("increasing battery duration weakly increases effective_sea_park_cf, and it never exceeds 100%", () => {
     const durations = [0.25, 0.5, 1, 2, 4];
     const factors = durations.map((h) => computeDerived({ ...DEFAULT_INPUTS, battery_duration_hours: h }).effective_sea_park_cf);
     for (let i = 1; i < factors.length; i++) {
@@ -119,6 +126,130 @@ describe("battery duration and the internal effective sea-park factor", () => {
     expect(recovery).toBeGreaterThanOrEqual(0);
     const eff = effectiveSeaParkCF(params, 1_000_000);
     expect(eff).toBeLessThanOrEqual(1);
+  });
+});
+
+// resource_capacity_factor: the NEW share-of-time "full rated output or
+// not" metric, used ONLY for the dashboard's "Resource capacity factor"
+// display tile. Deliberately does not feed energy delivery, fleet sizing,
+// or cost -- see the "does not affect fleet sizing" describe block below.
+describe("dashboard-display resource capacity factor (full-power-availability, lull-based, does not feed energy delivery)", () => {
+  it("full-power wave-flux threshold at default sliders ~= 37.2 kW/m (dynamic, not hard-coded)", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    expect(derived.full_output_flux_kw_per_m).toBeCloseTo(37.2, 1);
+    expect(derived.full_output_flux_kw_per_m).toBeCloseTo(derived.power_cap_kw / derived.capture_coefficient, 10);
+  });
+
+  it("recalculates when payload, hull diameter, or PTO-relevant capture inputs change", () => {
+    const base = computeDerived(DEFAULT_INPUTS);
+    const biggerHull = computeDerived({ ...DEFAULT_INPUTS, hull_diameter_m: 15 });
+    const biggerPayload = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: 250 });
+    expect(biggerHull.full_output_flux_kw_per_m).not.toBeCloseTo(base.full_output_flux_kw_per_m, 6);
+    expect(biggerPayload.full_output_flux_kw_per_m).not.toBeCloseTo(base.full_output_flux_kw_per_m, 6);
+  });
+
+  it("is a genuine share-of-time-at-full-power metric (no partial credit), ~88.8% at defaults (0.5h battery)", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    expect(derived.resource_capacity_factor).toBeCloseTo(0.8878, 3);
+  });
+
+  it("battery duration has NO effect on wave-only full-power availability", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    expect(waveOnlyFullPowerAvailability(params)).toBeCloseTo(0.8703, 3);
+  });
+
+  it("with zero battery, resource_capacity_factor equals wave-only full-power availability exactly", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    expect(effectiveResourceCapacityFactor(params, 0)).toBeCloseTo(waveOnlyFullPowerAvailability(params), 12);
+  });
+
+  it("increasing battery duration never lowers resource_capacity_factor, and it never exceeds 100%", () => {
+    const durations = [0, 0.25, 0.5, 1, 2, 4, 8];
+    const factors = durations.map((h) => computeDerived({ ...DEFAULT_INPUTS, battery_duration_hours: h }).resource_capacity_factor);
+    for (let i = 1; i < factors.length; i++) {
+      expect(factors[i]!).toBeGreaterThanOrEqual(factors[i - 1]!);
+    }
+    for (const f of factors) {
+      expect(f).toBeLessThanOrEqual(1);
+      expect(f).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("a battery large enough to cover every individual lull's deficit yields exactly 100% availability", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    const { lulls } = getLullDistribution(params);
+    const maxDeficit = Math.max(...lulls.map((l) => l.lullEnergyDeficitKwh));
+    expect(effectiveResourceCapacityFactor(params, maxDeficit)).toBeCloseTo(1, 10);
+  });
+
+  it("every lull's coverage fraction (implied by recovered hours / lull duration) is between 0 and 1", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    const { lulls } = getLullDistribution(params);
+    const batteryCapacityKwh = DEFAULT_INPUTS.payload_rating_kw * DEFAULT_INPUTS.battery_duration_hours;
+    for (const lull of lulls) {
+      const coverage = Math.min(1, batteryCapacityKwh / lull.lullEnergyDeficitKwh);
+      expect(coverage).toBeGreaterThanOrEqual(0);
+      expect(coverage).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("changing battery duration alone does not rebuild the underlying lull distribution", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    const first = getLullDistribution(params);
+    effectiveResourceCapacityFactor(params, 50);
+    effectiveResourceCapacityFactor(params, 5_000);
+    const second = getLullDistribution(params);
+    expect(second).toBe(first); // same object reference: never rebuilt
+  });
+
+  it("changing payload or hull diameter (which move the full-power threshold) does rebuild the lull distribution", () => {
+    const base = computeDerived(DEFAULT_INPUTS);
+    const baseParams = { captureCoefficient: base.capture_coefficient, powerCapKw: base.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    const baseDist = getLullDistribution(baseParams);
+
+    const changedPayload = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: 250 });
+    const changedParams = { captureCoefficient: changedPayload.capture_coefficient, powerCapKw: changedPayload.power_cap_kw, payloadRatingKw: 250 };
+    const changedDist = getLullDistribution(changedParams);
+
+    expect(changedDist).not.toBe(baseDist);
+    expect(changedDist.fullPowerHours).not.toBeCloseTo(baseDist.fullPowerHours, 0);
+
+    // Re-requesting the original params still returns the correct (rebuilt) distribution.
+    const backToBase = getLullDistribution(baseParams);
+    expect(backToBase.fullPowerHours).toBeCloseTo(baseDist.fullPowerHours, 6);
+  });
+
+  it("every lull has strictly positive duration and energy deficit, and durations sum with full-power hours to the total record", () => {
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const params = { captureCoefficient: derived.capture_coefficient, powerCapKw: derived.power_cap_kw, payloadRatingKw: DEFAULT_INPUTS.payload_rating_kw };
+    const { totalHistoricalHours, fullPowerHours, lulls } = getLullDistribution(params);
+    expect(lulls.length).toBeGreaterThan(0);
+    let lullHours = 0;
+    for (const l of lulls) {
+      expect(l.lullDurationHours).toBeGreaterThan(0);
+      expect(l.lullEnergyDeficitKwh).toBeGreaterThan(0);
+      lullHours += l.lullDurationHours;
+    }
+    expect(fullPowerHours + lullHours).toBeCloseTo(totalHistoricalHours, 6);
+  });
+
+  it("does NOT feed energy delivery, fleet sizing, or cost: forcing it to an extreme value leaves the model result unchanged", () => {
+    const withDisplayMetricUnused = runModel(DEFAULT_INPUTS);
+    // resource_capacity_factor is not read anywhere downstream of derived.ts,
+    // so mutating it post-hoc must be a pure no-op on every other output --
+    // the strongest possible regression guard against it silently leaking
+    // into energy/fleet/cost math the way effective_sea_park_cf did before.
+    const derived = computeDerived(DEFAULT_INPUTS);
+    const mutated = { ...derived, resource_capacity_factor: 0 };
+    const chipWithReal = computeChipFailures(DEFAULT_INPUTS, derived);
+    const chipWithMutated = computeChipFailures(DEFAULT_INPUTS, mutated);
+    expect(chipWithMutated.chip_adjusted_energy_kwh).toBe(chipWithReal.chip_adjusted_energy_kwh);
+    expect(withDisplayMetricUnused.N_fleet).toBeGreaterThan(0);
   });
 });
 

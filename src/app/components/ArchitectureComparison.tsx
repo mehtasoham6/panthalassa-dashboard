@@ -14,7 +14,9 @@ interface Props {
  * both architectures are forced to hit the same shared target_capacity_gw,
  * so those two rows are always identical (or, for ocean, only trivially
  * off by fleet-rounding) -- a tautology, not a real comparison. Every row
- * kept below reflects a genuine architectural difference.
+ * kept below reflects a genuine architectural difference. "All-in cost per
+ * target watt" is broken down by cost component in CostPerWattBreakdown
+ * (rendered just below this card), so it isn't repeated here.
  */
 export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props) {
   const ocean = comparableOutputsFromPanthalassa(oceanResult);
@@ -25,11 +27,6 @@ export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props
       label: "Present-value lifecycle cost",
       ocean: formatUsdCompact(ocean.present_value_lifecycle_cost_usd),
       terrestrial: formatUsdCompact(terrestrial.present_value_lifecycle_cost_usd),
-    },
-    {
-      label: "Cost per target watt",
-      ocean: formatUsdPerUnit(ocean.lifecycle_cost_per_target_watt_usd, 2) + "/W",
-      terrestrial: formatUsdPerUnit(terrestrial.lifecycle_cost_per_target_watt_usd, 2) + "/W",
     },
     {
       label: "Power-system LCOE",

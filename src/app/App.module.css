@@ -65,30 +65,30 @@
   align-items: start;
 }
 
+/*
+ * Below this, three columns (two fixed 340px sidebars + a flexible main
+ * area) don't comfortably fit. Rather than a partial state (drop to two
+ * columns, push the terrestrial sidebar into a full-width row below), we
+ * go straight to a single stacked column for all three regions. A partial
+ * state was tried and found genuinely broken: a sticky sidebar's
+ * containing block does not reliably bound itself to a single grid row
+ * track across browsers, so the still-sticky ocean sidebar visually
+ * covered the terrestrial sidebar's row while scrolling through it,
+ * hiding its slider labels. Stacking everything avoids relying on that
+ * sticky/grid interaction entirely.
+ */
 @media (max-width: 1400px) {
-  .layout {
-    grid-template-columns: 320px 1fr;
-  }
-
-  .terrestrialSidebar {
-    position: static;
-    height: auto;
-    border-left: none;
-    border-top: 1px solid var(--border);
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
+  .sidebar,
+  .terrestrialSidebar {
     position: static;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-left: none;
+    border-top: 1px solid var(--border);
   }
 
   .main {

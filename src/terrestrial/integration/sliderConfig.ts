@@ -1,5 +1,5 @@
 import { DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS } from "../model/defaults.js";
-import type { TerrestrialArchitectureInputs } from "../model/types.js";
+import type { TerrestrialArchitectureInputs, TerrestrialPowerSource } from "../model/types.js";
 
 export interface NumericControlConfig<K extends string> {
   key: K;
@@ -20,8 +20,8 @@ export interface TerrestrialSliderGroupConfig {
   sliders: readonly NumericControlConfig<keyof TerrestrialArchitectureInputs>[];
 }
 
-/** Mirrors the ocean sidebar's grouped-slider-panel structure for visual symmetry. */
-export const TERRESTRIAL_SLIDER_GROUPS: readonly TerrestrialSliderGroupConfig[] = [
+/** Power-source-independent groups: shown regardless of which power_source is selected. */
+export const TERRESTRIAL_ALWAYS_VISIBLE_SLIDER_GROUPS: readonly TerrestrialSliderGroupConfig[] = [
   {
     title: "Economics",
     description: "The terrestrial plant's own real discount rate.",
@@ -41,6 +41,61 @@ export const TERRESTRIAL_SLIDER_GROUPS: readonly TerrestrialSliderGroupConfig[] 
     ],
   },
   {
+    title: "Facility",
+    description: "Non-generation data-center build and physical maintenance.",
+    sliders: [
+      {
+        key: "pue",
+        label: "PUE",
+        unit: "ratio",
+        min: 1.08,
+        max: 1.50,
+        step: 0.01,
+        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.pue,
+        decimals: 2,
+        helpText: "Total facility electricity divided by IT electricity.",
+      },
+      {
+        key: "facility_capex_usd_per_it_watt",
+        label: "Data-center facility capex",
+        unit: "$ / IT W",
+        min: 9,
+        max: 16,
+        step: 0.25,
+        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.facility_capex_usd_per_it_watt,
+        decimals: 2,
+        helpText: "Electrical, mechanical/cooling, civil/shell and networking fit-out; excludes primary generation and active compute.",
+      },
+    ],
+  },
+  {
+    title: "Reliability",
+    description: "Terrestrial hardware failure behavior.",
+    sliders: [
+      {
+        key: "chip_failure_rate_annual",
+        label: "Chip degradation/failure rate",
+        unit: "% / server-yr",
+        min: 0.01,
+        max: 0.09,
+        step: 0.005,
+        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.chip_failure_rate_annual,
+        displayScale: 100,
+        decimals: 1,
+        helpText: "Terrestrial-specific hardware hazard, replaced immediately/locally. Range spans a theoretical fleet floor (~1%) to a frontier continuous-training ceiling (~9%, Meta Llama 3).",
+      },
+    ],
+  },
+];
+
+/**
+ * One slider group per power source -- swapped in below the always-visible
+ * groups depending on the "Power source" selector. Renewable capex/O&M/
+ * capacity-factor ranges are sourced from Lazard's LCOE+ v19.0 (July 2026);
+ * see TERRESTRIAL_POWER_SOURCE_SPECS for provenance notes.
+ */
+export const POWER_SOURCE_SLIDER_GROUPS: Record<TerrestrialPowerSource, TerrestrialSliderGroupConfig> = {
+  ccgt: {
     title: "Power system & fuel",
     description: "CCGT sizing, capital cost, efficiency, fuel price, and operating cost.",
     sliders: [
@@ -102,53 +157,235 @@ export const TERRESTRIAL_SLIDER_GROUPS: readonly TerrestrialSliderGroupConfig[] 
       },
     ],
   },
-  {
-    title: "Facility",
-    description: "Non-generation data-center build and physical maintenance.",
+  solar: {
+    title: "Power system",
+    description: "Solar generation and battery economics (Lazard Solar PV + Storage—Utility).",
     sliders: [
       {
-        key: "pue",
-        label: "PUE",
-        unit: "ratio",
-        min: 1.08,
-        max: 1.50,
-        step: 0.01,
-        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.pue,
-        decimals: 2,
-        helpText: "Total facility electricity divided by IT electricity.",
+        key: "renewable_capex_usd_per_kw",
+        label: "Solar overnight capex",
+        unit: "$ / kW",
+        min: 1_250,
+        max: 1_850,
+        step: 25,
+        default: 1_550,
+        decimals: 0,
+        helpText: "Utility-scale solar PV capital cost (Lazard LCOE+ v19.0).",
       },
       {
-        key: "facility_capex_usd_per_it_watt",
-        label: "Data-center facility capex",
-        unit: "$ / IT W",
-        min: 9,
-        max: 16,
+        key: "renewable_fixed_om_usd_per_kw_year",
+        label: "Solar fixed O&M",
+        unit: "$ / kW-yr",
+        min: 8.25,
+        max: 26.25,
         step: 0.25,
-        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.facility_capex_usd_per_it_watt,
+        default: 17,
         decimals: 2,
-        helpText: "Electrical, mechanical/cooling, civil/shell and networking fit-out; excludes primary CCGT and active compute.",
+        helpText: "Fixed operations and maintenance for the solar array.",
+      },
+      {
+        key: "renewable_capacity_factor",
+        label: "Solar capacity factor",
+        unit: "%",
+        min: 0.20,
+        max: 0.30,
+        step: 0.01,
+        default: 0.25,
+        displayScale: 100,
+        decimals: 0,
+        helpText: "Energy-balance sizing factor: nameplate is oversized so average output matches average load. Not a guarantee of firm delivery -- see docs/SOURCES_AND_ASSUMPTIONS.md.",
+      },
+      {
+        key: "renewable_storage_capex_usd_per_kwh",
+        label: "Battery capex",
+        unit: "$ / kWh",
+        min: 270,
+        max: 365,
+        step: 5,
+        default: 318,
+        decimals: 0,
+        helpText: "Battery sized at 50% of solar capacity, 4-hour duration (Lazard's Solar + Storage configuration).",
       },
     ],
   },
-  {
-    title: "Reliability",
-    description: "Terrestrial hardware failure behavior.",
+  wind_onshore: {
+    title: "Power system",
+    description: "Onshore wind generation and battery economics (Lazard Wind + Storage—Onshore).",
     sliders: [
       {
-        key: "chip_failure_rate_annual",
-        label: "Chip degradation/failure rate",
-        unit: "% / server-yr",
-        min: 0.01,
-        max: 0.09,
-        step: 0.005,
-        default: DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS.chip_failure_rate_annual,
+        key: "renewable_capex_usd_per_kw",
+        label: "Onshore wind overnight capex",
+        unit: "$ / kW",
+        min: 1_900,
+        max: 2_750,
+        step: 25,
+        default: 2_325,
+        decimals: 0,
+        helpText: "Onshore wind capital cost (Lazard LCOE+ v19.0).",
+      },
+      {
+        key: "renewable_fixed_om_usd_per_kw_year",
+        label: "Onshore wind fixed O&M",
+        unit: "$ / kW-yr",
+        min: 24.50,
+        max: 40.00,
+        step: 0.50,
+        default: 32,
+        decimals: 2,
+        helpText: "Fixed operations and maintenance for the wind farm.",
+      },
+      {
+        key: "renewable_capacity_factor",
+        label: "Onshore wind capacity factor",
+        unit: "%",
+        min: 0.30,
+        max: 0.55,
+        step: 0.01,
+        default: 0.43,
         displayScale: 100,
-        decimals: 1,
-        helpText: "Terrestrial-specific hardware hazard, replaced immediately/locally. Range spans a theoretical fleet floor (~1%) to a frontier continuous-training ceiling (~9%, Meta Llama 3).",
+        decimals: 0,
+        helpText: "Energy-balance sizing factor: nameplate is oversized so average output matches average load. Not a guarantee of firm delivery -- see docs/SOURCES_AND_ASSUMPTIONS.md.",
+      },
+      {
+        key: "renewable_storage_capex_usd_per_kwh",
+        label: "Battery capex",
+        unit: "$ / kWh",
+        min: 270,
+        max: 365,
+        step: 5,
+        default: 318,
+        decimals: 0,
+        helpText: "Battery sized at 50% of wind capacity, 4-hour duration (Lazard's Wind + Storage configuration).",
       },
     ],
   },
+  wind_offshore: {
+    title: "Power system",
+    description: "Offshore wind generation and battery economics (Lazard Wind—Offshore; battery assumptions extrapolated from the onshore hybrid, since Lazard doesn't publish a Wind + Storage—Offshore table).",
+    sliders: [
+      {
+        key: "renewable_capex_usd_per_kw",
+        label: "Offshore wind overnight capex",
+        unit: "$ / kW",
+        min: 5_600,
+        max: 7_100,
+        step: 50,
+        default: 6_350,
+        decimals: 0,
+        helpText: "Offshore wind capital cost (Lazard LCOE+ v19.0).",
+      },
+      {
+        key: "renewable_fixed_om_usd_per_kw_year",
+        label: "Offshore wind fixed O&M",
+        unit: "$ / kW-yr",
+        min: 60.00,
+        max: 91.50,
+        step: 1,
+        default: 76,
+        decimals: 2,
+        helpText: "Fixed operations and maintenance for the offshore wind farm.",
+      },
+      {
+        key: "renewable_capacity_factor",
+        label: "Offshore wind capacity factor",
+        unit: "%",
+        min: 0.45,
+        max: 0.55,
+        step: 0.01,
+        default: 0.50,
+        displayScale: 100,
+        decimals: 0,
+        helpText: "Energy-balance sizing factor: nameplate is oversized so average output matches average load. Not a guarantee of firm delivery -- see docs/SOURCES_AND_ASSUMPTIONS.md.",
+      },
+      {
+        key: "renewable_storage_capex_usd_per_kwh",
+        label: "Battery capex",
+        unit: "$ / kWh",
+        min: 270,
+        max: 365,
+        step: 5,
+        default: 318,
+        decimals: 0,
+        helpText: "Battery sized at 50% of wind capacity, 4-hour duration; $/kWh reused from Lazard's onshore Wind + Storage table.",
+      },
+    ],
+  },
+  geothermal: {
+    title: "Power system",
+    description: "Geothermal generation economics (Lazard Geothermal). No battery -- an 80-90% capacity factor is already close to baseload.",
+    sliders: [
+      {
+        key: "renewable_capex_usd_per_kw",
+        label: "Geothermal overnight capex",
+        unit: "$ / kW",
+        min: 5_135,
+        max: 6_635,
+        step: 50,
+        default: 5_885,
+        decimals: 0,
+        helpText: "Geothermal capital cost (Lazard LCOE+ v19.0).",
+      },
+      {
+        key: "renewable_fixed_om_usd_per_kw_year",
+        label: "Geothermal fixed O&M",
+        unit: "$ / kW-yr",
+        min: 14.50,
+        max: 15.75,
+        step: 0.05,
+        default: 15,
+        decimals: 2,
+        helpText: "Fixed operations and maintenance for the geothermal plant.",
+      },
+      {
+        key: "renewable_capacity_factor",
+        label: "Geothermal capacity factor",
+        unit: "%",
+        min: 0.80,
+        max: 0.90,
+        step: 0.01,
+        default: 0.85,
+        displayScale: 100,
+        decimals: 0,
+        helpText: "Energy-balance sizing factor: nameplate is oversized so average output matches average load.",
+      },
+      {
+        key: "geothermal_variable_om_usd_per_mwh",
+        label: "Geothermal variable O&M",
+        unit: "$ / MWh",
+        min: 9.05,
+        max: 24.80,
+        step: 0.25,
+        default: 17,
+        decimals: 2,
+        helpText: "Output-linked operating cost -- geothermal's closest analog to fuel.",
+      },
+    ],
+  },
+};
+
+export interface PowerSourceOption {
+  key: TerrestrialPowerSource;
+  label: string;
+  /** CSS color for the selector button. */
+  color: string;
+}
+
+/** Colors chosen per explicit request: orange/CCGT, light green/Solar, light gray/Onshore, darker gray/Offshore, light red/Geothermal. */
+export const TERRESTRIAL_POWER_SOURCE_OPTIONS: readonly PowerSourceOption[] = [
+  { key: "ccgt", label: "CCGT", color: "var(--power-ccgt)" },
+  { key: "solar", label: "Solar (with battery)", color: "var(--power-solar)" },
+  { key: "wind_onshore", label: "Onshore Wind (with battery)", color: "var(--power-wind-onshore)" },
+  { key: "wind_offshore", label: "Offshore Wind (with battery)", color: "var(--power-wind-offshore)" },
+  { key: "geothermal", label: "Geothermal", color: "var(--power-geothermal)" },
 ];
 
-export const ALL_TERRESTRIAL_SLIDERS: readonly NumericControlConfig<keyof TerrestrialArchitectureInputs>[] =
-  TERRESTRIAL_SLIDER_GROUPS.flatMap((g) => g.sliders);
+/** All sliders relevant to the currently selected power source, for the "Baseline vs. current" diff. */
+export function getRelevantTerrestrialSliderGroups(powerSource: TerrestrialPowerSource): readonly TerrestrialSliderGroupConfig[] {
+  return [...TERRESTRIAL_ALWAYS_VISIBLE_SLIDER_GROUPS, POWER_SOURCE_SLIDER_GROUPS[powerSource]];
+}
+
+/** Every slider across every power source -- used only where a technology-agnostic superset is needed. */
+export const ALL_TERRESTRIAL_SLIDERS: readonly NumericControlConfig<keyof TerrestrialArchitectureInputs>[] = [
+  ...TERRESTRIAL_ALWAYS_VISIBLE_SLIDER_GROUPS.flatMap((g) => g.sliders),
+  ...Object.values(POWER_SOURCE_SLIDER_GROUPS).flatMap((g) => g.sliders),
+];

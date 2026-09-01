@@ -64,9 +64,9 @@ export function BaselineComparison({ result }: Props) {
       higherIsBetter: false,
     },
     {
-      label: "Wave resource capacity factor",
-      from: BASELINE_RESULT.derived.raw_wave_resource_cf,
-      to: result.derived.raw_wave_resource_cf,
+      label: "Resource capacity factor",
+      from: BASELINE_RESULT.derived.resource_capacity_factor,
+      to: result.derived.resource_capacity_factor,
       higherIsBetter: true,
     },
   ];

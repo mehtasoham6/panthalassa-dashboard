@@ -36,9 +36,9 @@ export function TerrestrialBaselineComparison({ result }: Props) {
 
   const metrics = [
     {
-      label: "CCGT nameplate",
-      from: TERRESTRIAL_BASELINE_RESULT.capacity.ccgt_nameplate_capacity_mw,
-      to: result.capacity.ccgt_nameplate_capacity_mw,
+      label: "Power-plant nameplate",
+      from: TERRESTRIAL_BASELINE_RESULT.capacity.power_plant_nameplate_capacity_mw,
+      to: result.capacity.power_plant_nameplate_capacity_mw,
       higherIsBetter: false,
     },
     {

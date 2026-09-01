@@ -26,6 +26,13 @@
   --cat-power: var(--cat-physical);
   --cat-facility: #8a5f7a;
 
+  /* Terrestrial "Power source" selector button colors, per explicit request. */
+  --power-ccgt: #c17a3a;
+  --power-solar: #8fbb8a;
+  --power-wind-onshore: #b7bcc2;
+  --power-wind-offshore: #838a92;
+  --power-geothermal: #c98787;
+
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 

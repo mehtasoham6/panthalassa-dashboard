@@ -146,7 +146,7 @@ describe("LCOE responds to physical/power-system inputs", () => {
   it("the Copernicus-derived wave-resource factor (via any slider that moves it, e.g. hull diameter)", () => {
     const small = computeDerived({ ...DEFAULT_INPUTS, hull_diameter_m: 10 });
     const large = computeDerived({ ...DEFAULT_INPUTS, hull_diameter_m: 20 });
-    expect(small.raw_wave_resource_cf).toBeLessThan(large.raw_wave_resource_cf);
+    expect(small.effective_sea_park_cf).toBeLessThan(large.effective_sea_park_cf);
     const rSmall = runModel({ ...DEFAULT_INPUTS, hull_diameter_m: 10 });
     const rLarge = runModel({ ...DEFAULT_INPUTS, hull_diameter_m: 20 });
     expect(rSmall.lcoe.present_value_electrical_energy_mwh).not.toBe(rLarge.lcoe.present_value_electrical_energy_mwh);

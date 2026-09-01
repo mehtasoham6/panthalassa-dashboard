@@ -33,9 +33,9 @@ export function ResultsHeader({ result, isPending }: Props) {
       sub: "Hull, PTO, battery, onboard systems, and compute -- one node, before replacement or maintenance.",
     },
     {
-      label: "Wave resource capacity factor",
-      value: formatPercent(result.derived.raw_wave_resource_cf, 1),
-      sub: "Average output the waves provide, as a share of the node's maximum possible output.",
+      label: "Resource capacity factor",
+      value: formatPercent(result.derived.resource_capacity_factor, 1),
+      sub: "Share of time the node can sustain full rated output from historical wave conditions and onboard battery storage.",
     },
   ];
 

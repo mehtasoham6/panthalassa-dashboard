@@ -1,3 +1,8 @@
+/* Compound selector (beats the global .card rule's specificity) since this is applied alongside "card", not instead of it. */
+:global(.card).accentCard {
+  border: 2px solid var(--accent-strong);
+}
+
 .eyebrowRow {
   padding: 14px 20px 0;
 }

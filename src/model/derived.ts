@@ -1,7 +1,7 @@
 import { CONST } from "./constants.js";
 import type { DerivedQuantities, ModelInputs } from "./types.js";
 import { outboundLegSegments, processSegments, type BatteryState } from "./energy.js";
-import { rawWaveResourceCF, effectiveSeaParkCF } from "./waverys.js";
+import { effectiveSeaParkCF, effectiveResourceCapacityFactor } from "./waverys.js";
 
 /** Section 2.1 and Appendix A.3: quantities derived once from the sliders. */
 export function computeDerived(inputs: ModelInputs): DerivedQuantities {
@@ -49,16 +49,22 @@ export function computeDerived(inputs: ModelInputs): DerivedQuantities {
   ).deliveredEnergyKwh;
 
   // Copernicus WAVERYS sea-park wave-resource capacity factor (Section 3.1
-  // extension): raw_wave_resource_cf is the sole dashboard-facing metric;
-  // effective_sea_park_cf additionally folds in the episode-level battery
-  // smoothing approximation and is used only to schedule sea-park energy.
+  // extension): effective_sea_park_cf is the original energy-average
+  // formula and is what actually schedules sea-park energy (see
+  // chipFailures.ts/lcoe.ts/nodeFailureModes.ts) -- unchanged model logic,
+  // so battery duration affects fleet sizing/cost exactly as it always
+  // has. resource_capacity_factor is a separate, share-of-time "full rated
+  // output or not" metric (lull-by-lull battery approximation, see
+  // waverys.ts) used ONLY for the dashboard's "Resource capacity factor"
+  // display tile -- it intentionally does not feed energy delivery/fleet
+  // sizing/cost.
   const seaParkResourceParams = {
     captureCoefficient: capture_coefficient,
     powerCapKw: power_cap_kw,
     payloadRatingKw: inputs.payload_rating_kw,
   };
-  const raw_wave_resource_cf = rawWaveResourceCF(seaParkResourceParams);
   const effective_sea_park_cf = effectiveSeaParkCF(seaParkResourceParams, battery_capacity_kwh);
+  const resource_capacity_factor = effectiveResourceCapacityFactor(seaParkResourceParams, battery_capacity_kwh);
 
   return {
     capture_width_ratio,
@@ -75,7 +81,7 @@ export function computeDerived(inputs: ModelInputs): DerivedQuantities {
     capture_coefficient,
     outbound_days,
     outbound_energy_kwh,
-    raw_wave_resource_cf,
     effective_sea_park_cf,
+    resource_capacity_factor,
   };
 }

@@ -7,8 +7,10 @@ import { ResultsHeader } from "./components/ResultsHeader.js";
 import { CostBreakdown } from "./components/CostBreakdown.js";
 import { BaselineComparison } from "./components/BaselineComparison.js";
 import { ArchitectureComparison } from "./components/ArchitectureComparison.js";
+import { CostPerWattBreakdown } from "./components/CostPerWattBreakdown.js";
 import {
   DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS,
+  TERRESTRIAL_POWER_SOURCE_SPECS,
   TerrestrialBaselineComparison,
   TerrestrialControls,
   TerrestrialDiagnostics,
@@ -17,6 +19,7 @@ import {
   buildTerrestrialInputs,
   runTerrestrialModel,
   type TerrestrialArchitectureInputs,
+  type TerrestrialPowerSource,
 } from "../terrestrial/index.js";
 import styles from "./App.module.css";
 
@@ -29,6 +32,15 @@ export function App() {
   const setTerrestrialInput = (key: keyof TerrestrialArchitectureInputs, value: number) =>
     setTerrestrialInputs((previous) => ({ ...previous, [key]: value }));
   const resetTerrestrial = () => setTerrestrialInputs(DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS);
+  // Switching power source resets only that technology's own sliders to its
+  // defaults (see TERRESTRIAL_POWER_SOURCE_SPECS) -- power-source-independent
+  // sliders (discount rate, PUE, facility capex, chip failure rate) carry over.
+  const setPowerSource = (source: TerrestrialPowerSource) =>
+    setTerrestrialInputs((previous) => ({
+      ...previous,
+      power_source: source,
+      ...TERRESTRIAL_POWER_SOURCE_SPECS[source].defaults,
+    }));
 
   const terrestrialResult = useMemo(
     () => runTerrestrialModel(buildTerrestrialInputs(inputs, terrestrialInputs)),
@@ -56,21 +68,27 @@ export function App() {
           </div>
 
           <ArchitectureComparison oceanResult={result} terrestrialResult={terrestrialResult} />
+          <CostPerWattBreakdown oceanResult={result} terrestrialResult={terrestrialResult} />
 
           <div className={styles.compareRow}>
+            <CostBreakdown result={result} />
+            <TerrestrialResults result={terrestrialResult} />
+
             <BaselineComparison result={result} />
             <TerrestrialBaselineComparison result={terrestrialResult} />
 
             <ResultsHeader result={result} isPending={isPending} />
             <TerrestrialDiagnostics result={terrestrialResult} />
-
-            <CostBreakdown result={result} />
-            <TerrestrialResults result={terrestrialResult} />
           </div>
         </main>
 
         <aside className={styles.terrestrialSidebar}>
-          <TerrestrialControls inputs={terrestrialInputs} onChange={setTerrestrialInput} onReset={resetTerrestrial} />
+          <TerrestrialControls
+            inputs={terrestrialInputs}
+            onChange={setTerrestrialInput}
+            onSelectPowerSource={setPowerSource}
+            onReset={resetTerrestrial}
+          />
         </aside>
       </div>
     </div>

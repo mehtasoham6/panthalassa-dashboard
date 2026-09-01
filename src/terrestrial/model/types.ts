@@ -1,42 +1,52 @@
 /** Inputs deliberately shared with the frozen Panthalassa model. */
 export interface SharedComparisonInputs {
-  /** Average saleable IT compute that the architecture must deliver. */
   target_capacity_gw: number;
   analysis_period_years: number;
   compute_hardware_cost_usd_per_kw: number;
   workloadBandwidthIntensityMbpsPerKw: number;
 }
 
-/** Terrestrial-only assumptions. Percentages are decimal fractions. */
+/**
+ * Which physical power source supplies the data center. CCGT is the
+ * original/default architecture; the other four are priced from Lazard's
+ * LCOE+ (July 2026) per-technology assumption tables. Solar and both Wind
+ * options ship "with battery" (Lazard's Solar/Wind + Storage configuration,
+ * generation capacity's own 50%/4-hour ratio) since nobody would seriously
+ * propose powering a captive data center from solar or wind alone; Geothermal
+ * skips storage because its 80-90% capacity factor is already close to
+ * baseload.
+ */
+export type TerrestrialPowerSource = "ccgt" | "solar" | "wind_onshore" | "wind_offshore" | "geothermal";
+
+/**
+ * Terrestrial-only assumptions. Percentages are decimal fractions.
+ *
+ * Only the fields relevant to the selected `power_source` are exposed as
+ * sliders (see integration/sliderConfig.ts) and used by the model -- the
+ * rest sit here holding that technology's own last-set values so switching
+ * `power_source` and back doesn't lose anything, but they otherwise have no
+ * effect. CCGT fields (`power_system_availability` through
+ * `ccgt_economic_life_years`) are used only when power_source === "ccgt".
+ * `renewable_*` fields are used for solar/wind_onshore/wind_offshore/geothermal.
+ * `renewable_storage_capex_usd_per_kwh` is used only for the three
+ * battery-paired sources (solar/wind_onshore/wind_offshore).
+ * `geothermal_variable_om_usd_per_mwh` is used only for geothermal.
+ */
 export interface TerrestrialArchitectureInputs {
-  /**
-   * Terrestrial-specific real discount rate: mature CCGT technology paired
-   * with investment-grade, long-term-contracted data-center financing gets
-   * materially better 2026 terms than a first-of-a-kind marine platform, so
-   * this is deliberately decoupled from -- and lower than -- Panthalassa's
-   * own real_discount_rate.
-   */
   real_discount_rate: number;
-  /**
-   * Terrestrial-specific annual chip/GPU hardware failure hazard.
-   * Deliberately decoupled from Panthalassa's own chip_failure_rate_annual:
-   * this represents a normal terrestrial hyperscale GPU fleet, not a
-   * marine-environment hazard, and terrestrial hardware is assumed to be
-   * replaced immediately/locally rather than via Panthalassa's tug-based
-   * service schedule (see compute_failure_treatment in the model result).
-   */
   chip_failure_rate_annual: number;
-  /** Total facility electricity / IT electricity. */
   pue: number;
-  /** Expected fraction of nameplate generation available for the captive baseload duty. */
+  power_source: TerrestrialPowerSource;
   power_system_availability: number;
-  /** All-in overnight CCGT cost; scope is documented in docs/SOURCES_AND_ASSUMPTIONS.md. */
   ccgt_capex_usd_per_kw: number;
-  /** Delivered plant-gate price; do not add transport again when using this input. */
   delivered_gas_price_usd_per_mmbtu: number;
   ccgt_fixed_om_usd_per_kw_year: number;
   ccgt_economic_life_years: number;
-  /** Non-compute data-center facility cost per installed IT watt. */
+  renewable_capex_usd_per_kw: number;
+  renewable_fixed_om_usd_per_kw_year: number;
+  renewable_capacity_factor: number;
+  renewable_storage_capex_usd_per_kwh: number;
+  geothermal_variable_om_usd_per_mwh: number;
   facility_capex_usd_per_it_watt: number;
 }
 
@@ -46,7 +56,8 @@ export interface TerrestrialCapacityResult {
   target_average_delivered_compute_mw: number;
   installed_compute_capacity_mw: number;
   average_facility_electrical_load_mw: number;
-  ccgt_nameplate_capacity_mw: number;
+  /** Generation-only nameplate (excludes battery power rating) for whichever power_source is selected. */
+  power_plant_nameplate_capacity_mw: number;
   generation_nameplate_margin_over_average_load: number;
 }
 
@@ -55,6 +66,7 @@ export interface TerrestrialEnergyResult {
   annual_generated_electricity_mwh: number;
   analysis_period_delivered_compute_mwh: number;
   analysis_period_generated_electricity_mwh: number;
+  /** Zero for every non-CCGT power source. */
   annual_natural_gas_mmbtu: number;
   analysis_period_natural_gas_mmbtu: number;
   analysis_period_natural_gas_bcf: number;
@@ -63,14 +75,18 @@ export interface TerrestrialEnergyResult {
 
 export interface TerrestrialCostResult {
   initial: {
-    ccgt_capex_usd: number;
+    /** Generation + (if applicable) storage capex for the selected power source. */
+    power_plant_capex_usd: number;
     facility_capex_usd: number;
     compute_hardware_capex_usd: number;
     total_initial_capex_usd: number;
   };
   annual_steady_state: {
+    /** Zero for every non-CCGT power source. */
     fuel_usd: number;
+    /** The selected power source's own generation fixed O&M. */
     ccgt_fixed_om_usd: number;
+    /** For CCGT: variable O&M. For a battery-paired renewable: storage O&M. For geothermal: variable O&M. Zero otherwise. */
     ccgt_variable_om_usd: number;
     facility_maintenance_usd: number;
     compute_failure_replacement_usd: number;
@@ -78,6 +94,7 @@ export interface TerrestrialCostResult {
     total_annual_recurring_usd: number;
   };
   line_items_undiscounted: {
+    /** Generation + storage planned capital schedule total, for whichever power_source is selected. */
     initial_and_planned_ccgt_capital_usd: number;
     initial_and_planned_facility_capital_usd: number;
     compute_hardware_capex_usd: number;
@@ -87,6 +104,7 @@ export interface TerrestrialCostResult {
     facility_maintenance_usd: number;
     compute_failure_replacement_usd: number;
     workload_data_transfer_usd: number;
+    /** Power-plant decommissioning (generation + storage), any power_source. */
     ccgt_decommissioning_usd: number;
     facility_decommissioning_usd: number;
   };
@@ -106,6 +124,19 @@ export interface TerrestrialPresentValueResult {
   yearly_delivered_compute_mwh: number[];
   yearly_generated_electricity_mwh: number[];
   present_value_total_lifecycle_cost_usd: number;
+  /**
+   * Six cost categories, each a genuine discounted present value, summing
+   * exactly to present_value_total_lifecycle_cost_usd: power plant and data
+   * center are pure planned capital (generation + storage capex, or CCGT
+   * capex / facility capex only); chips is compute capex plus its own
+   * failure-replacement cost; other opex is every recurring O&M/maintenance
+   * line (including storage O&M) plus both decommissioning schedules.
+   */
+  present_value_power_plant_cost_usd: number;
+  present_value_fuel_cost_usd: number;
+  present_value_data_center_cost_usd: number;
+  present_value_chips_cost_usd: number;
+  present_value_other_opex_cost_usd: number;
   present_value_workload_data_transfer_cost_usd: number;
 }
 

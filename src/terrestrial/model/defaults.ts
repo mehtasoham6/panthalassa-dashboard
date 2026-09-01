@@ -3,6 +3,7 @@ import type {
   SharedComparisonInputs,
   TerrestrialArchitectureInputs,
   TerrestrialModelInputs,
+  TerrestrialPowerSource,
 } from "./types.js";
 
 /** Exact matches for the four remaining Panthalassa controls that drive both architectures. */
@@ -57,12 +58,112 @@ export const DEFAULT_TERRESTRIAL_ARCHITECTURE_INPUTS: TerrestrialArchitectureInp
    */
   chip_failure_rate_annual: 0.04,
   pue: 1.20,
+  power_source: "ccgt",
   power_system_availability: 0.85,
   ccgt_capex_usd_per_kw: 2_300,
   delivered_gas_price_usd_per_mmbtu: 4.00,
   ccgt_fixed_om_usd_per_kw_year: 20,
   ccgt_economic_life_years: 30,
+  // Renewable/geothermal fields hold Solar's own defaults while CCGT is
+  // selected, so they're never garbage/zero -- see TERRESTRIAL_POWER_SOURCE_SPECS.
+  renewable_capex_usd_per_kw: 1_550,
+  renewable_fixed_om_usd_per_kw_year: 17,
+  renewable_capacity_factor: 0.25,
+  renewable_storage_capex_usd_per_kwh: 318,
+  geothermal_variable_om_usd_per_mwh: 17,
   facility_capex_usd_per_it_watt: 12.50,
+};
+
+/**
+ * Per-technology capex/O&M/capacity-factor assumptions, sourced from
+ * Lazard's Levelized Cost of Energy+ (v19.0, July 2026) -- see
+ * docs/SOURCES_AND_ASSUMPTIONS.md. Solar and both Wind options are priced
+ * "with battery" (Lazard's Solar/Wind + Storage—Utility/Onshore
+ * configuration: storage sized at 50% of generation capacity and 4-hour
+ * duration, i.e. 2 kWh of storage per kW of generation nameplate --
+ * MODEL_CONSTANTS.renewable_storage_kwh_per_kw). Lazard does not publish a
+ * Wind + Storage—Offshore table, so Offshore Wind's storage capex reuses the
+ * same $/kWh figures Lazard applies to Solar/Onshore Wind -- storage
+ * economics aren't really paired-generation-technology-specific, but this
+ * is an extrapolation, not a directly sourced number. Geothermal has no
+ * storage (its 80-90% capacity factor is already close to baseload) but
+ * does carry its own variable O&M, unlike the other three.
+ *
+ * `facilityLifeYears` is fixed (not a slider) -- Lazard's own facility-life
+ * assumption per technology -- and is always well above the dashboard's
+ * 15-year analysis-period ceiling, so (like CCGT) planned capital is always
+ * charged once, in full, at t=0.
+ */
+export interface TerrestrialPowerSourceSpec {
+  label: string;
+  hasStorage: boolean;
+  hasVariableOm: boolean;
+  facilityLifeYears: number;
+  defaults: Partial<TerrestrialArchitectureInputs>;
+}
+
+export const TERRESTRIAL_POWER_SOURCE_SPECS: Record<TerrestrialPowerSource, TerrestrialPowerSourceSpec> = {
+  ccgt: {
+    label: "CCGT",
+    hasStorage: false,
+    hasVariableOm: false,
+    facilityLifeYears: 30,
+    defaults: {
+      power_system_availability: 0.85,
+      ccgt_capex_usd_per_kw: 2_300,
+      delivered_gas_price_usd_per_mmbtu: 4.00,
+      ccgt_fixed_om_usd_per_kw_year: 20,
+      ccgt_economic_life_years: 30,
+    },
+  },
+  solar: {
+    label: "Solar (with battery)",
+    hasStorage: true,
+    hasVariableOm: false,
+    facilityLifeYears: 35,
+    defaults: {
+      renewable_capex_usd_per_kw: 1_550,
+      renewable_fixed_om_usd_per_kw_year: 17,
+      renewable_capacity_factor: 0.25,
+      renewable_storage_capex_usd_per_kwh: 318,
+    },
+  },
+  wind_onshore: {
+    label: "Onshore Wind (with battery)",
+    hasStorage: true,
+    hasVariableOm: false,
+    facilityLifeYears: 30,
+    defaults: {
+      renewable_capex_usd_per_kw: 2_325,
+      renewable_fixed_om_usd_per_kw_year: 32,
+      renewable_capacity_factor: 0.43,
+      renewable_storage_capex_usd_per_kwh: 318,
+    },
+  },
+  wind_offshore: {
+    label: "Offshore Wind (with battery)",
+    hasStorage: true,
+    hasVariableOm: false,
+    facilityLifeYears: 30,
+    defaults: {
+      renewable_capex_usd_per_kw: 6_350,
+      renewable_fixed_om_usd_per_kw_year: 76,
+      renewable_capacity_factor: 0.50,
+      renewable_storage_capex_usd_per_kwh: 318,
+    },
+  },
+  geothermal: {
+    label: "Geothermal",
+    hasStorage: false,
+    hasVariableOm: true,
+    facilityLifeYears: 25,
+    defaults: {
+      renewable_capex_usd_per_kw: 5_885,
+      renewable_fixed_om_usd_per_kw_year: 15,
+      renewable_capacity_factor: 0.85,
+      geothermal_variable_om_usd_per_mwh: 17,
+    },
+  },
 };
 
 export const DEFAULT_TERRESTRIAL_INPUTS: TerrestrialModelInputs = {
@@ -136,6 +237,24 @@ export const MODEL_CONSTANTS = {
   ccgt_variable_om_usd_per_mwh: 3.50,
   facility_maintenance_usd_per_it_kw_year: 67,
   facility_economic_life_years: 25,
+  /**
+   * Reused for the selected power source's own generation+storage
+   * decommissioning, whatever technology is picked -- there's no
+   * per-technology sourcing for renewable/geothermal decommissioning in
+   * Lazard's tables, so this applies the same already-lowest-confidence 1%
+   * convention uniformly rather than inventing new numbers.
+   */
   ccgt_decommissioning_fraction: 0.01,
   facility_decommissioning_fraction: 0.01,
+  /**
+   * Lazard's Solar/Wind + Storage configuration: storage sized at 50% of
+   * generation power rating, 4-hour duration = 2 kWh of storage per kW of
+   * generation nameplate. Applied to all three battery-paired sources
+   * (Solar, Onshore Wind, Offshore Wind).
+   */
+  renewable_storage_kwh_per_kw: 2,
+  /** Lazard LCOS v11.0 storage O&M midpoint ($3.75-$7.75/kWh); not exposed as a slider. */
+  renewable_storage_om_usd_per_kwh: 5.75,
+  /** Lazard LCOS v11.0 project life. */
+  renewable_storage_project_life_years: 20,
 } as const;

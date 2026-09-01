@@ -80,17 +80,27 @@ export interface DerivedQuantities {
   outbound_energy_kwh: number;
   /**
    * Historical (Copernicus WAVERYS, 1980-2025) sea-park wave-resource
-   * capacity factor: mean wave-only compute power / installed payload, at
-   * the current hull/efficiency/PTO/payload sliders. The only wave-resource
-   * number ever displayed on the dashboard. See src/model/waverys.ts.
-   */
-  raw_wave_resource_cf: number;
-  /**
-   * Internal-only: raw_wave_resource_cf plus an episode-level battery
-   * smoothing approximation (capped at 1.0), used to schedule sea-park
-   * energy. Never displayed as a second dashboard capacity-factor metric.
+   * capacity factor (energy average, with an episode-level battery
+   * smoothing approximation folded in, capped at 1.0). This is the value
+   * that actually schedules sea-park energy delivery (see chipFailures.ts /
+   * lcoe.ts / nodeFailureModes.ts) and therefore drives fleet sizing and
+   * lifecycle cost. Internal-only, never displayed directly -- see
+   * resource_capacity_factor for the dashboard's "Resource capacity
+   * factor" metric, which is a separate calculation that does NOT feed
+   * this value or anything derived from it. See src/model/waverys.ts.
    */
   effective_sea_park_cf: number;
+  /**
+   * The dashboard's single "Resource capacity factor" display metric: share
+   * of historical time the node can sustain full rated output (no partial
+   * credit), with battery folded in via a lull-by-lull energy-deficit
+   * approximation (assume the battery starts every historical lull fully
+   * charged; no chronological state-of-charge simulation), bounded to
+   * [0,1]. Deliberately independent of effective_sea_park_cf above -- this
+   * is a reporting-only metric and does not affect energy delivery, fleet
+   * sizing, or cost. See src/model/waverys.ts.
+   */
+  resource_capacity_factor: number;
 }
 
 /**
@@ -167,6 +177,16 @@ export interface ModelResult {
   presentValue: {
     yearly_cost_usd: number[]; // index 0 = year 0 (t=0), ... index T = year T
     present_value_total_node_fleet_cost_usd: number;
+    /**
+     * Four cost categories, each a genuine discounted present value (not an
+     * approximation), summing exactly to present_value_total_node_fleet_cost_usd.
+     * Mirrors costs.buckets: nodes = initial_non_compute_physical_usd's PV;
+     * chips = compute_and_replacement_usd's PV; other_opex =
+     * non_compute_maintenance_failure_usd's PV; workload = workload_data_transfer_usd's PV.
+     */
+    present_value_nodes_cost_usd: number;
+    present_value_chips_cost_usd: number;
+    present_value_other_opex_cost_usd: number;
     /** Discounted workload data-transfer cost (already included in present_value_total_node_fleet_cost_usd). */
     present_value_workload_data_transfer_cost_usd: number;
     lifecycle_cost_per_target_watt_usd: number;

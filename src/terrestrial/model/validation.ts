@@ -42,5 +42,14 @@ export function validateTerrestrialInputs(inputs: TerrestrialModelInputs): void 
   requireNonNegative("ccgt_fixed_om_usd_per_kw_year", inputs.ccgt_fixed_om_usd_per_kw_year);
   requirePositiveInteger("ccgt_economic_life_years", inputs.ccgt_economic_life_years);
 
+  requireNonNegative("renewable_capex_usd_per_kw", inputs.renewable_capex_usd_per_kw);
+  requireNonNegative("renewable_fixed_om_usd_per_kw_year", inputs.renewable_fixed_om_usd_per_kw_year);
+  requireFinite("renewable_capacity_factor", inputs.renewable_capacity_factor);
+  if (inputs.renewable_capacity_factor <= 0 || inputs.renewable_capacity_factor > 1) {
+    throw new RangeError("renewable_capacity_factor must be in (0, 1]");
+  }
+  requireNonNegative("renewable_storage_capex_usd_per_kwh", inputs.renewable_storage_capex_usd_per_kwh);
+  requireNonNegative("geothermal_variable_om_usd_per_mwh", inputs.geothermal_variable_om_usd_per_mwh);
+
   requireNonNegative("facility_capex_usd_per_it_watt", inputs.facility_capex_usd_per_it_watt);
 }

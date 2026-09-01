@@ -17,10 +17,13 @@ import { DEFAULT_INPUTS } from "../../src/model/types.js";
 //  5. Sea-park output is now scheduled against the Copernicus WAVERYS
 //     (1980-2025) historical wave-resource capacity factor at the
 //     representative sea-park point, instead of an always-available
-//     constant 100 kW/m: healthy compute * effective_sea_park_cf (raw CF
-//     ~96.45% plus a small internal battery-smoothing bump, capped at 1.0,
-//     never displayed itself). Modes 2/3's lost-output counterfactual uses
-//     the same resource-adjusted rate.
+//     constant 100 kW/m: healthy compute * effective_sea_park_cf (~96.66%
+//     at these defaults -- an energy-average wave-resource factor plus a
+//     small internal battery-smoothing bump, capped at 1.0, never displayed
+//     itself -- the dashboard's separate "Resource capacity factor" tile is
+//     a distinct, display-only metric that does not feed this calculation;
+//     see waverys.test.ts). Modes 2/3's lost-output counterfactual uses the
+//     same resource-adjusted rate.
 //  6. Total lifecycle cost allocates capital cost by planned generation (see
 //     generationCapital.ts): the initial fleet (generation 0) is always
 //     charged in full, and later planned replacement generations are
@@ -45,10 +48,6 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
     expect(r.chip.scheduled_node_maintenance_event_count_per_position).toBe(0);
     expect(r.chip.expected_mode_1_physical_tug_round_trips_per_position).toBe(0);
     expect(r.chip.expected_failed_capacity_kw_replaced_per_position).toBe(0);
-  });
-
-  it("raw wave-resource capacity factor (the sole displayed metric) ~= 96.45%", () => {
-    expect(r.derived.raw_wave_resource_cf).toBeCloseTo(0.9645, 3);
   });
 
   it("internal battery-adjusted sea-park factor ~= 96.66% at the default 0.5h battery (never displayed)", () => {

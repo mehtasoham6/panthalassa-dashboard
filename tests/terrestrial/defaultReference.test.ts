@@ -9,7 +9,7 @@ describe("refined terrestrial reference case", () => {
     expect(result.capacity.target_average_delivered_compute_mw).toBe(1_000);
     expect(result.capacity.installed_compute_capacity_mw).toBe(1_000);
     expect(result.capacity.average_facility_electrical_load_mw).toBe(1_200);
-    expect(result.capacity.ccgt_nameplate_capacity_mw).toBeCloseTo(1_411.764705882353, 9);
+    expect(result.capacity.power_plant_nameplate_capacity_mw).toBeCloseTo(1_411.764705882353, 9);
     expect(result.capacity.generation_nameplate_margin_over_average_load).toBeCloseTo(1 / 0.85 - 1, 12);
   });
 
@@ -26,7 +26,7 @@ describe("refined terrestrial reference case", () => {
   it("includes compute hardware in the comprehensive total", () => {
     expect(result.costs.initial.compute_hardware_capex_usd).toBe(25_000_000_000);
     expect(result.costs.initial.facility_capex_usd).toBe(12_500_000_000);
-    expect(result.costs.initial.ccgt_capex_usd).toBeCloseTo(3_247_058_823.529412, 4);
+    expect(result.costs.initial.power_plant_capex_usd).toBeCloseTo(3_247_058_823.529412, 4);
     expect(result.costs.annual_steady_state.compute_failure_replacement_usd).toBe(1_000_000_000);
   });
 
@@ -35,7 +35,9 @@ describe("refined terrestrial reference case", () => {
     expect(result.costs.annual_steady_state.total_annual_recurring_usd).toBeCloseTo(1_401_252_754.117647, 4);
     expect(result.costs.total_lifecycle_cost_usd).toBeCloseTo(47_753_322_594.11764, 3);
     expect(result.presentValue.present_value_total_lifecycle_cost_usd).toBeCloseTo(46_730_806_705.856514, 3);
-    expect(result.costs.lifecycle_cost_per_target_watt_usd).toBeCloseTo(47.75332259411764, 10);
+    // Present-value basis (matches ArchitectureComparison's "All-in cost per
+    // target watt" row), not the undiscounted total_lifecycle_cost_usd above.
+    expect(result.costs.lifecycle_cost_per_target_watt_usd).toBeCloseTo(46.730806705856516, 10);
     expect(result.lcoe.lcoe_usd_per_mwh).toBeCloseTo(53.081993046631986, 10);
   });
 
@@ -43,12 +45,12 @@ describe("refined terrestrial reference case", () => {
     expect(lockedReference.outputs).toEqual({
       targetAverageDeliveredComputeMw: result.capacity.target_average_delivered_compute_mw,
       averageFacilityElectricalLoadMw: result.capacity.average_facility_electrical_load_mw,
-      ccgtNameplateCapacityMw: result.capacity.ccgt_nameplate_capacity_mw,
+      powerPlantNameplateCapacityMw: result.capacity.power_plant_nameplate_capacity_mw,
       annualDeliveredComputeMWh: result.energy.annual_delivered_compute_mwh,
       annualGeneratedElectricityMWh: result.energy.annual_generated_electricity_mwh,
       annualNaturalGasMMBtu: result.energy.annual_natural_gas_mmbtu,
       fiveYearNaturalGasBcf: result.energy.analysis_period_natural_gas_bcf,
-      initialCcgtCapexUsd: result.costs.initial.ccgt_capex_usd,
+      initialPowerPlantCapexUsd: result.costs.initial.power_plant_capex_usd,
       initialFacilityCapexUsd: result.costs.initial.facility_capex_usd,
       initialComputeCapexUsd: result.costs.initial.compute_hardware_capex_usd,
       annualRecurringCostUsd: result.costs.annual_steady_state.total_annual_recurring_usd,

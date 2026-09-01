@@ -13,6 +13,7 @@ interface Props {
  * the shared/paired metrics live in the banner and ArchitectureComparison.
  */
 export function TerrestrialDiagnostics({ result }: Props) {
+  const isCcgt = result.inputs.power_source === "ccgt";
   const metrics = [
     {
       label: "Average facility electrical load",
@@ -22,13 +23,19 @@ export function TerrestrialDiagnostics({ result }: Props) {
     {
       label: "Generation margin over load",
       value: `+${(result.capacity.generation_nameplate_margin_over_average_load * 100).toFixed(0)}%`,
-      detail: "CCGT nameplate built above average load for captive-baseload availability",
+      detail: isCcgt
+        ? "Nameplate built above average load for captive-baseload availability"
+        : "Nameplate built above average load on an energy-balance basis (capacity factor), not a firm-delivery guarantee",
     },
-    {
-      label: "Natural gas consumed",
-      value: `${formatNumber(result.energy.analysis_period_natural_gas_bcf, 1)} Bcf`,
-      detail: `${MODEL_CONSTANTS.ccgt_heat_rate_btu_per_kwh_hhv.toLocaleString()} Btu/kWh net HHV`,
-    },
+    ...(isCcgt
+      ? [
+          {
+            label: "Natural gas consumed",
+            value: `${formatNumber(result.energy.analysis_period_natural_gas_bcf, 1)} Bcf`,
+            detail: `${MODEL_CONSTANTS.ccgt_heat_rate_btu_per_kwh_hhv.toLocaleString()} Btu/kWh net HHV`,
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -6,7 +6,7 @@ describe("refined-model monotonicity", () => {
 
   it("higher PUE increases generation, gas, nameplate and lifecycle cost", () => {
     const high = runTerrestrialModel({ ...DEFAULT_TERRESTRIAL_INPUTS, pue: 1.40 });
-    expect(high.capacity.ccgt_nameplate_capacity_mw).toBeGreaterThan(base.capacity.ccgt_nameplate_capacity_mw);
+    expect(high.capacity.power_plant_nameplate_capacity_mw).toBeGreaterThan(base.capacity.power_plant_nameplate_capacity_mw);
     expect(high.energy.annual_generated_electricity_mwh).toBeGreaterThan(base.energy.annual_generated_electricity_mwh);
     expect(high.energy.annual_natural_gas_mmbtu).toBeGreaterThan(base.energy.annual_natural_gas_mmbtu);
     expect(high.costs.total_lifecycle_cost_usd).toBeGreaterThan(base.costs.total_lifecycle_cost_usd);
@@ -15,15 +15,15 @@ describe("refined-model monotonicity", () => {
 
   it("lower availability increases nameplate and fixed/capital cost without reducing delivered compute", () => {
     const low = runTerrestrialModel({ ...DEFAULT_TERRESTRIAL_INPUTS, power_system_availability: 0.75 });
-    expect(low.capacity.ccgt_nameplate_capacity_mw).toBeGreaterThan(base.capacity.ccgt_nameplate_capacity_mw);
+    expect(low.capacity.power_plant_nameplate_capacity_mw).toBeGreaterThan(base.capacity.power_plant_nameplate_capacity_mw);
     expect(low.energy.annual_delivered_compute_mwh).toBe(base.energy.annual_delivered_compute_mwh);
-    expect(low.costs.initial.ccgt_capex_usd).toBeGreaterThan(base.costs.initial.ccgt_capex_usd);
+    expect(low.costs.initial.power_plant_capex_usd).toBeGreaterThan(base.costs.initial.power_plant_capex_usd);
     expect(low.costs.total_lifecycle_cost_usd).toBeGreaterThan(base.costs.total_lifecycle_cost_usd);
   });
 
   it("scales linearly with target capacity apart from no discrete rounding", () => {
     const ten = runTerrestrialModel({ ...DEFAULT_TERRESTRIAL_INPUTS, target_capacity_gw: 10 });
-    expect(ten.capacity.ccgt_nameplate_capacity_mw).toBeCloseTo(base.capacity.ccgt_nameplate_capacity_mw * 10, 8);
+    expect(ten.capacity.power_plant_nameplate_capacity_mw).toBeCloseTo(base.capacity.power_plant_nameplate_capacity_mw * 10, 8);
     expect(ten.costs.total_lifecycle_cost_usd).toBeCloseTo(base.costs.total_lifecycle_cost_usd * 10, 2);
     expect(ten.costs.lifecycle_cost_per_target_watt_usd).toBeCloseTo(base.costs.lifecycle_cost_per_target_watt_usd, 10);
   });
