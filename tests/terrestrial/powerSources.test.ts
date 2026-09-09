@@ -46,7 +46,7 @@ describe("power-source selector: five technologies produce comparable, finite, s
     }
   });
 
-  it("every technology's present-value categories sum exactly to the present-value total (six-way split, by construction)", () => {
+  it("every technology's present-value categories sum exactly to the present-value total (five-way split, by construction)", () => {
     for (const source of ALL_SOURCES) {
       const r = runTerrestrialModel(inputsFor(source));
       const sum =
@@ -54,7 +54,6 @@ describe("power-source selector: five technologies produce comparable, finite, s
         r.presentValue.present_value_fuel_cost_usd +
         r.presentValue.present_value_data_center_cost_usd +
         r.presentValue.present_value_chips_cost_usd +
-        r.presentValue.present_value_other_opex_cost_usd +
         r.presentValue.present_value_workload_data_transfer_cost_usd;
       expect(sum).toBeCloseTo(r.presentValue.present_value_total_lifecycle_cost_usd, 4);
     }

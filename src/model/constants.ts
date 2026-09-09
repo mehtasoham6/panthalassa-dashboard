@@ -21,8 +21,12 @@ export const CONST = {
   mode_2_repair_days: 7,
   mode_3_repair_days: 7,
   reference_hull_length_m: 85, // descriptive metadata only; not used in any formula
-  reference_hull_diameter_m: 20,
-  reference_hull_steel_mass_tonnes: 150,
+  // Empirical structural-mass design point (Panthalassa): 397 tonnes at a
+  // 23.0 m hull diameter. Structural mass at every other diameter scales
+  // cubically off this single point (nodeUnitCosts.ts) -- geometric volume
+  // scaling, not the old 150t-at-20m linear relationship.
+  reference_hull_diameter_m: 23.0,
+  reference_hull_steel_mass_tonnes: 397,
   battery_pack_cost_usd_per_kwh: 100,
   battery_power_system_cost_usd_per_kw: 75,
   onboard_systems_cost_usd_per_node: 25_000,
@@ -36,4 +40,13 @@ export const CONST = {
   workload_data_transfer_gb_per_mbps_kwh: 0.45,
   hours_per_year: 8760,
   days_per_year: 365,
+  /**
+   * Approximate server power draw required merely to keep compute hardware
+   * powered and idle, as a fraction of rated payload. A fixed design
+   * assumption provided by Panthalassa, not independently sourced -- not
+   * exposed as a slider. Used only by the dashboard's descriptive
+   * "Resource capacity factor" / "Keepalive availability" metrics (see
+   * waverys.ts); does not affect delivered energy, fleet sizing, or cost.
+   */
+  server_idle_power_fraction: 0.15,
 } as const;

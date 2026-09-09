@@ -25,14 +25,22 @@ import { remainingLifeIntegral } from "./remainingLife.js";
  *
  * Physical/resource logic -- route wave ramps, the Copernicus WAVERYS
  * sea-park capacity factor plus its episode-level battery-recovery bump,
- * deterministic route-level battery behavior, and the rated electrical cap
- * -- is intentionally identical to the integrated model's, since none of it
- * is compute-specific: it already lives in derived.ts and is reused as-is
- * here. What is deliberately NOT reused is chipFailures.ts's schedule walk:
- * this module runs its own lightweight physical-maintenance-only schedule
- * (nominal five-year cadence, never moved earlier to combine with a
- * compute-service trip) so that changes to compute-hardware economics or
- * the chip-degradation model can never silently change LCOE.
+ * and deterministic route-level battery behavior -- reuses the same
+ * WAVERYS data, hull/CWR/efficiency conversion, route profiles, and
+ * battery-recovery machinery as the integrated model (derived.ts). One
+ * deliberate difference: the electrical-output cap. LCOE is meant to be
+ * use-agnostic, so its cap is the installed PTO rating alone
+ * (derived.lcoe_power_cap_kw = derived.pto_rating_kw), not
+ * min(payload, PTO) like the compute-side derived.power_cap_kw -- an
+ * undersized compute payload must not shrink the electricity LCOE prices.
+ * The payload still indirectly shapes LCOE through the PTO/battery sizing
+ * rules (PTO = 1.5x payload, battery = payload x duration), just not by
+ * directly truncating the output series. What is deliberately NOT reused
+ * is chipFailures.ts's schedule walk: this module runs its own lightweight
+ * physical-maintenance-only schedule (nominal five-year cadence, never
+ * moved earlier to combine with a compute-service trip) so that changes to
+ * compute-hardware economics or the chip-degradation model can never
+ * silently change LCOE.
  *
  * Included: initial non-compute capital (t=0); periodic physical
  * maintenance (labor + its round-trip tug cost); Modes 2/3 (non-chip
@@ -110,10 +118,12 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
   const Tend = inputs.node_lifetime_years; // LCOE horizon: one generating-asset economic life, not the analysis period
   const unit = computeNodeUnitCosts(inputs, derived);
 
+  // LCOE's electrical-output cap is the installed PTO rating, not
+  // min(payload, PTO) -- see derived.ts's lcoe_power_cap_kw doc comment.
   const capParams: CapParams = {
     capture_coefficient: derived.capture_coefficient,
-    power_cap_kw: derived.power_cap_kw,
-    full_output_flux_kw_per_m: derived.full_output_flux_kw_per_m,
+    power_cap_kw: derived.lcoe_power_cap_kw,
+    full_output_flux_kw_per_m: derived.lcoe_full_output_flux_kw_per_m,
   };
   const legInputs = {
     ...capParams,
@@ -160,7 +170,7 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
       // completing at/after the horizon doesn't happen -- the node just
       // operates at sea park through the end of its economic life.
       const seaParkDays = Math.max(0, (Tend - arrivalAbs) * CONST.days_per_year);
-      creditSeaParkPowerOnly(seaParkDays, arrivalAbs, derived.power_cap_kw, derived.effective_sea_park_cf, scheduleEnergyKwh, Tend);
+      creditSeaParkPowerOnly(seaParkDays, arrivalAbs, derived.lcoe_power_cap_kw, derived.lcoe_effective_sea_park_cf, scheduleEnergyKwh, Tend);
       break;
     }
 
@@ -169,8 +179,8 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
     const seaParkEndAbs = creditSeaParkPowerOnly(
       seaParkDays,
       arrivalAbs,
-      derived.power_cap_kw,
-      derived.effective_sea_park_cf,
+      derived.lcoe_power_cap_kw,
+      derived.lcoe_effective_sea_park_cf,
       scheduleEnergyKwh,
       Tend,
     );
@@ -198,13 +208,13 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
   const mode_4_rate_annual = inputs.node_failure_rate_annual * CONST.mode_4_weight;
   const mode_5_rate_annual = inputs.node_failure_rate_annual * CONST.mode_5_weight;
 
-  const outboundEnergyKwh = derived.outbound_energy_kwh;
+  const outboundEnergyKwh = derived.lcoe_outbound_energy_kwh;
   const returnDays = derived.one_way_journey_days;
-  const powerCapKw = derived.power_cap_kw;
+  const powerCapKw = derived.lcoe_power_cap_kw;
   // Modes 2/3's lost-time counterfactual is resource-adjusted (same as the
   // integrated model); Modes 4/5 keep the existing unadjusted deployment-ramp
   // treatment (no sea-park-time component in that formula).
-  const seaParkAdjustedCapKw = powerCapKw * derived.effective_sea_park_cf;
+  const seaParkAdjustedCapKw = powerCapKw * derived.lcoe_effective_sea_park_cf;
 
   const mode_2_loss_per_event_kwh =
     24 * seaParkAdjustedCapKw * (returnDays + CONST.mode_2_repair_days + outboundDays) - outboundEnergyKwh;

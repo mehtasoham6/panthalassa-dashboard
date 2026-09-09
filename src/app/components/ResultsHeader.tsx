@@ -7,11 +7,19 @@ interface Props {
   isPending: boolean;
 }
 
+interface SecondaryMetric {
+  label: string;
+  value: string;
+  sub: string;
+}
+
 interface Tile {
   label: string;
   value: string;
   sub: string;
   primary?: boolean;
+  /** Smaller, visually subordinate metrics shown inside the same card, below the primary value/sub. */
+  secondary?: SecondaryMetric[];
 }
 
 /**
@@ -35,7 +43,19 @@ export function ResultsHeader({ result, isPending }: Props) {
     {
       label: "Resource capacity factor",
       value: formatPercent(result.derived.resource_capacity_factor, 1),
-      sub: "Share of time the node can sustain full rated output from historical wave conditions and onboard battery storage.",
+      sub: "Useful compute work delivered relative to continuous full-power operation.",
+      secondary: [
+        {
+          label: "Rated power availability",
+          value: formatPercent(result.derived.rated_power_availability, 1),
+          sub: "Time the full payload can run at 100%",
+        },
+        {
+          label: "Keepalive availability",
+          value: formatPercent(result.derived.keepalive_availability, 1),
+          sub: "Time there is enough power to keep servers on",
+        },
+      ],
     },
   ];
 
@@ -47,6 +67,17 @@ export function ResultsHeader({ result, isPending }: Props) {
           <span className={styles.label}>{tile.label}</span>
           <span className={`${styles.value} num`}>{tile.value}</span>
           <span className={styles.sub}>{tile.sub}</span>
+          {tile.secondary && (
+            <div className={styles.secondaryRow}>
+              {tile.secondary.map((metric) => (
+                <div key={metric.label} className={styles.secondaryMetric}>
+                  <span className={styles.secondaryLabel}>{metric.label}</span>
+                  <span className={`${styles.secondaryValue} num`}>{metric.value}</span>
+                  <span className={styles.secondarySub}>{metric.sub}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

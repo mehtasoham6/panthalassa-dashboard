@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runModel } from "../../src/model/index.js";
 import { computeDerived } from "../../src/model/derived.js";
+import { computeLcoe } from "../../src/model/lcoe.js";
 import { CONST } from "../../src/model/constants.js";
 import { DEFAULT_INPUTS } from "../../src/model/types.js";
 
@@ -33,9 +34,9 @@ describe("LCOE sanity check at defaults", () => {
     expect(r.lcoe.yearly_power_system_cost_usd.length).toBe(21); // t=0..20
   });
 
-  it("initial non-compute capital at t=0 matches the ~$410,000 power-system capex", () => {
+  it("initial non-compute capital at t=0 matches the ~$632,068 power-system capex", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(410_000, -2);
+    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(632_068, -2);
     expect(r.lcoe.yearly_power_system_cost_usd[0]).toBeCloseTo(r.costs.non_compute_node_cost_usd, 6);
   });
 });
@@ -138,7 +139,7 @@ describe("LCOE responds to physical/power-system inputs", () => {
     expect(r.lcoe.lcoe_usd_per_mwh).toBeGreaterThan(base.lcoe.lcoe_usd_per_mwh);
   });
 
-  it("payload/rated electrical capacity (sizes the whole power system and caps output)", () => {
+  it("payload/rated electrical capacity (sizes the whole power system, incl. PTO/battery, which in turn moves LCOE)", () => {
     const r = runModel({ ...DEFAULT_INPUTS, payload_rating_kw: 300 });
     expect(r.lcoe.lcoe_usd_per_mwh).not.toBe(base.lcoe.lcoe_usd_per_mwh);
   });
@@ -276,10 +277,112 @@ describe("LCOE's own horizon and unit-cost invariants", () => {
     expect(total).toBeGreaterThan(r.costs.non_compute_node_cost_usd); // more than just initial capex
   });
 
-  it("present-value energy is positive and well below the naive undiscounted nameplate ceiling (payload x 8760h x horizon)", () => {
+  it("present-value energy is positive and well below the naive undiscounted nameplate ceiling (PTO rating x 8760h x horizon)", () => {
     const r = runModel(DEFAULT_INPUTS);
-    const nameplateCeilingMwh = (DEFAULT_INPUTS.payload_rating_kw * 8760 * r.lcoe.lcoe_horizon_years) / 1_000;
+    // The ceiling uses the PTO rating, not the payload -- LCOE's output series
+    // can legitimately reach the PTO cap even though payload is smaller.
+    const nameplateCeilingMwh = (r.derived.pto_rating_kw * 8760 * r.lcoe.lcoe_horizon_years) / 1_000;
     expect(r.lcoe.present_value_electrical_energy_mwh).toBeGreaterThan(0);
     expect(r.lcoe.present_value_electrical_energy_mwh).toBeLessThan(nameplateCeilingMwh);
+  });
+});
+
+// LCOE denominator/output-cap correction: LCOE is meant to be use-agnostic --
+// it measures what the generating platform can supply, not what a possibly
+// undersized compute payload happens to draw. So the LCOE electrical-output
+// series is capped at the installed PTO rating (derived.pto_rating_kw), not
+// at min(payload, PTO) like the compute-side series (derived.power_cap_kw).
+// The payload still indirectly moves LCOE by sizing the PTO (1.5x payload)
+// and battery (payload x duration), just no longer by directly truncating
+// the LCOE output once those are sized.
+describe("LCOE electrical-output cap is the installed PTO rating, not the compute payload", () => {
+  it("at defaults, the compute-side cap is 200 kW (payload) while the LCOE-side cap is 300 kW (PTO)", () => {
+    const r = runModel(DEFAULT_INPUTS);
+    expect(DEFAULT_INPUTS.payload_rating_kw).toBe(200);
+    expect(r.derived.power_cap_kw).toBe(200);
+    expect(r.derived.pto_rating_kw).toBe(300);
+    expect(r.derived.lcoe_power_cap_kw).toBe(300);
+    expect(r.derived.lcoe_power_cap_kw).toBe(r.derived.pto_rating_kw);
+  });
+
+  it("does not use a hard-coded 300 kW -- lcoe_power_cap_kw tracks the actual pto_rating_kw as payload changes", () => {
+    for (const payload of [100, 150, 250, 400]) {
+      const d = computeDerived({ ...DEFAULT_INPUTS, payload_rating_kw: payload });
+      expect(d.lcoe_power_cap_kw).toBeCloseTo(d.pto_rating_kw, 9);
+      expect(d.lcoe_power_cap_kw).toBeCloseTo(CONST.pto_payload_multiplier * payload, 9);
+    }
+  });
+
+  it("removing the payload cap materially increases the LCOE energy denominator and decreases the displayed LCOE, cost held fixed", () => {
+    const r = runModel(DEFAULT_INPUTS);
+    // Reconstruct the pre-fix behavior (LCOE cap == compute cap) by feeding
+    // computeLcoe a derived object whose lcoe_* fields fall back to their
+    // compute-side equivalents, and compare against the real (fixed) result.
+    const legacyDerived = {
+      ...r.derived,
+      lcoe_power_cap_kw: r.derived.power_cap_kw,
+      lcoe_full_output_flux_kw_per_m: r.derived.full_output_flux_kw_per_m,
+      lcoe_effective_sea_park_cf: r.derived.effective_sea_park_cf,
+      lcoe_outbound_energy_kwh: r.derived.outbound_energy_kwh,
+    };
+    const legacyLcoe = computeLcoe(DEFAULT_INPUTS, legacyDerived);
+
+    expect(r.lcoe.present_value_electrical_energy_mwh).toBeGreaterThan(legacyLcoe.present_value_electrical_energy_mwh);
+    expect(r.lcoe.lcoe_usd_per_mwh).toBeLessThan(legacyLcoe.lcoe_usd_per_mwh);
+    // The fix touches only the denominator: PV cost is untouched.
+    expect(r.lcoe.present_value_power_system_cost_usd).toBe(legacyLcoe.present_value_power_system_cost_usd);
+  });
+
+  it("changing PTO sizing (via the payload-to-PTO multiplier) changes the LCOE denominator, holding payload fixed", () => {
+    const base = runModel(DEFAULT_INPUTS);
+    // Payload fixed at 200 kW; only compare against a larger PTO multiplier
+    // by directly constructing derived objects with a bigger lcoe_power_cap_kw,
+    // since CONST.pto_payload_multiplier itself isn't a slider.
+    const biggerPto = {
+      ...base.derived,
+      lcoe_power_cap_kw: base.derived.pto_rating_kw * 1.5,
+    };
+    biggerPto.lcoe_full_output_flux_kw_per_m = biggerPto.lcoe_power_cap_kw / biggerPto.capture_coefficient;
+    const biggerPtoLcoe = computeLcoe(DEFAULT_INPUTS, biggerPto);
+    expect(biggerPtoLcoe.present_value_electrical_energy_mwh).toBeGreaterThan(base.lcoe.present_value_electrical_energy_mwh);
+  });
+
+  it("does not affect fleet size, total lifecycle cost, or the three descriptive resource metrics", () => {
+    const r = runModel(DEFAULT_INPUTS);
+    // These figures are unrelated to LCOE and must be exactly what the rest
+    // of the test suite (exampleA/B.test.ts, appendixA7.test.ts) expects.
+    expect(r.N_fleet).toBe(5_310);
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 1);
+    expect(r.derived.resource_capacity_factor).toBeCloseTo(0.9607, 3);
+    expect(r.derived.rated_power_availability).toBeCloseTo(0.8878, 3);
+    expect(r.derived.keepalive_availability).toBeCloseTo(1.0, 3);
+  });
+});
+
+// The new cubic hull-mass/cost model (nodeUnitCosts.ts) must raise LCOE's
+// cost numerator (non_compute_node_cost_usd feeds capex, maintenance,
+// retirement, and Mode 4/5 replacement) while leaving the PTO-capped
+// electrical-output denominator completely untouched -- hull cost is a
+// dollar figure, never a power/energy quantity.
+describe("LCOE numerator responds to the new hull-mass/cost model; the PTO-capped denominator stays intact", () => {
+  it("raising structural-fabrication $/tonne (which only moves hull cost, not mass or wave capture) raises the LCOE numerator but not the denominator", () => {
+    const cheap = runModel({ ...DEFAULT_INPUTS, finished_hull_cost_usd_per_tonne: 1500 });
+    const expensive = runModel({ ...DEFAULT_INPUTS, finished_hull_cost_usd_per_tonne: 8000 });
+    expect(expensive.lcoe.present_value_power_system_cost_usd).toBeGreaterThan(cheap.lcoe.present_value_power_system_cost_usd);
+    expect(expensive.lcoe.present_value_electrical_energy_mwh).toBe(cheap.lcoe.present_value_electrical_energy_mwh);
+    expect(expensive.lcoe.lcoe_usd_per_mwh).toBeGreaterThan(cheap.lcoe.lcoe_usd_per_mwh);
+  });
+
+  it("hull diameter change propagates through both the LCOE numerator (cubic mass/cost) and the denominator (CWR wave capture) simultaneously", () => {
+    const small = runModel({ ...DEFAULT_INPUTS, hull_diameter_m: 10 });
+    const large = runModel({ ...DEFAULT_INPUTS, hull_diameter_m: 20 });
+    expect(large.lcoe.present_value_power_system_cost_usd).toBeGreaterThan(small.lcoe.present_value_power_system_cost_usd);
+    expect(large.lcoe.present_value_electrical_energy_mwh).toBeGreaterThan(small.lcoe.present_value_electrical_energy_mwh);
+  });
+
+  it("the LCOE denominator is still capped by PTO rating (not payload) after the hull-cost change -- 300 kW reachable at defaults", () => {
+    const r = runModel(DEFAULT_INPUTS);
+    expect(r.derived.lcoe_power_cap_kw).toBe(300);
+    expect(r.derived.power_cap_kw).toBe(200);
   });
 });

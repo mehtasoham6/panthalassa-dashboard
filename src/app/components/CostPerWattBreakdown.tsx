@@ -14,12 +14,17 @@ const fmtMwh = (value: number) => `${formatUsdPerUnit(value, 0)}/MWh`;
 
 /**
  * Every figure here is a genuine (not approximated) present-value $/W-of-
- * target-capacity number: each cost category is discounted independently
- * (see presentValue.ts / terrestrial model.ts's per-category schedules) and
- * the categories sum exactly to the "All-in cost per target watt" total by
- * construction (linearity of discounting), not by rounding luck. A node
- * bundles generation + free wave "fuel" + housing into one physical unit,
- * so its value spans the three terrestrial rows it replaces.
+ * target-capacity number, and every row is a full total-cost-of-ownership
+ * for that component -- capex plus its own present-valued operating costs
+ * (O&M, maintenance, decommissioning), not capex alone. There is
+ * deliberately no "other opex" row: every recurring cost already belongs to
+ * one of the rows shown, so a catch-all bucket would always read $0.00/W.
+ * Each cost category is discounted independently (see presentValue.ts /
+ * terrestrial model.ts's per-category schedules) and the categories sum
+ * exactly to the "All-in cost per target watt" total by construction
+ * (linearity of discounting), not by rounding luck. A node bundles
+ * generation + free wave "fuel" + housing into one physical unit, so its
+ * value spans the three terrestrial rows it replaces.
  */
 export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) {
   const oceanWatts = oceanResult.inputs.target_capacity_gw * 1_000_000_000;
@@ -33,7 +38,6 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
   const oceanNodes = oceanPerWatt(oceanResult.presentValue.present_value_nodes_cost_usd);
   const oceanChips = oceanPerWatt(oceanResult.presentValue.present_value_chips_cost_usd);
   const oceanData = oceanPerWatt(oceanResult.presentValue.present_value_workload_data_transfer_cost_usd);
-  const oceanOtherOpex = oceanPerWatt(oceanResult.presentValue.present_value_other_opex_cost_usd);
   const oceanTotal = oceanComparable.lifecycle_cost_per_target_watt_usd;
 
   const terrestrialPowerPlant = terrestrialPerWatt(terrestrialResult.presentValue.present_value_power_plant_cost_usd);
@@ -41,7 +45,6 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
   const terrestrialDataCenter = terrestrialPerWatt(terrestrialResult.presentValue.present_value_data_center_cost_usd);
   const terrestrialChips = terrestrialPerWatt(terrestrialResult.presentValue.present_value_chips_cost_usd);
   const terrestrialData = terrestrialPerWatt(terrestrialResult.presentValue.present_value_workload_data_transfer_cost_usd);
-  const terrestrialOtherOpex = terrestrialPerWatt(terrestrialResult.presentValue.present_value_other_opex_cost_usd);
   const terrestrialTotal = terrestrialComparable.lifecycle_cost_per_target_watt_usd;
 
   const oceanPerMwh = oceanComparable.present_value_lifecycle_cost_usd / oceanComparable.analysis_period_delivered_compute_mwh;
@@ -55,7 +58,7 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
       <div className={styles.wrap}>
         <div className={styles.titleRow}>
           <span className={styles.title}>All-in cost per target watt, by component</span>
-          <span className={styles.subtitle}>Present-value $/W of target capacity</span>
+          <span className={styles.subtitle}>Present-value $/W of target capacity (capex + lifetime opex)</span>
         </div>
 
         <div className={styles.grid}>
@@ -117,33 +120,23 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
             {fmtW(terrestrialData)}
           </span>
 
-          <span className={styles.rowLabel} style={{ gridColumn: col.label, gridRow: 7 }}>
-            Other opex
-          </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.ocean, gridRow: 7 }}>
-            {fmtW(oceanOtherOpex)}
-          </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 7 }}>
-            {fmtW(terrestrialOtherOpex)}
-          </span>
-
-          <span className={styles.totalLabel} style={{ gridColumn: col.label, gridRow: 8 }}>
+          <span className={styles.totalLabel} style={{ gridColumn: col.label, gridRow: 7 }}>
             All-in cost per target watt
           </span>
-          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.ocean, gridRow: 8 }}>
+          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.ocean, gridRow: 7 }}>
             {fmtW(oceanTotal)}
           </span>
-          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 8 }}>
+          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 7 }}>
             {fmtW(terrestrialTotal)}
           </span>
 
-          <span className={styles.lastRowLabel} style={{ gridColumn: col.label, gridRow: 9 }}>
+          <span className={styles.lastRowLabel} style={{ gridColumn: col.label, gridRow: 8 }}>
             Cost per MWh (delivered compute)
           </span>
-          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.ocean, gridRow: 9 }}>
+          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.ocean, gridRow: 8 }}>
             {fmtMwh(oceanPerMwh)}
           </span>
-          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 9 }}>
+          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 8 }}>
             {fmtMwh(terrestrialPerMwh)}
           </span>
         </div>

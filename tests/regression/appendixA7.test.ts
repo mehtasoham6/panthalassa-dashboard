@@ -20,16 +20,16 @@ import { DEFAULT_INPUTS } from "../../src/model/types.js";
 // unprorated fleet cost; see exampleA/B.test.ts, workloadCost.test.ts, and
 // waverys.test.ts for the full breakdown).
 describe("Appendix A.7 required regression checks", () => {
-  it("default inputs: N_fleet == 5314 and rounded lifecycle cost == $29.54 billion", () => {
+  it("default inputs: N_fleet == 5310 and rounded lifecycle cost == $30.69 billion", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.N_fleet).toBe(5314);
-    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(29.54, 2);
+    expect(r.N_fleet).toBe(5310);
+    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(30.69, 2);
   });
 
-  it("high chip-degradation-hazard inputs: N_fleet == 5473 and rounded lifecycle cost == $42.31 billion", () => {
+  it("high chip-degradation-hazard inputs: N_fleet == 5453 and rounded lifecycle cost == $42.91 billion", () => {
     const r = runModel({ ...DEFAULT_INPUTS, chip_failure_rate_annual: 0.10 });
-    expect(r.N_fleet).toBe(5473);
-    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(42.31, 2);
+    expect(r.N_fleet).toBe(5453);
+    expect(Math.round(r.costs.total_node_fleet_cost_usd / 1e7) / 100).toBeCloseTo(42.91, 2);
   });
 
   const scenarios: { label: string; inputs: typeof DEFAULT_INPUTS }[] = [

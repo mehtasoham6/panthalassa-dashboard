@@ -13,10 +13,10 @@ describe("derived quantities at defaults (Section 2, 9.2)", () => {
     expect(d.full_output_flux_kw_per_m).toBeCloseTo(37.23, 2);
   });
 
-  it("one-way journey = 30.375 days (0.167 tug + 30.208 self-propulsion)", () => {
+  it("one-way journey = 15.792 days (0.167 tug + 15.625 self-propulsion)", () => {
     expect(d.one_way_tug_days).toBeCloseTo(0.167, 3);
-    expect(d.one_way_self_propulsion_days).toBeCloseTo(30.208, 3);
-    expect(d.one_way_journey_days).toBeCloseTo(30.375, 3);
+    expect(d.one_way_self_propulsion_days).toBeCloseTo(15.625, 3);
+    expect(d.one_way_journey_days).toBeCloseTo(15.792, 3);
   });
 
   it("guaranteed/best-effort split at default 10% hot spares: 180/20 kW", () => {

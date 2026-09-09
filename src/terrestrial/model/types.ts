@@ -125,18 +125,19 @@ export interface TerrestrialPresentValueResult {
   yearly_generated_electricity_mwh: number[];
   present_value_total_lifecycle_cost_usd: number;
   /**
-   * Six cost categories, each a genuine discounted present value, summing
-   * exactly to present_value_total_lifecycle_cost_usd: power plant and data
-   * center are pure planned capital (generation + storage capex, or CCGT
-   * capex / facility capex only); chips is compute capex plus its own
-   * failure-replacement cost; other opex is every recurring O&M/maintenance
-   * line (including storage O&M) plus both decommissioning schedules.
+   * Five cost categories, each a genuine discounted present value, summing
+   * exactly to present_value_total_lifecycle_cost_usd. Power plant is the
+   * full lifecycle cost of generation (+ storage, where applicable): capex,
+   * fixed/variable O&M (including storage O&M), and decommissioning. Data
+   * center is the same for the facility: capex, maintenance, and
+   * decommissioning. Chips is compute capex plus its own failure-replacement
+   * cost. There is deliberately no separate "other opex" category -- every
+   * recurring cost already belongs to one of these, or to workload.
    */
   present_value_power_plant_cost_usd: number;
   present_value_fuel_cost_usd: number;
   present_value_data_center_cost_usd: number;
   present_value_chips_cost_usd: number;
-  present_value_other_opex_cost_usd: number;
   present_value_workload_data_transfer_cost_usd: number;
 }
 

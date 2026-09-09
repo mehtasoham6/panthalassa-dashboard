@@ -213,8 +213,8 @@ describe("No residual/terminal-value metric exists anywhere in the model result"
 
   it("default 5-year total lifecycle cost matches the pre-proration-era (pre-terminal-residual) baseline", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.N_fleet).toBe(5314);
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(29.54, 1);
+    expect(r.N_fleet).toBe(5310);
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 1);
   });
 });
 

@@ -55,8 +55,13 @@ describe("output declines before any trip is triggered", () => {
 });
 
 describe("a surprise service restores health, and near-coincident fixed maintenance dates now consolidate into the same trip (6-month window)", () => {
-  it("10% hot spares, 10% hazard, 10-year horizon: 8 surprise visits occur, and BOTH the year-5 and year-10 fixed-maintenance dates happen to fall within 6 months of a nearby surprise visit, so both consolidate (8 distinct physical trips total, not 10)", () => {
-    const inputs = { ...DEFAULT_INPUTS, hotSpareShare: 0.10, chip_failure_rate_annual: 0.10, analysis_period_years: 10 };
+  // Route-trip timing (and therefore which surprise visits happen to land
+  // near a year-5/year-10 boundary) depends on sea_park_distance_km, so the
+  // hazard rate here (9%, not the shared 10% default) is tuned specifically
+  // to reproduce full consolidation at the current default distance -- it is
+  // not itself the thing under test.
+  it("10% hot spares, 9% hazard, 10-year horizon: 8 surprise visits occur, and BOTH the year-5 and year-10 fixed-maintenance dates happen to fall within 6 months of a nearby surprise visit, so both consolidate (8 distinct physical trips total, not 10)", () => {
+    const inputs = { ...DEFAULT_INPUTS, hotSpareShare: 0.10, chip_failure_rate_annual: 0.09, analysis_period_years: 10 };
     const r = runModel(inputs);
     expect(r.chip.expected_mode_1_surprise_service_event_count_per_position).toBe(8);
     expect(r.chip.scheduled_node_maintenance_event_count_per_position).toBe(2);

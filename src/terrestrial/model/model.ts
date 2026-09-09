@@ -70,12 +70,16 @@ function computeEnergy(inputs: TerrestrialModelInputs, capacity: TerrestrialCapa
 }
 
 /**
- * Six cost categories -- power plant, fuel, data center, chips, workload
- * (data), other opex -- each a genuine yearly schedule so its present value
- * is real, not approximated. Power plant / data center are pure planned
- * capital (CCGT / facility capex); chips is compute capex plus its own
- * failure-replacement cost; other opex is every recurring O&M/maintenance
- * line plus both decommissioning schedules. The six sum exactly to `total`.
+ * Five cost categories -- power plant, fuel, data center, chips, workload
+ * (data) -- each a genuine yearly schedule so its present value is real, not
+ * approximated. Power plant is the full lifecycle cost of generation (+
+ * battery, where applicable): capex, fixed/variable O&M, and decommissioning.
+ * Data center is the same for the facility: capex, maintenance, and
+ * decommissioning. Chips is compute capex plus its own failure-replacement
+ * cost. There is deliberately no separate "other opex" category: every
+ * recurring cost already belongs to power plant, data center, chips, or
+ * workload, so a catch-all bucket would always be empty. The five sum
+ * exactly to `total`.
  */
 interface CostSchedules {
   total: number[];
@@ -83,7 +87,6 @@ interface CostSchedules {
   fuel: number[];
   dataCenter: number[];
   chips: number[];
-  otherOpex: number[];
   workload: number[];
 }
 
@@ -157,8 +160,10 @@ function computeCostsAndSchedules(
   const totalSchedule = new Array<number>(years + 1).fill(0);
   const workloadSchedule = new Array<number>(years + 1).fill(0);
   const chipsSchedule = new Array<number>(years + 1).fill(0);
-  const otherOpexSchedule = new Array<number>(years + 1).fill(0);
   const fuelSchedule = new Array<number>(years + 1).fill(0);
+  const powerPlantSchedule = new Array<number>(years + 1).fill(0);
+  const dataCenterSchedule = new Array<number>(years + 1).fill(0);
+
   const powerPlantCapitalSchedule = plannedCapitalSchedule(powerPlantCapex, powerPlantEconomicLifeYears, years);
   const facilityCapitalSchedule = plannedCapitalSchedule(
     facilityCapex,
@@ -181,23 +186,26 @@ function computeCostsAndSchedules(
     MODEL_CONSTANTS.facility_decommissioning_fraction,
   );
 
-  // Other opex = every recurring O&M/maintenance line plus both
-  // decommissioning schedules (decommissioning is operational-lifecycle
-  // cost, not part of the initial-asset capital categories).
-  addSchedules(otherOpexSchedule, powerPlantRetirementSchedule);
-  addSchedules(otherOpexSchedule, facilityRetirementSchedule);
+  // Each asset's full lifecycle cost stays with that asset: power plant
+  // (capex + fixed/variable O&M + decommissioning) and data center (capex +
+  // maintenance + decommissioning), rather than pooling their recurring
+  // costs into a separate catch-all category.
+  addSchedules(powerPlantSchedule, powerPlantCapitalSchedule);
+  addSchedules(powerPlantSchedule, powerPlantRetirementSchedule);
+  addSchedules(dataCenterSchedule, facilityCapitalSchedule);
+  addSchedules(dataCenterSchedule, facilityRetirementSchedule);
   chipsSchedule[0]! += computeCapex;
   for (let year = 1; year <= years; year++) {
-    otherOpexSchedule[year]! += annualGenerationFixedOm + annualVariableOmSlot + annualFacilityMaintenance;
+    powerPlantSchedule[year]! += annualGenerationFixedOm + annualVariableOmSlot;
+    dataCenterSchedule[year]! += annualFacilityMaintenance;
     chipsSchedule[year]! += annualComputeFailureReplacement;
     fuelSchedule[year]! += annualFuel;
     workloadSchedule[year] = annualWorkloadCost;
   }
 
-  addSchedules(totalSchedule, powerPlantCapitalSchedule);
-  addSchedules(totalSchedule, facilityCapitalSchedule);
+  addSchedules(totalSchedule, powerPlantSchedule);
+  addSchedules(totalSchedule, dataCenterSchedule);
   addSchedules(totalSchedule, chipsSchedule);
-  addSchedules(totalSchedule, otherOpexSchedule);
   addSchedules(totalSchedule, workloadSchedule);
   addSchedules(totalSchedule, fuelSchedule);
 
@@ -258,11 +266,10 @@ function computeCostsAndSchedules(
     costs,
     schedules: {
       total: totalSchedule,
-      powerPlant: powerPlantCapitalSchedule,
+      powerPlant: powerPlantSchedule,
       fuel: fuelSchedule,
-      dataCenter: facilityCapitalSchedule,
+      dataCenter: dataCenterSchedule,
       chips: chipsSchedule,
-      otherOpex: otherOpexSchedule,
       workload: workloadSchedule,
     },
   };
@@ -298,13 +305,12 @@ function computePresentValue(
   const presentValueFuel = presentValueOfSchedule(schedules.fuel, r);
   const presentValueDataCenter = presentValueOfSchedule(schedules.dataCenter, r);
   const presentValueChips = presentValueOfSchedule(schedules.chips, r);
-  const presentValueOtherOpex = presentValueOfSchedule(schedules.otherOpex, r);
   const presentValueWorkload = presentValueOfSchedule(schedules.workload, r);
-  // Sum of the six categories, not a fresh discount pass over schedules.total --
+  // Sum of the five categories, not a fresh discount pass over schedules.total --
   // identical by linearity, and keeps "parts sum to the total" true by
   // construction rather than by coincidence.
   const presentValueTotal =
-    presentValuePowerPlant + presentValueFuel + presentValueDataCenter + presentValueChips + presentValueOtherOpex + presentValueWorkload;
+    presentValuePowerPlant + presentValueFuel + presentValueDataCenter + presentValueChips + presentValueWorkload;
 
   return {
     yearly_cost_usd: schedules.total,
@@ -315,7 +321,6 @@ function computePresentValue(
     present_value_fuel_cost_usd: presentValueFuel,
     present_value_data_center_cost_usd: presentValueDataCenter,
     present_value_chips_cost_usd: presentValueChips,
-    present_value_other_opex_cost_usd: presentValueOtherOpex,
     present_value_workload_data_transfer_cost_usd: presentValueWorkload,
   };
 }

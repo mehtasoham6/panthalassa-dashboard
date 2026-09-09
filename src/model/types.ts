@@ -27,7 +27,7 @@ export const DEFAULT_INPUTS: ModelInputs = {
   payload_rating_kw: 200,
   battery_duration_hours: 0.5,
   hull_diameter_m: 20,
-  sea_park_distance_km: 1500,
+  sea_park_distance_km: 800,
   node_lifetime_years: 20,
   chip_failure_rate_annual: 0.01,
   hotSpareShare: 0.10,
@@ -91,16 +91,61 @@ export interface DerivedQuantities {
    */
   effective_sea_park_cf: number;
   /**
-   * The dashboard's single "Resource capacity factor" display metric: share
-   * of historical time the node can sustain full rated output (no partial
-   * credit), with battery folded in via a lull-by-lull energy-deficit
-   * approximation (assume the battery starts every historical lull fully
-   * charged; no chronological state-of-charge simulation), bounded to
-   * [0,1]. Deliberately independent of effective_sea_park_cf above -- this
-   * is a reporting-only metric and does not affect energy delivery, fleet
-   * sizing, or cost. See src/model/waverys.ts.
+   * The dashboard's headline "Resource capacity factor" metric: useful
+   * compute work actually available, relative to a theoretically perfect
+   * continuous-full-power environment. "Useful work" is server power above
+   * the fixed idle-power floor (CONST.server_idle_power_fraction of rated
+   * payload) -- a genuine energy-average capacity factor (partial credit
+   * for partial power), NOT the share-of-time metric that name colloquially
+   * suggests (see rated_power_availability for that). Battery folded in via
+   * the same lull-by-lull approximation as the other two metrics below, no
+   * chronological state-of-charge simulation. Bounded to [0,1]. Deliberately
+   * independent of effective_sea_park_cf above -- this is a reporting-only
+   * metric and does not affect energy delivery, fleet sizing, or cost. See
+   * src/model/waverys.ts.
    */
   resource_capacity_factor: number;
+  /**
+   * Secondary descriptive metric: share of historical time the full
+   * installed compute payload can operate at 100% rated power (no partial
+   * credit at all) -- what this dashboard used to label "Resource capacity
+   * factor" before that name was reserved for the energy-average metric
+   * above. Never called a "capacity factor" in code or UI copy. Same
+   * lull-by-lull battery approximation, bounded to [0,1], reporting-only.
+   */
+  rated_power_availability: number;
+  /**
+   * Secondary descriptive metric: share of historical time there is enough
+   * power to keep the servers powered at their idle requirement, even if
+   * not enough to do any useful compute work. Its own, independent
+   * lull-by-lull battery approximation against the (much lower) idle-power
+   * threshold -- not jointly optimized with the other two metrics' battery
+   * usage. Bounded to [0,1], reporting-only.
+   */
+  keepalive_availability: number;
+  /**
+   * LCOE-only electrical-output cap: equals pto_rating_kw (installed PTO
+   * rating), NOT min(payload, PTO) like power_cap_kw. Power-system LCOE is
+   * meant to be use-agnostic -- it measures what the generating platform can
+   * supply, not what a possibly-undersized compute payload happens to draw
+   * -- so a deliberately small payload must not shrink the LCOE denominator.
+   * Used only by lcoe.ts; every compute-side calculation (fleet sizing,
+   * lifecycle cost, chip failures, the three descriptive resource metrics
+   * above) continues to use power_cap_kw unchanged. See src/model/lcoe.ts.
+   */
+  lcoe_power_cap_kw: number;
+  /** Same role as full_output_flux_kw_per_m, but for lcoe_power_cap_kw -- LCOE-only. */
+  lcoe_full_output_flux_kw_per_m: number;
+  /** Same role as outbound_energy_kwh, but capped at lcoe_power_cap_kw -- LCOE-only. */
+  lcoe_outbound_energy_kwh: number;
+  /**
+   * Same role as effective_sea_park_cf, but computed with the equipment cap
+   * (and the "full power" threshold it normalizes against) set to
+   * lcoe_power_cap_kw instead of power_cap_kw -- i.e. relative to installed
+   * PTO rating rather than installed compute payload. LCOE-only; never fed
+   * into fleet sizing, lifecycle cost, or the descriptive resource metrics.
+   */
+  lcoe_effective_sea_park_cf: number;
 }
 
 /**
@@ -178,15 +223,18 @@ export interface ModelResult {
     yearly_cost_usd: number[]; // index 0 = year 0 (t=0), ... index T = year T
     present_value_total_node_fleet_cost_usd: number;
     /**
-     * Four cost categories, each a genuine discounted present value (not an
+     * Three cost categories, each a genuine discounted present value (not an
      * approximation), summing exactly to present_value_total_node_fleet_cost_usd.
-     * Mirrors costs.buckets: nodes = initial_non_compute_physical_usd's PV;
-     * chips = compute_and_replacement_usd's PV; other_opex =
-     * non_compute_maintenance_failure_usd's PV; workload = workload_data_transfer_usd's PV.
+     * nodes = the full lifecycle cost of everything about a node except its
+     * compute payload and workload data (capex, deployment logistics,
+     * maintenance, failure/retirement -- i.e. initial_non_compute_physical_usd
+     * plus non_compute_maintenance_failure_usd's PV, combined: there is no
+     * separate "other opex" category, since every recurring non-compute cost
+     * already belongs to nodes); chips = compute_and_replacement_usd's PV;
+     * workload = workload_data_transfer_usd's PV.
      */
     present_value_nodes_cost_usd: number;
     present_value_chips_cost_usd: number;
-    present_value_other_opex_cost_usd: number;
     /** Discounted workload data-transfer cost (already included in present_value_total_node_fleet_cost_usd). */
     present_value_workload_data_transfer_cost_usd: number;
     lifecycle_cost_per_target_watt_usd: number;
