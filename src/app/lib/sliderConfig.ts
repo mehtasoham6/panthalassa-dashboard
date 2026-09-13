@@ -16,7 +16,6 @@ export interface SliderConfig {
 
 export interface SliderGroupConfig {
   title: string;
-  description: string;
   sliders: SliderConfig[];
 }
 
@@ -28,13 +27,14 @@ export interface SliderGroupConfig {
 export const SHARED_SLIDERS: SliderConfig[] = [
   {
     key: "target_capacity_gw",
-    label: "Target saleable compute capacity",
+    label: "Target compute capacity",
     unit: "GW",
     min: 0.1,
     max: 100,
     step: 0.1,
     default: 1,
     decimals: 1,
+    helpText: "Average delivered compute over analysis period",
   },
   {
     key: "analysis_period_years",
@@ -45,6 +45,7 @@ export const SHARED_SLIDERS: SliderConfig[] = [
     step: 1,
     default: 5,
     decimals: 0,
+    helpText: "Window over which total lifecycle cost and delivered energy are counted",
   },
   {
     key: "compute_hardware_cost_usd_per_kw",
@@ -56,7 +57,6 @@ export const SHARED_SLIDERS: SliderConfig[] = [
     default: 25_000,
     displayScale: 0.001,
     decimals: 0,
-    helpText: "Identical compute-hardware price for both architectures.",
   },
   {
     key: "workloadBandwidthIntensityMbpsPerKw",
@@ -67,14 +67,13 @@ export const SHARED_SLIDERS: SliderConfig[] = [
     step: 0.005,
     default: 0.03,
     decimals: 3,
-    helpText: "Identical external workload traffic intensity; transport prices remain architecture-specific.",
+    helpText: "Identical external workload traffic intensity; transport prices remain architecture-specific",
   },
 ];
 
 export const SLIDER_GROUPS: SliderGroupConfig[] = [
   {
     title: "Economics",
-    description: "The ocean fleet's own real discount rate.",
     sliders: [
       {
         key: "real_discount_rate",
@@ -86,13 +85,11 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 0.08,
         displayScale: 100,
         decimals: 1,
-        helpText: "Reflects a first-of-a-kind marine platform's risk premium over established, contracted terrestrial power infrastructure.",
       },
     ],
   },
   {
     title: "Node physical design",
-    description: "The single node's compute payload, hull, and onboard storage.",
     sliders: [
       {
         key: "payload_rating_kw",
@@ -103,6 +100,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 10,
         default: 200,
         decimals: 0,
+        helpText: "How much energy the chips aboard one node consumes",
       },
       {
         key: "hull_diameter_m",
@@ -113,7 +111,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 1,
         default: 20,
         decimals: 0,
-        helpText: "Affects both wave capture and structural mass. Structural mass is estimated from a Panthalassa empirical design point of 397 tonnes at 23 m using cubic geometric scaling.",
+        helpText: "Affects both wave capture and structural mass (bigger hull = more captured power and more steel needed)",
       },
       {
         key: "battery_duration_hours",
@@ -124,12 +122,12 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 0.25,
         default: 0.5,
         decimals: 2,
+        helpText: "The amount of time the battery can power the payload when waves are insufficient",
       },
     ],
   },
   {
     title: "Operations & service",
-    description: "Where the node operates and how long it stays in the fleet.",
     sliders: [
       {
         key: "sea_park_distance_km",
@@ -140,6 +138,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 100,
         default: 800,
         decimals: 0,
+        helpText: "The distance between the port the nodes launch from and the area of the ocean where the waves are optimal",
       },
       {
         key: "node_lifetime_years",
@@ -150,12 +149,12 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 1,
         default: 20,
         decimals: 0,
+        helpText: "Economic life of a node",
       },
     ],
   },
   {
     title: "Reliability",
-    description: "Chip-level and whole-node failure behavior.",
     sliders: [
       {
         key: "chip_failure_rate_annual",
@@ -167,7 +166,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 0.01,
         displayScale: 100,
         decimals: 1,
-        helpText: "Reduces expected delivered output continuously from the moment a node is restored, well before hot spares are exhausted -- so it raises required fleet size even between service trips.",
+        helpText: "The percentage of still-working compute hardware expected to fail each year and eventually need replacement",
       },
       {
         key: "hotSpareShare",
@@ -179,7 +178,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 0.1,
         displayScale: 100,
         decimals: 1,
-        helpText: "Share of installed payload held as best-effort capacity. Sets the surprise-service trigger threshold -- it does not add hardware.",
+        helpText: "Extra compute capacity kept in reserve so some chips can fail without reducing the node's promised output; once that reserve is used up, the node returns for service",
       },
       {
         key: "node_failure_rate_annual",
@@ -191,12 +190,12 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 0.03,
         displayScale: 100,
         decimals: 1,
+        helpText: "The annual chance that a node suffers a serious hardware or mechanical failure (other than normal chip wear) that forces it out of service",
       },
     ],
   },
   {
     title: "Cost assumptions",
-    description: "Unit costs for the ocean-only capital line items.",
     sliders: [
       {
         key: "finished_hull_cost_usd_per_tonne",
@@ -207,6 +206,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 500,
         default: 2000,
         decimals: 0,
+        helpText: "Fabrication cost per tonne of finished structural steel",
       },
       {
         key: "pto_cost_usd_per_kw",
@@ -217,12 +217,12 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 25,
         default: 200,
         decimals: 0,
+        helpText: "Power take-off (generator) cost per kW of installed PTO rating (PTO is sized at 1.5x payload)",
       },
     ],
   },
   {
     title: "Workload & data transfer",
-    description: "Transfer cost for external network traffic generated by delivered compute.",
     sliders: [
       {
         key: "dataTransferCostPerGb",
@@ -233,6 +233,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         step: 0.05,
         default: 1.0,
         decimals: 2,
+        helpText: "Cost to move workload data off the node",
       },
     ],
   },

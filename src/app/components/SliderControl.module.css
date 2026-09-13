@@ -16,6 +16,51 @@
   color: var(--text-primary);
 }
 
+/* Sliders with a definition: dotted underline + help cursor signal that
+   hovering (or focusing, for keyboard users) reveals more text, instead of
+   printing that text permanently below the slider. */
+.labelHint {
+  position: relative;
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-tertiary);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 7px);
+  width: max-content;
+  max-width: 220px;
+  background: var(--accent-strong);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 6px 9px;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(20, 24, 31, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.labelHint:hover .tooltip,
+.labelHint:focus-visible .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .valueGroup {
   display: flex;
   align-items: baseline;
@@ -107,11 +152,4 @@
 
 .defaultTag:disabled {
   visibility: hidden;
-}
-
-.helpText {
-  font-size: 10.5px;
-  line-height: 1.4;
-  color: var(--text-tertiary);
-  margin: 6px 0 0;
 }

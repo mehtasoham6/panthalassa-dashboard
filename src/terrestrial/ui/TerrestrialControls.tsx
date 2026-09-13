@@ -51,10 +51,7 @@ export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onR
         {groups.map((group) => (
           <details key={group.title} className={panelStyles.group} open>
             <summary className={panelStyles.groupSummary}>
-              <span className={panelStyles.groupTitleBlock}>
-                <span className={panelStyles.groupTitle}>{group.title}</span>
-                <span className={panelStyles.groupDescription}>{group.description}</span>
-              </span>
+              <span className={panelStyles.groupTitle}>{group.title}</span>
               <span className={panelStyles.chevron} aria-hidden>
                 &#9656;
               </span>

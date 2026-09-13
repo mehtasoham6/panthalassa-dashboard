@@ -22,10 +22,7 @@ export function SliderPanel({ inputs, setInput, resetAll }: Props) {
         {SLIDER_GROUPS.map((group) => (
           <details key={group.title} className={styles.group} open>
             <summary className={styles.groupSummary}>
-              <span className={styles.groupTitleBlock}>
-                <span className={styles.groupTitle}>{group.title}</span>
-                <span className={styles.groupDescription}>{group.description}</span>
-              </span>
+              <span className={styles.groupTitle}>{group.title}</span>
               <span className={styles.chevron} aria-hidden>
                 &#9656;
               </span>

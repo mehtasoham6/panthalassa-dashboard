@@ -31,7 +31,16 @@ export function SliderControl({ config, value, onChange }: Props) {
   return (
     <div className={styles.row}>
       <div className={styles.topLine}>
-        <span className={styles.label}>{config.label}</span>
+        {config.helpText ? (
+          <span className={styles.labelHint} tabIndex={0}>
+            {config.label}
+            <span className={styles.tooltip} role="tooltip">
+              {config.helpText}
+            </span>
+          </span>
+        ) : (
+          <span className={styles.label}>{config.label}</span>
+        )}
         <span className={styles.valueGroup}>
           <span className={`${styles.value} num`}>{displayValue.toFixed(decimals)}</span>
           <span className={styles.unit}>{config.unit}</span>
@@ -46,7 +55,7 @@ export function SliderControl({ config, value, onChange }: Props) {
           step={config.step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={config.label}
+          aria-label={config.helpText ? `${config.label}: ${config.helpText}` : config.label}
         />
       </div>
       <div className={styles.bottomLine}>
@@ -62,7 +71,6 @@ export function SliderControl({ config, value, onChange }: Props) {
           default: {(config.default * scale).toFixed(decimals)}
         </button>
       </div>
-      {config.helpText && <p className={styles.helpText}>{config.helpText}</p>}
     </div>
   );
 }
