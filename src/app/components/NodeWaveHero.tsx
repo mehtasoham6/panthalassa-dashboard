@@ -15,8 +15,11 @@ import styles from "./NodeWaveHero.module.css";
  *
  * The sea starts just in front of the node, so its near edge is a wavy
  * cut-off line through the float and nothing is drawn over the submerged
- * part. Rows fade out well before the horizon, where they would alias;
- * columns run further and converge on the vanishing point.
+ * part. Rows are spaced by their height on screen so they run right up to
+ * the horizon without aliasing; columns converge on the vanishing point and
+ * fade just before they bunch up. With SEA_FACES on, an opaque surface mesh
+ * under the wires closes the last sliver so sea and sky meet with a hard
+ * edge.
  *
  * The node line list is exported from the Blender model by
  * scripts/export_node_wire.py (metres, +Z up, float at the top).
@@ -39,8 +42,8 @@ const PIVOT_Z = 46;                          // model z the node pitches about
 const SWAY_GAIN = 0.4;                       // how fully the node follows the surface slope; a spar buoy barely tilts
 const FLOAT_SAMPLE_R = 4.5;                  // m, footprint the sway is averaged over
 
-const CAM_HEIGHT = 31;                       // m above the mean water line
-const CAM_DISTANCE = 253;                    // m horizontally from the node
+const CAM_HEIGHT = 16;                       // m above the mean water line
+const CAM_DISTANCE = 190;                    // m horizontally from the node
 const FOV_Y = (40 * Math.PI) / 180;          // vertical field of view
 const TILT = Math.atan2(CAM_HEIGHT, CAM_DISTANCE);   // optical axis points at the node's water line
 const CAM_DIST = Math.hypot(CAM_HEIGHT, CAM_DISTANCE);
@@ -52,18 +55,29 @@ const INITIAL_SPIN = (-35 * Math.PI) / 180;
 const MAX_DPR = 1.5;
 
 const GRID_NEAR = -6;                        // m in front of the node where the sea is cut off
-const GRID_ROW_FAR = 600;                    // m behind the node the last row lies
-const GRID_COL_FAR = 1500;                   // m behind the node the columns end
-const GRID_SPACING = 8;                      // m between grid lines
-const GRID_STEP = 4;                         // m between vertices along a line
+const GRID_SPACING = 8;                      // m between grid lines at the cut-off
+const GRID_STEP = 4;                         // m between vertices along a line, near the node
+const STEP_GROWTH = 0.02;                    // vertex spacing grows to this fraction of the distance from the camera
+const ROW_MIN_SCREEN = 0.004;                // NDC; rows never get closer on screen than this, so they reach the horizon without aliasing
+const GRID_COL_FAR = 5000;                   // m behind the node where the columns end
+const FACE_FAR = 400_000;                    // m, the last face row is within a pixel of the horizon line
 
-/** Fades along the camera's depth axis, metres behind the node: opaque until [0], gone by [1]. */
-const ROW_FADE: [number, number] = [220, 600];
-const COL_FADE: [number, number] = [700, 1500];
+/** Column fade along the camera's depth axis, metres behind the node: opaque until [0], gone by [1]. */
+const COL_FADE: [number, number] = [2500, 5000];
 const NODE_DEPTH_DIM = 0.55;
+
+/**
+ * Experiment: draw the sea as opaque faces under the wires, so it meets
+ * the sky with a hard edge at the horizon instead of fading into haze.
+ */
+const SEA_FACES = true;
+const FACE_HAZE_RANGE: [number, number] = [500, 8000];  // m behind the node over which faces tint toward the haze colour
 
 const NODE_COLOR: [number, number, number, number] = [0.94, 0.97, 0.99, 0.82];
 const WAVE_COLOR: [number, number, number, number] = [0.80, 0.92, 1.0, 0.42];
+const SEA_FACE_COLOR: [number, number, number, number] = [0.08, 0.26, 0.41, 1.0];
+const SEA_HAZE_COLOR: [number, number, number] = [0.19, 0.41, 0.59];
+const FAR_PLANE = 400_000;
 
 /* ------------------------------------------------------------------ */
 /* Shaders                                                             */
@@ -113,6 +127,8 @@ in float v_dist;
 uniform vec4 u_color;      // straight alpha
 uniform vec4 u_fade;       // nearEnd, nearStart, farStart, farEnd (metres)
 uniform float u_depthDim;  // how much to dim the far side (0..1)
+uniform vec3 u_hazeColor;  // colour the surface tints toward with distance
+uniform vec2 u_hazeRange;  // metres behind the node where the tint starts / completes
 
 out vec4 o_color;
 
@@ -120,8 +136,9 @@ void main() {
   float near = smoothstep(u_fade.x, u_fade.y, v_dist);
   float far = 1.0 - smoothstep(u_fade.z, u_fade.w, v_dist);
   float dim = 1.0 - u_depthDim * smoothstep(-8.0, 8.0, v_dist);
+  vec3 rgb = mix(u_color.rgb, u_hazeColor, smoothstep(u_hazeRange.x, u_hazeRange.y, v_dist));
   float a = u_color.a * near * far * dim;
-  o_color = vec4(u_color.rgb * a, a);   // premultiplied
+  o_color = vec4(rgb * a, a);   // premultiplied
 }
 `;
 
@@ -149,33 +166,108 @@ function visibleHalfWidth(y: number): number {
   return 1.1 * (1 + NODE_NDC_X_WIDE) * Math.tan(FOV_Y / 2) * MAX_ASPECT * (CAM_DISTANCE + y);
 }
 
+/** How far below the horizon, in NDC, a point on the mean water plane `d` metres from the camera projects. */
+function dropBelowHorizon(d: number): number {
+  return (Math.tan(TILT) + Math.tan(Math.atan(CAM_HEIGHT / d) - TILT)) / Math.tan(FOV_Y / 2);
+}
+
+/** Inverse of dropBelowHorizon. */
+function distanceForDrop(u: number): number {
+  return CAM_HEIGHT / Math.tan(TILT + Math.atan(u * Math.tan(FOV_Y / 2) - Math.tan(TILT)));
+}
+
+/** Vertex spacing along a line `y` metres behind the node: GRID_STEP near, growing with distance. */
+function stepAt(y: number): number {
+  return Math.max(GRID_STEP, STEP_GROWTH * (CAM_DISTANCE + y));
+}
+
+type SeaRow = { y: number; xs: number[] };
+
+function rowXs(y: number): number[] {
+  const step = stepAt(y);
+  const half = Math.ceil(visibleHalfWidth(y) / step) * step;
+  const xs: number[] = [];
+  for (let x = -half; x <= half + 1e-6; x += step) xs.push(x);
+  return xs;
+}
+
+/**
+ * Rows of the sea, from the cut-off out to the horizon. Rows are placed by
+ * their height on screen: GRID_SPACING metres apart at the cut-off, then
+ * closing up toward the horizon but never below ROW_MIN_SCREEN, so the last
+ * row sits just under the sky and nothing aliases.
+ */
+function buildSeaRows(): SeaRow[] {
+  const u0 = dropBelowHorizon(CAM_DISTANCE + GRID_NEAR);
+  const sNear = u0 - dropBelowHorizon(CAM_DISTANCE + GRID_NEAR + GRID_SPACING);
+  const rows: SeaRow[] = [];
+  let u = u0;
+  while (u > ROW_MIN_SCREEN * 0.5) {
+    const y = distanceForDrop(u) - CAM_DISTANCE;
+    rows.push({ y, xs: rowXs(y) });
+    u -= ROW_MIN_SCREEN + (sNear - ROW_MIN_SCREEN) * (u / u0);
+  }
+  return rows;
+}
+
 type SeaGrid = { data: Float32Array; rowVertices: number; colVertices: number };
 
 /**
- * Flat sea grid in the XY plane as a LINES list; the shader displaces it.
- * Rows (constant y) come first, then columns (constant x), so the two can
- * be drawn with different far fades. Lines are only generated where they
- * can be on screen, which keeps the far, wide part of the grid cheap.
+ * Sea wires as a LINES list; the shader displaces it. Rows come first,
+ * then columns, so the two can be drawn with different fades. Columns
+ * take their vertices from the row positions (subdivided near the camera)
+ * and only start where they can be on screen.
  */
-function buildSeaGrid(): SeaGrid {
+function buildSeaGrid(rows: SeaRow[]): SeaGrid {
   const out: number[] = [];
-  for (let y = GRID_NEAR; y <= GRID_ROW_FAR + 1e-6; y += GRID_SPACING) {
-    const half = Math.ceil(visibleHalfWidth(y) / GRID_STEP) * GRID_STEP;
-    for (let x = -half; x < half - 1e-6; x += GRID_STEP) {
-      out.push(x, y, 0, x + GRID_STEP, y, 0);
-    }
+  for (const { y, xs } of rows) {
+    for (let i = 0; i < xs.length - 1; i++) out.push(xs[i]!, y, 0, xs[i + 1]!, y, 0);
   }
   const rowVertices = out.length / 3;
+
+  const ys = rows.map((r) => r.y).filter((y) => y <= GRID_COL_FAR);
   const colHalf = Math.ceil(visibleHalfWidth(GRID_COL_FAR) / GRID_SPACING) * GRID_SPACING;
   for (let x = -colHalf; x <= colHalf + 1e-6; x += GRID_SPACING) {
     // the column first enters the frame at this depth
-    const yEnter = Math.abs(x) / (visibleHalfWidth(0) / CAM_DISTANCE) - CAM_DISTANCE;
-    const yStart = Math.max(GRID_NEAR, Math.floor((yEnter - 2 * GRID_STEP) / GRID_STEP) * GRID_STEP);
-    for (let y = yStart; y < GRID_COL_FAR - 1e-6; y += GRID_STEP) {
-      out.push(x, y, 0, x, Math.min(y + GRID_STEP, GRID_COL_FAR), 0);
+    const yEnter = Math.abs(x) / (visibleHalfWidth(0) / CAM_DISTANCE) - CAM_DISTANCE - 2 * GRID_SPACING;
+    for (let r = 0; r < ys.length - 1; r++) {
+      const ya = ys[r]!;
+      const yb = ys[r + 1]!;
+      if (yb < yEnter) continue;
+      const n = Math.max(1, Math.ceil((yb - ya) / stepAt(ya)));
+      for (let k = 0; k < n; k++) {
+        out.push(x, ya + ((yb - ya) * k) / n, 0, x, ya + ((yb - ya) * (k + 1)) / n, 0);
+      }
     }
   }
   return { data: new Float32Array(out), rowVertices, colVertices: out.length / 3 - rowVertices };
+}
+
+/**
+ * Sea surface as a triangle list under the wires, on the same rows plus a
+ * final row at FACE_FAR that closes the last sliver up to the horizon.
+ */
+function buildSeaFaces(rows: SeaRow[]): Float32Array {
+  const out: number[] = [];
+  const all = [...rows, { y: FACE_FAR, xs: rowXs(FACE_FAR) }];
+  for (let r = 0; r < all.length - 1; r++) {
+    const { y: y0, xs: xs0 } = all[r]!;
+    const { y: y1, xs: xs1 } = all[r + 1]!;
+    // stitch the two rows as a strip: walk both rows by x
+    let i = 0;
+    let j = 0;
+    while (i < xs0.length - 1 || j < xs1.length - 1) {
+      const advance0 = j >= xs1.length - 1 || (i < xs0.length - 1 && xs0[i + 1]! <= xs1[j + 1]!);
+      if (advance0) {
+        out.push(xs0[i]!, y0, 0, xs0[i + 1]!, y0, 0, xs1[j]!, y1, 0);
+        i++;
+      } else {
+        out.push(xs0[i]!, y0, 0, xs1[j + 1]!, y1, 0, xs1[j]!, y1, 0);
+        j++;
+      }
+    }
+  }
+  return new Float32Array(out);
 }
 
 function compileProgram(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
@@ -229,7 +321,7 @@ function buildView(): mat4 {
  * of centre. Shifting in clip space keeps the horizon level.
  */
 function buildProjection(aspect: number): mat4 {
-  const proj = mat4.perspective(mat4.create(), FOV_Y, aspect, 1, 5000);
+  const proj = mat4.perspective(mat4.create(), FOV_Y, aspect, 1, FAR_PLANE);
   const horizonUnshifted = Math.tan(TILT) / Math.tan(FOV_Y / 2);
   const shiftY = 1 - 2 * HORIZON_FRAC - horizonUnshifted;
   const shiftX = aspect >= WIDE_ASPECT ? NODE_NDC_X_WIDE : 0;
@@ -262,6 +354,7 @@ class HeroRenderer {
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
   private sea: { vao: WebGLVertexArrayObject; rowVertices: number; colVertices: number };
+  private faces: { vao: WebGLVertexArrayObject; count: number } | null = null;
   private node: { vao: WebGLVertexArrayObject; count: number } | null = null;
 
   private view = buildView();
@@ -276,12 +369,14 @@ class HeroRenderer {
     this.program = compileProgram(gl, line_vs, line_fs);
     const names = [
       "u_model", "u_view", "u_proj", "u_camDist", "u_isWave", "u_time", "u_steep",
-      "u_color", "u_fade", "u_depthDim",
+      "u_color", "u_fade", "u_depthDim", "u_hazeColor", "u_hazeRange",
     ];
     this.u = Object.fromEntries(names.map((n) => [n, gl.getUniformLocation(this.program, n)]));
 
-    const grid = buildSeaGrid();
+    const rows = buildSeaRows();
+    const grid = buildSeaGrid(rows);
     this.sea = { ...makeLineVao(gl, this.program, grid.data), rowVertices: grid.rowVertices, colVertices: grid.colVertices };
+    if (SEA_FACES) this.faces = makeLineVao(gl, this.program, buildSeaFaces(rows));
 
     gl.useProgram(this.program);
     gl.uniformMatrix4fv(this.u.u_view!, false, this.view);
@@ -315,15 +410,25 @@ class HeroRenderer {
     gl.uniformMatrix4fv(this.u.u_proj!, false, this.proj);
     gl.uniform1f(this.u.u_time!, t);
 
-    // sea: rows fade out early, columns run on to the horizon
+    // sea surface, opaque out to the horizon
     gl.uniformMatrix4fv(this.u.u_model!, false, this.seaModel);
     gl.uniform1i(this.u.u_isWave!, 1);
-    gl.uniform4f(this.u.u_color!, ...WAVE_COLOR);
     gl.uniform1f(this.u.u_depthDim!, 0);
+    gl.uniform4f(this.u.u_fade!, -1e9, -1e9 + 1, 1e9 - 1, 1e9);
+    if (this.faces) {
+      gl.uniform4f(this.u.u_color!, ...SEA_FACE_COLOR);
+      gl.uniform3f(this.u.u_hazeColor!, ...SEA_HAZE_COLOR);
+      gl.uniform2f(this.u.u_hazeRange!, ...FACE_HAZE_RANGE);
+      gl.bindVertexArray(this.faces.vao);
+      gl.drawArrays(gl.TRIANGLES, 0, this.faces.count);
+    }
+
+    // sea wires: rows run to the horizon, columns fade before they bunch at the vanishing point
+    gl.uniform4f(this.u.u_color!, ...WAVE_COLOR);
+    gl.uniform2f(this.u.u_hazeRange!, 1e9, 2e9);
     gl.bindVertexArray(this.sea.vao);
-    gl.uniform4f(this.u.u_fade!, -1e4, -1e4 + 1, ...ROW_FADE);
     gl.drawArrays(gl.LINES, 0, this.sea.rowVertices);
-    gl.uniform4f(this.u.u_fade!, -1e4, -1e4 + 1, ...COL_FADE);
+    gl.uniform4f(this.u.u_fade!, -1e9, -1e9 + 1, ...COL_FADE);
     gl.drawArrays(gl.LINES, this.sea.rowVertices, this.sea.colVertices);
 
     // node, far side dimmed
@@ -346,6 +451,7 @@ class HeroRenderer {
     const gl = this.gl;
     gl.deleteProgram(this.program);
     gl.deleteVertexArray(this.sea.vao);
+    if (this.faces) gl.deleteVertexArray(this.faces.vao);
     if (this.node) gl.deleteVertexArray(this.node.vao);
   }
 }

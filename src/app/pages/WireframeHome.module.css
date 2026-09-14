@@ -2,8 +2,8 @@
   --sky-top: #e9f4fb;
   --sky-mid: #a9d0ec;
   --sky-horizon: #4d93cc;
-  --deep-top: #0f2236;
-  --deep: #0a141d;
+  --deep: #112a40;
+  --gutter: max(32px, calc(50vw - 560px));
   --ink: #0b2a44;
   --ink-muted: #2f5b7d;
   --fg: #e3ebf2;
@@ -25,7 +25,7 @@
     var(--sky-top) 0%,
     var(--sky-mid) calc(var(--horizon) - 24%),
     var(--sky-horizon) var(--horizon),
-    var(--deep-top) calc(var(--horizon) + 2.5%),
+    var(--deep) var(--horizon),
     var(--deep) 100%
   );
 }
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
+  padding: 20px var(--gutter);
   z-index: 2;
 }
 
@@ -73,7 +73,7 @@
 .title {
   position: absolute;
   top: 14vh;
-  left: 32px;
+  left: var(--gutter);
   z-index: 2;
   max-width: 60vw;
 }
@@ -98,13 +98,18 @@
 
 .copy {
   position: absolute;
-  left: 32px;
+  left: var(--gutter);
   bottom: 48px;
   z-index: 2;
   max-width: 34rem;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 24px 28px;
+  border: 1px solid rgba(227, 235, 242, 0.28);
+  border-radius: 2px;
+  background: rgba(9, 24, 38, 0.6);
+  backdrop-filter: blur(6px);
 }
 
 .copy p {
@@ -144,8 +149,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 32px;
-  padding: 72px 32px 96px;
-  max-width: 1200px;
+  padding: 72px var(--gutter) 96px;
+  max-width: none;
   margin: 0 auto;
   border-top: 1px solid var(--hairline);
 }
