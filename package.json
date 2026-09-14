@@ -21,7 +21,9 @@
     "vitest": "^2.1.4"
   },
   "dependencies": {
+    "gl-matrix": "^3.4.4",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.1"
   }
 }
