@@ -17,7 +17,7 @@ const LABEL_MIN_FRACTION = 0.14;
  * architectures are sized to the same delivered-compute target, so
  * undiscounted lifecycle cost is directly comparable. The two bars share a
  * scale set by the dearer build; the stretch of the longer bar beyond the
- * shorter one is the difference, and it is the page's International Orange.
+ * shorter one is the overage, and it breaks into Frontier Crimson.
  * Nothing here assumes which side is cheaper.
  */
 export function ComparisonVerdict({ oceanResult, terrestrialResult }: Props) {

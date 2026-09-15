@@ -16,15 +16,15 @@
 
 /* The header is a flat field in the side's colour, so the column reads as that side from the top. */
 .headerOcean {
-  background: var(--fai-cod-gray);
-  color: var(--fai-smoke-white);
-  border-bottom-color: var(--fai-cod-gray);
+  background: var(--fai-international-orange);
+  color: var(--fai-cod-gray);
+  border-bottom-color: var(--fai-international-orange);
 }
 
 .headerLand {
-  background: var(--fai-timberwolf);
-  color: var(--fai-cod-gray);
-  border-bottom-color: var(--fai-timberwolf);
+  background: var(--fai-cod-gray);
+  color: var(--fai-smoke-white);
+  border-bottom-color: var(--fai-cod-gray);
 }
 
 .headerTitle {
@@ -52,7 +52,7 @@
   border-color: var(--fai-cod-gray);
 }
 
-.headerOcean .resetBtn:hover {
+.headerLand .resetBtn:hover {
   background: var(--fai-smoke-white);
   color: var(--fai-cod-gray);
   border-color: var(--fai-smoke-white);

@@ -101,13 +101,13 @@
 }
 
 .sideOcean {
-  background: var(--fai-cod-gray);
-  color: var(--fai-smoke-white);
+  background: var(--fai-international-orange);
+  color: var(--fai-cod-gray);
 }
 
 .sideLand {
-  background: var(--fai-timberwolf);
-  color: var(--fai-cod-gray);
+  background: var(--fai-cod-gray);
+  color: var(--fai-smoke-white);
 }
 
 .inputsDock {

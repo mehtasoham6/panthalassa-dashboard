@@ -55,8 +55,11 @@ export function WireframeHome() {
         </header>
 
         <div className={styles.title}>
-          <h1 className={styles.headline}>Wave Power</h1>
+          <p className={styles.headline}>Wave Power</p>
         </div>
+
+        {/* The name stands up out of the sea and cuts across the headline. */}
+        <h1 className={styles.brandWord}>Panthalassa</h1>
 
         <div className={styles.copy}>
           <p>{LOREM_LEAD}</p>

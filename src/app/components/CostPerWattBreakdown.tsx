@@ -3,6 +3,7 @@ import type { TerrestrialModelResult } from "../../terrestrial/model/types.js";
 import { comparableOutputsFromPanthalassa } from "../../terrestrial/integration/index.js";
 import { formatUsdPerUnit } from "../lib/formatters.js";
 import { SideMark } from "./SideMark.js";
+import { highlightClass, lowerSide } from "../lib/compare.js";
 import styles from "./CostPerWattBreakdown.module.css";
 
 interface Props {
@@ -53,6 +54,16 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
     terrestrialComparable.present_value_lifecycle_cost_usd / terrestrialComparable.analysis_period_delivered_compute_mwh;
 
   const col = { label: 1, ocean: 2, terrestrial: 3 } as const;
+
+  // Rows where both sides have a like-for-like figure get the lower one highlighted.
+  // The node cell stands in for three terrestrial rows, so it is not scored.
+  const marks = { ocean: styles.betterOcean!, land: styles.betterLand!, worse: styles.worse! };
+  const better = {
+    chips: lowerSide(oceanChips, terrestrialChips),
+    data: lowerSide(oceanData, terrestrialData),
+    total: lowerSide(oceanTotal, terrestrialTotal),
+    perMwh: lowerSide(oceanPerMwh, terrestrialPerMwh),
+  };
 
   return (
     <div className="card">
@@ -106,40 +117,64 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
           <span className={styles.rowLabel} style={{ gridColumn: col.label, gridRow: 5 }}>
             Chips
           </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.ocean, gridRow: 5 }}>
+          <span
+            className={`${styles.rowValue} num ${highlightClass(better.chips, "ocean", marks)}`}
+            style={{ gridColumn: col.ocean, gridRow: 5 }}
+          >
             {fmtW(oceanChips)}
           </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 5 }}>
+          <span
+            className={`${styles.rowValue} num ${highlightClass(better.chips, "land", marks)}`}
+            style={{ gridColumn: col.terrestrial, gridRow: 5 }}
+          >
             {fmtW(terrestrialChips)}
           </span>
 
           <span className={styles.rowLabel} style={{ gridColumn: col.label, gridRow: 6 }}>
             Data
           </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.ocean, gridRow: 6 }}>
+          <span
+            className={`${styles.rowValue} num ${highlightClass(better.data, "ocean", marks)}`}
+            style={{ gridColumn: col.ocean, gridRow: 6 }}
+          >
             {fmtW(oceanData)}
           </span>
-          <span className={`${styles.rowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 6 }}>
+          <span
+            className={`${styles.rowValue} num ${highlightClass(better.data, "land", marks)}`}
+            style={{ gridColumn: col.terrestrial, gridRow: 6 }}
+          >
             {fmtW(terrestrialData)}
           </span>
 
           <span className={styles.totalLabel} style={{ gridColumn: col.label, gridRow: 7 }}>
             All-in cost per target watt
           </span>
-          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.ocean, gridRow: 7 }}>
+          <span
+            className={`${styles.totalValue} num ${highlightClass(better.total, "ocean", marks)}`}
+            style={{ gridColumn: col.ocean, gridRow: 7 }}
+          >
             {fmtW(oceanTotal)}
           </span>
-          <span className={`${styles.totalValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 7 }}>
+          <span
+            className={`${styles.totalValue} num ${highlightClass(better.total, "land", marks)}`}
+            style={{ gridColumn: col.terrestrial, gridRow: 7 }}
+          >
             {fmtW(terrestrialTotal)}
           </span>
 
           <span className={styles.lastRowLabel} style={{ gridColumn: col.label, gridRow: 8 }}>
             Cost per MWh (delivered compute)
           </span>
-          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.ocean, gridRow: 8 }}>
+          <span
+            className={`${styles.lastRowValue} num ${highlightClass(better.perMwh, "ocean", marks)}`}
+            style={{ gridColumn: col.ocean, gridRow: 8 }}
+          >
             {fmtMwh(oceanPerMwh)}
           </span>
-          <span className={`${styles.lastRowValue} num`} style={{ gridColumn: col.terrestrial, gridRow: 8 }}>
+          <span
+            className={`${styles.lastRowValue} num ${highlightClass(better.perMwh, "land", marks)}`}
+            style={{ gridColumn: col.terrestrial, gridRow: 8 }}
+          >
             {fmtMwh(terrestrialPerMwh)}
           </span>
         </div>

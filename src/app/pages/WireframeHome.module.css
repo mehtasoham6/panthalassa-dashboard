@@ -96,6 +96,28 @@
   white-space: nowrap;
 }
 
+/* The name, set vertical in International Orange, standing in the sea and cutting up across
+   the black headline: a vertical against a horizontal, the Bauhaus poster's cut. In front of
+   the water (the headline is behind it), so it rises out of the waves rather than sinking. */
+.brandWord {
+  position: absolute;
+  left: 53vw;
+  bottom: 48px;
+  z-index: 2;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(64px, 22vh, 240px);
+  line-height: 0.8;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .copy {
   position: absolute;
   left: var(--gutter);
@@ -245,6 +267,13 @@
 @media (max-width: 672px) {
   .hero {
     min-height: 720px;
+  }
+  .brandWord {
+    left: auto;
+    right: 16px;
+    bottom: auto;
+    top: 64px;
+    font-size: 14vh;
   }
   .topbar {
     padding: 16px;

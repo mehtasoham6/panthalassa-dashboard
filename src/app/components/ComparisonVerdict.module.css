@@ -1,5 +1,6 @@
 /* The emphasised card on the page: compound selector so its border beats the global .card rule.
-   Paper surface; the only International Orange here is the difference segment in the bar. */
+   Paper surface. Panthalassa's bar is International Orange, Terrestrial's is Cod Gray, and the
+   stretch the dearer build runs past the cheaper one breaks into Frontier Crimson. */
 :global(.card).verdictCard {
   border: 2px solid var(--fai-cod-gray);
   padding: 24px;
@@ -76,18 +77,18 @@
 }
 
 .fillOcean {
-  background: var(--fai-cod-gray);
+  background: var(--fai-international-orange);
 }
 
 .fillLand {
-  background: var(--fai-timberwolf);
+  background: var(--fai-cod-gray);
 }
 
-/* The stretch one build costs beyond the other. Cod Gray label on orange. */
+/* The overage: what one build costs beyond the other. Smoke label on crimson. */
 .diff {
   flex-shrink: 0;
   height: 100%;
-  background: var(--fai-international-orange);
+  background: var(--fai-frontier-crimson);
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -97,7 +98,7 @@
 .diffLabel {
   font-size: 14px;
   font-weight: 600;
-  color: var(--fai-cod-gray);
+  color: var(--fai-smoke-white);
   white-space: nowrap;
 }
 

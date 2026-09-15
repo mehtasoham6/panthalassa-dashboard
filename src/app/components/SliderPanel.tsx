@@ -9,6 +9,9 @@ interface Props {
   resetAll: () => void;
 }
 
+/** The one group open on load. The node itself is what Panthalassa is proposing; everything else is context. */
+const OPEN_GROUP = "Node physical design";
+
 export function SliderPanel({ inputs, setInput, resetAll }: Props) {
   return (
     <div className={styles.panel}>
@@ -20,7 +23,7 @@ export function SliderPanel({ inputs, setInput, resetAll }: Props) {
       </div>
       <div className={`${styles.scrollArea} scroll-thin`}>
         {SLIDER_GROUPS.map((group) => (
-          <details key={group.title} className={styles.group} open>
+          <details key={group.title} className={styles.group} open={group.title === OPEN_GROUP}>
             <summary className={styles.groupSummary}>
               <span className={styles.groupTitle}>{group.title}</span>
               <svg

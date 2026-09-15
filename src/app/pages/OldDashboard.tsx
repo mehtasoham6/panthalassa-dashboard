@@ -130,8 +130,8 @@ export function OldDashboard() {
           <CostPerWattBreakdown oceanResult={result} terrestrialResult={terrestrialResult} />
 
           {/* Below the shared comparison, each architecture gets its own column under a
-              side-coloured head: Cod Gray for the ocean fleet, Timberwolf for the terrestrial
-              plant. Everything in a column belongs to that side. */}
+              side-coloured head: International Orange for the ocean fleet, Cod Gray for the
+              terrestrial plant. Everything in a column belongs to that side. */}
           <div className={styles.sides}>
             <section className={styles.side} aria-labelledby="ocean-side">
               <h2 id="ocean-side" className={`${styles.sideHead} ${styles.sideOcean}`}>
