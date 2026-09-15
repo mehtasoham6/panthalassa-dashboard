@@ -4,10 +4,10 @@ import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
 
 /**
- * Home page, option A: toned-down wireframe look. Mid-day sky above the
- * water line, dark below it where the copy sits. The background gradient
- * and the WebGL hero share HORIZON_FRAC so the sky/deep split lands on the
- * horizon the sea converges to.
+ * Home page: a flat Smoke White sky above the water line and a Cod Gray
+ * sea below it where the copy sits. The two-plane background and the WebGL
+ * hero share HORIZON_FRAC so the split lands on the horizon the sea
+ * converges to.
  */
 
 const LOREM_LEAD =
@@ -43,7 +43,6 @@ export function WireframeHome() {
         </header>
 
         <div className={styles.title}>
-          <span className={styles.eyebrow}>Ocean-2 node</span>
           <h1 className={styles.headline}>Wave Power</h1>
         </div>
 
@@ -52,7 +51,6 @@ export function WireframeHome() {
           <p>{LOREM}</p>
           <Link to="/old" className={styles.cta}>
             Explore the model
-            <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>
       </section>

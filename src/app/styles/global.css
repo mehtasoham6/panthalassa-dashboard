@@ -1,43 +1,84 @@
+/*
+ * Design tokens. FAI overlay: the palette is the ten permitted FAI fills
+ * (four master fills plus six program hues); every grey is a tint of Cod Gray
+ * over Smoke White, never a new hex. Type is the IBM Plex family: Serif for
+ * the reading voice (titles, prose), Sans for utility labels, Mono for
+ * numerals. Geometry is rectilinear (2px radius, no shadows, no blur).
+ */
+@font-face {
+  font-family: "Schmalfette Grotesk";
+  src: url("/fonts/SchmalfetteGrotesk.woff2") format("woff2"); /* licensed; lives in public/fonts, not in git */
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
 :root {
-  --bg: #f3f5f7;
-  --surface: #ffffff;
-  --surface-alt: #f8f9fb;
-  --border: #e0e4e9;
-  --border-strong: #c9ced6;
+  /* FAI master fills */
+  --fai-international-orange: #ff4f00;
+  --fai-cod-gray: #121212;
+  --fai-smoke-white: #f3f3f3;
+  --fai-timberwolf: #d9d9d6;
 
-  --text-primary: #14181f;
-  --text-secondary: #57626f;
-  --text-tertiary: #8993a1;
+  /* FAI program hues, used here only as data-visualisation slots */
+  --fai-chrome-yellow: #ffa300;
+  --fai-iris-violet: #7150d6;
+  --fai-deep-teal: #0e8c88;
+  --fai-signal-green: #268b41;
+  --fai-celestial-blue: #4997d0;
+  --fai-frontier-crimson: #c8102e;
 
-  --accent: #205572;
-  --accent-strong: #123549;
-  --accent-soft: #e7f0f4;
-  --accent-soft-border: #bdd6e1;
+  /* Grounds. Smoke White is the working white; the page ground is a Cod Gray tint of it. */
+  --bg: color-mix(in srgb, var(--fai-cod-gray) 6%, var(--fai-smoke-white));
+  --surface: var(--fai-smoke-white);
+  --surface-alt: color-mix(in srgb, var(--fai-cod-gray) 4%, var(--fai-smoke-white));
+  --border: var(--fai-timberwolf);
+  --border-strong: color-mix(in srgb, var(--fai-cod-gray) 48%, var(--fai-smoke-white));
 
-  /* Cost-category colors: reused consistently across breakdown bar, legend, and methodology. */
-  --cat-physical: #4a7188;
-  --cat-compute: #1c4a5e;
-  --cat-planned: #8993a1;
-  --cat-failure: #a8623f;
-  --cat-workload: #5a8a6b;
+  /* Ink hierarchy by tint, all >= 4.5:1 on --surface and --bg. */
+  --text-primary: var(--fai-cod-gray);
+  --text-secondary: color-mix(in srgb, var(--fai-cod-gray) 76%, var(--fai-smoke-white));
+  --text-tertiary: color-mix(in srgb, var(--fai-cod-gray) 64%, var(--fai-smoke-white));
+
+  /* International Orange is the only accent. It is a fill, never body-size text (2.97:1 on Smoke White). */
+  --accent: var(--fai-international-orange);
+  --accent-ink: var(--fai-cod-gray);
+  --accent-strong: var(--fai-cod-gray);
+  --accent-soft: color-mix(in srgb, var(--fai-international-orange) 12%, var(--fai-smoke-white));
+  --accent-soft-border: color-mix(in srgb, var(--fai-international-orange) 40%, var(--fai-smoke-white));
+
+  /* Status colours for deltas, kept separate from cost-category hues. Large text only for green. */
+  --positive: var(--fai-signal-green);
+  --negative: var(--fai-frontier-crimson);
+
+  /* Cost-category colours: reused consistently across breakdown bar, legend, and methodology. */
+  --cat-physical: var(--fai-celestial-blue);
+  --cat-compute: var(--fai-deep-teal);
+  --cat-planned: color-mix(in srgb, var(--fai-cod-gray) 44%, var(--fai-smoke-white));
+  --cat-failure: var(--fai-frontier-crimson);
+  --cat-workload: var(--fai-chrome-yellow);
   /* Terrestrial-comparator-only categories: power_system reuses the ocean
      physical-platform hue; compute/workload intentionally reuse the ocean
      tokens above since both architectures share those cost concepts. */
   --cat-power: var(--cat-physical);
-  --cat-facility: #8a5f7a;
+  --cat-facility: var(--fai-iris-violet);
 
-  /* Terrestrial "Power source" selector button colors, per explicit request. */
-  --power-ccgt: #c17a3a;
-  --power-solar: #8fbb8a;
-  --power-wind-onshore: #b7bcc2;
-  --power-wind-offshore: #838a92;
-  --power-geothermal: #c98787;
+  /* Terrestrial "Power source" selector button colours. */
+  --power-ccgt: color-mix(in srgb, var(--fai-cod-gray) 60%, var(--fai-smoke-white));
+  --power-solar: var(--fai-chrome-yellow);
+  --power-wind-onshore: var(--fai-celestial-blue);
+  --power-wind-offshore: var(--fai-deep-teal);
+  --power-geothermal: var(--fai-frontier-crimson);
 
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Display face: FAI's Schmalfette Grotesk, self-hosted below. ALL CAPS, positive tracking, never below 28px, never running text. */
+  --font-display: "Schmalfette Grotesk", "Arial Narrow", "IBM Plex Sans Condensed", sans-serif;
+  --font-body: "IBM Plex Serif", Georgia, serif;
+  --font-utility: "IBM Plex Sans", system-ui, sans-serif;
+  --font-sans: var(--font-utility);
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --radius: 6px;
-  --shadow-card: 0 1px 2px rgba(20, 24, 31, 0.04), 0 1px 1px rgba(20, 24, 31, 0.03);
+  --radius: 2px;
+  --shadow-card: none;
 
   color-scheme: light;
 }
@@ -55,7 +96,7 @@ body {
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-sans);
+  font-family: var(--font-utility);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -70,6 +111,7 @@ h2,
 h3,
 h4 {
   margin: 0;
+  font-family: var(--font-body);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -91,7 +133,6 @@ button {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
 }
 
 .section-label {
@@ -119,11 +160,16 @@ button {
 }
 .scroll-thin::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 a {
-  color: var(--accent);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .visually-hidden {

@@ -1,5 +1,5 @@
 .wrap {
-  padding: 6px 20px 10px;
+  padding: 8px 24px 12px;
 }
 
 .headerRow,
@@ -11,7 +11,7 @@
 }
 
 .headerRow {
-  padding: 10px 0 8px;
+  padding: 12px 0 8px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -32,7 +32,7 @@
 }
 
 .row {
-  padding: 11px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -41,7 +41,7 @@
 }
 
 .rowLabel {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -63,7 +63,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: "label label" "ocean terrestrial";
     row-gap: 4px;
-    padding: 10px 0;
+    padding: 12px 0;
   }
 
   .rowLabel {
@@ -81,12 +81,12 @@
 
   .rowValue::before {
     display: block;
-    font-size: 9.5px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--text-tertiary);
-    margin-bottom: 1px;
+    margin-bottom: 2px;
   }
 
   .rowValue:nth-of-type(2)::before {
