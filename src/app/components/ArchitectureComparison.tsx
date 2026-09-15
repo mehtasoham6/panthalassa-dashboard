@@ -2,6 +2,7 @@ import type { ModelResult } from "../../model/index.js";
 import type { TerrestrialModelResult } from "../../terrestrial/model/types.js";
 import { comparableOutputsFromPanthalassa } from "../../terrestrial/integration/index.js";
 import { formatDataGb, formatUsdCompact, formatUsdPerUnit } from "../lib/formatters.js";
+import { SideMark } from "./SideMark.js";
 import styles from "./ArchitectureComparison.module.css";
 
 interface Props {
@@ -50,8 +51,14 @@ export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props
       <div className={styles.wrap}>
         <div className={styles.headerRow}>
           <h2 className={styles.cornerLabel}>Comparable outputs</h2>
-          <span className={styles.colHeader}>Panthalassa</span>
-          <span className={styles.colHeader}>Terrestrial</span>
+          <span className={styles.colHeader}>
+            <SideMark side="ocean" />
+            Panthalassa
+          </span>
+          <span className={styles.colHeader}>
+            <SideMark side="land" />
+            Terrestrial
+          </span>
         </div>
         {rows.map((row) => (
           <div className={styles.row} key={row.label}>

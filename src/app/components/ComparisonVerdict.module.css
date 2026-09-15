@@ -1,6 +1,10 @@
-/* Compound selector so this beats the global .card border. This is the one emphasised card on the page. */
+/* The page's one committed International Orange field: the finding, stated on a full-width
+   plane. Compound selector so this beats the global .card surface. Everything on orange is
+   Cod Gray; the delta's direction is carried by the words, not by green or red. */
 :global(.card).verdictCard {
-  border: 2px solid var(--fai-cod-gray);
+  background: var(--fai-international-orange);
+  border: 0;
+  color: var(--fai-cod-gray);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -18,11 +22,12 @@
   font-size: 16px;
   font-weight: 600;
   margin: 0;
+  color: inherit;
 }
 
 .sub {
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: inherit;
 }
 
 .row {
@@ -40,12 +45,14 @@
 }
 
 .value dt {
+  display: flex;
+  align-items: center;
   font-family: var(--font-utility);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-tertiary);
+  color: inherit;
   margin: 0 0 4px;
 }
 
@@ -55,30 +62,18 @@
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.01em;
-  color: var(--text-secondary);
-}
-
-.ocean dd {
-  color: var(--text-primary);
+  color: inherit;
 }
 
 .verdict {
   font-family: var(--font-body);
   font-size: 20px;
   line-height: 1.3;
-  color: var(--text-primary);
+  color: inherit;
 }
 
 .verdict :global(.num) {
   font-weight: 600;
-}
-
-.lower :global(.num) {
-  color: var(--positive);
-}
-
-.higher :global(.num) {
-  color: var(--negative);
 }
 
 @media (max-width: 1311px) {

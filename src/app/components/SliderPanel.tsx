@@ -12,8 +12,8 @@ interface Props {
 export function SliderPanel({ inputs, setInput, resetAll }: Props) {
   return (
     <div className={styles.panel}>
-      <div className={styles.header}>
-        <h2 className={styles.headerTitle}>Inputs</h2>
+      <div className={`${styles.header} ${styles.headerOcean}`}>
+        <h2 className={styles.headerTitle}>Panthalassa inputs</h2>
         <button type="button" className={styles.resetBtn} onClick={resetAll}>
           Reset to defaults
         </button>

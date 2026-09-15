@@ -4,12 +4,14 @@
   flex-direction: column;
 }
 
-/* Masthead: International Orange as a committed structural field, not a hairline. Ink on orange for body-size text. */
+/* Masthead: quiet paper with a rule. The page's committed International Orange field is the
+   verdict card below, where the finding is, not a bar over a dense working surface. */
 .topbar {
   flex-shrink: 0;
   padding: 16px 24px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--surface);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: baseline;
   gap: 16px;
@@ -20,20 +22,20 @@
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
-  color: var(--accent-ink);
+  color: var(--text-primary);
 }
 
 .subtitle {
   font-family: var(--font-body);
   font-size: 14px;
-  color: var(--accent-ink);
+  color: var(--text-secondary);
 }
 
 .homeLink {
   font-family: var(--font-utility);
   font-size: 13px;
   font-weight: 500;
-  color: var(--accent-ink);
+  color: var(--text-primary);
   margin-left: auto;
 }
 
@@ -73,30 +75,39 @@
   min-width: 0;
 }
 
-.compareRow {
+/* One column per architecture. The head is a flat field in the side's colour; the cards
+   below it belong to that side. */
+.sides {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
 
-/* A pair row whose two cards both rendered nothing takes no space. */
-.compareRow:empty {
-  display: none;
-}
-
-/* Diagnostics tile rows: a serif heading over a full-width grid of tiles. */
-.group {
+.side {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
-.groupTitle {
+.sideHead {
+  margin: 0;
+  padding: 12px 16px;
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
-  margin: 0;
+  border-radius: var(--radius);
+}
+
+.sideOcean {
+  background: var(--fai-cod-gray);
+  color: var(--fai-smoke-white);
+}
+
+.sideLand {
+  background: var(--fai-timberwolf);
+  color: var(--fai-cod-gray);
 }
 
 .inputsDock {
@@ -144,8 +155,8 @@
     grid-template-columns: 280px 1fr 280px;
   }
 
-  .compareRow {
-    grid-template-columns: 1fr;
+  .sides {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

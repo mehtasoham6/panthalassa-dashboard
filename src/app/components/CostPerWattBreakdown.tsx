@@ -2,6 +2,7 @@ import type { ModelResult } from "../../model/index.js";
 import type { TerrestrialModelResult } from "../../terrestrial/model/types.js";
 import { comparableOutputsFromPanthalassa } from "../../terrestrial/integration/index.js";
 import { formatUsdPerUnit } from "../lib/formatters.js";
+import { SideMark } from "./SideMark.js";
 import styles from "./CostPerWattBreakdown.module.css";
 
 interface Props {
@@ -66,9 +67,11 @@ export function CostPerWattBreakdown({ oceanResult, terrestrialResult }: Props) 
             Component
           </span>
           <span className={styles.colHeader} style={{ gridColumn: col.ocean, gridRow: 1 }}>
+            <SideMark side="ocean" />
             Panthalassa
           </span>
           <span className={styles.colHeader} style={{ gridColumn: col.terrestrial, gridRow: 1 }}>
+            <SideMark side="land" />
             Terrestrial
           </span>
 

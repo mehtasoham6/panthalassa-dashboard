@@ -1,6 +1,7 @@
 import type { ModelResult } from "../../model/index.js";
 import type { TerrestrialModelResult } from "../../terrestrial/model/types.js";
 import { formatUsdCompact } from "../lib/formatters.js";
+import { SideMark } from "./SideMark.js";
 import styles from "./ComparisonVerdict.module.css";
 
 interface Props {
@@ -31,16 +32,22 @@ export function ComparisonVerdict({ oceanResult, terrestrialResult }: Props) {
       </div>
       <div className={styles.row}>
         <dl className={styles.values}>
-          <div className={`${styles.value} ${styles.ocean}`}>
-            <dt>Panthalassa</dt>
+          <div className={styles.value}>
+            <dt>
+              <SideMark side="ocean" />
+              Panthalassa
+            </dt>
             <dd className="num">{formatUsdCompact(ocean)}</dd>
           </div>
           <div className={styles.value}>
-            <dt>Terrestrial</dt>
+            <dt>
+              <SideMark side="land" />
+              Terrestrial
+            </dt>
             <dd className="num">{formatUsdCompact(terrestrial)}</dd>
           </div>
         </dl>
-        <p className={`${styles.verdict} ${same ? "" : lower ? styles.lower : styles.higher}`}>
+        <p className={styles.verdict}>
           {same ? (
             "The two architectures cost the same over the analysis period."
           ) : (

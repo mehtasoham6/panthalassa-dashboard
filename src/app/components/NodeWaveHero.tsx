@@ -49,6 +49,7 @@ const TILT = Math.atan2(CAM_HEIGHT, CAM_DISTANCE);   // optical axis points at t
 const CAM_DIST = Math.hypot(CAM_HEIGHT, CAM_DISTANCE);
 const NODE_NDC_X_WIDE = 0.45;                // node sits right of centre on wide canvases (lens shift)
 const WIDE_ASPECT = 1.1;
+const ZOOM_MAX = 1.5;                        // a 16:9 canvas is framed 1.5x tighter than a phone, so the node fills the width it has
 const MAX_ASPECT = 2.4;                      // widest canvas the grid is sized for
 const SPIN_RAD_PER_S = (2 * Math.PI) / 150;  // slow turntable
 const INITIAL_SPIN = (-35 * Math.PI) / 180;
@@ -321,12 +322,23 @@ function buildView(): mat4 {
  * of centre. Shifting in clip space keeps the horizon level.
  */
 function buildProjection(aspect: number): mat4 {
-  const proj = mat4.perspective(mat4.create(), FOV_Y, aspect, 1, FAR_PLANE);
-  const horizonUnshifted = Math.tan(TILT) / Math.tan(FOV_Y / 2);
+  const fovY = 2 * Math.atan(Math.tan(FOV_Y / 2) / zoomFor(aspect));
+  const proj = mat4.perspective(mat4.create(), fovY, aspect, 1, FAR_PLANE);
+  const horizonUnshifted = Math.tan(TILT) / Math.tan(fovY / 2);
   const shiftY = 1 - 2 * HORIZON_FRAC - horizonUnshifted;
   const shiftX = aspect >= WIDE_ASPECT ? NODE_NDC_X_WIDE : 0;
   const shift = mat4.fromTranslation(mat4.create(), [shiftX, shiftY, 0]);
   return mat4.multiply(mat4.create(), shift, proj);
+}
+
+/**
+ * Screen-space magnification by aspect. Portrait canvases use the full FOV_Y;
+ * the frame tightens as the canvas widens, so the node keeps a similar share of
+ * the width instead of shrinking into an empty sea. The sea geometry is built
+ * for the wide FOV, so zooming in only ever shows less of it.
+ */
+function zoomFor(aspect: number): number {
+  return Math.min(ZOOM_MAX, Math.max(1, aspect / WIDE_ASPECT));
 }
 
 /** Node transform: turntable spin, then pitch about PIVOT_Z, then ride the surface. */

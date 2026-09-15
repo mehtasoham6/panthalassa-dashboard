@@ -1,6 +1,6 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
   container-type: inline-size;
 }
@@ -87,10 +87,6 @@
 }
 
 @container (max-width: 640px) {
-  .tile {
-    grid-column: 1 / -1;
-  }
-
   .secondaryRow {
     grid-template-columns: 1fr;
   }
