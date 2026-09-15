@@ -38,7 +38,7 @@ export function ResultsHeader({ result, isPending }: Props) {
     {
       label: "Per-node cost",
       value: formatUsdCompact(result.costs.physical_node_cost_usd),
-      sub: "Hull, PTO, battery, onboard systems, and compute -- one node, before replacement or maintenance.",
+      sub: "Hull, PTO, battery, onboard systems, and compute for one node, before replacement or maintenance.",
     },
     {
       label: "Resource capacity factor",
