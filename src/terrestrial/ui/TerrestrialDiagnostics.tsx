@@ -42,7 +42,7 @@ export function TerrestrialDiagnostics({ result }: Props) {
     <div className={styles.tileGrid}>
       {metrics.map((metric) => (
         <div key={metric.label} className={`card ${styles.tile}`}>
-          <span className={styles.tileLabel}>{metric.label}</span>
+          <h3 className={styles.tileLabel}>{metric.label}</h3>
           <span className={`${styles.tileValue} num`}>{metric.value}</span>
           <span className={styles.tileSub}>{metric.detail}</span>
         </div>

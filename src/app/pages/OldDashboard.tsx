@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { useModel } from "../hooks/useModel.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { SliderPanel } from "../components/SliderPanel.js";
@@ -53,8 +54,11 @@ export function OldDashboard() {
   return (
     <div className={styles.shell}>
       <header className={styles.topbar}>
-        <span className={styles.title}>Panthalassa Wave-Powered Data-Center Model</span>
-        <span className={styles.subtitle}>Analytical techno-economic dashboard</span>
+        <h1 className={styles.title}>Panthalassa Wave-Powered Data-Center Model</h1>
+        <p className={styles.subtitle}>Analytical techno-economic dashboard</p>
+        <Link to="/" className={styles.homeLink}>
+          Home
+        </Link>
       </header>
 
       <div className={styles.layout}>

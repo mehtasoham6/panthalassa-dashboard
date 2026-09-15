@@ -49,7 +49,7 @@ export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props
     <div className="card">
       <div className={styles.wrap}>
         <div className={styles.headerRow}>
-          <span className={styles.cornerLabel}>Comparable outputs</span>
+          <h2 className={styles.cornerLabel}>Comparable outputs</h2>
           <span className={styles.colHeader}>Panthalassa</span>
           <span className={styles.colHeader}>Terrestrial</span>
         </div>

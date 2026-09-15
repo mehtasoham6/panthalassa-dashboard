@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import styles from "./SliderControl.module.css";
 
 /**
@@ -27,19 +28,35 @@ export function SliderControl({ config, value, onChange }: Props) {
   const decimals = config.decimals ?? 1;
   const displayValue = value * scale;
   const isDefault = Math.abs(value - config.default) < 1e-9;
+  const inputId = useId();
+  const tipId = useId();
+  const [tipOpen, setTipOpen] = useState(false);
 
   return (
     <div className={styles.row}>
       <div className={styles.topLine}>
         {config.helpText ? (
-          <span className={styles.labelHint} tabIndex={0}>
+          <button
+            type="button"
+            className={styles.labelHint}
+            aria-expanded={tipOpen}
+            aria-controls={tipId}
+            onClick={() => setTipOpen((open) => !open)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                setTipOpen(false);
+              }
+            }}
+          >
             {config.label}
-            <span className={styles.tooltip} role="tooltip">
+            <span id={tipId} role="tooltip" className={styles.tooltip} data-open={tipOpen}>
               {config.helpText}
             </span>
-          </span>
+          </button>
         ) : (
-          <span className={styles.label}>{config.label}</span>
+          <label htmlFor={inputId} className={styles.label}>
+            {config.label}
+          </label>
         )}
         <span className={styles.valueGroup}>
           <span className={`${styles.value} num`}>{displayValue.toFixed(decimals)}</span>
@@ -48,6 +65,7 @@ export function SliderControl({ config, value, onChange }: Props) {
       </div>
       <div className={styles.sliderTrack}>
         <input
+          id={inputId}
           className={styles.slider}
           type="range"
           min={config.min}
@@ -55,7 +73,9 @@ export function SliderControl({ config, value, onChange }: Props) {
           step={config.step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={config.helpText ? `${config.label}: ${config.helpText}` : config.label}
+          aria-label={config.label}
+          aria-describedby={config.helpText ? tipId : undefined}
+          aria-valuetext={`${displayValue.toFixed(decimals)} ${config.unit}`}
         />
       </div>
       <div className={styles.bottomLine}>
