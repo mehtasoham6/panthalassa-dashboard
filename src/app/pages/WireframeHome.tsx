@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router";
 import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
+import { Methodology } from "../components/methodology/Methodology.js";
 
 /**
  * Home page, option A: toned-down wireframe look. Mid-day sky above the
@@ -17,12 +18,6 @@ const LOREM =
   "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip " +
   "ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit " +
   "esse cillum dolore eu fugiat nulla pariatur.";
-const LOREM_2 =
-  "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt " +
-  "mollit anim id est laborum. Curabitur pretium tincidunt lacus, nulla gravida orci a odio.";
-
-const SECTIONS = ["Section one", "Section two", "Section three"];
-
 export function WireframeHome() {
   const pageStyle = { "--horizon": `${HORIZON_FRAC * 100}%` } as CSSProperties;
 
@@ -57,14 +52,7 @@ export function WireframeHome() {
         </div>
       </section>
 
-      <section className={styles.body}>
-        {SECTIONS.map((title) => (
-          <div key={title}>
-            <h2>{title}</h2>
-            <p>{LOREM_2}</p>
-          </div>
-        ))}
-      </section>
+      <Methodology />
     </div>
   );
 }

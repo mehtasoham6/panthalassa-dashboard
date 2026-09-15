@@ -12,18 +12,22 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^4.7.0",
     "typescript": "^5.6.3",
     "vite": "^6.4.3",
     "vitest": "^2.1.4"
   },
   "dependencies": {
+    "d3-geo": "^3.1.1",
     "gl-matrix": "^3.4.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router": "^8.3.1"
+    "react-router": "^8.3.1",
+    "topojson-client": "^3.1.0"
   }
 }
