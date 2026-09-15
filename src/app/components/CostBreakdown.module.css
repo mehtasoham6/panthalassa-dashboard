@@ -6,77 +6,89 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
 .title {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
+  margin: 0;
 }
 
 .totalValue {
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-.bar {
-  display: flex;
-  width: 100%;
-  height: 28px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-}
-
-.segment {
-  height: 100%;
-  min-width: 2px;
-  transition: flex-basis 0.2s ease;
-}
-
-.legend {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.legendItem {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  margin-top: 4px;
   flex-shrink: 0;
 }
 
-.legendText {
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: 16px;
 }
 
-.legendLabel {
-  font-size: 12px;
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rowLabel {
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.legendValue {
+.rowValue {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.legendPercent {
-  font-size: 11px;
+.rowShare {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  min-width: 5ch;
+  text-align: right;
+}
+
+/* One full-width track per row: the same scale for every category. */
+.track {
+  height: 8px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.fill {
+  height: 100%;
+  min-width: 2px;
+}
+
+.rowDesc {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.footnote {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--text-tertiary);
 }

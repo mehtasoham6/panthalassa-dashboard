@@ -1,20 +1,20 @@
 import type { TerrestrialModelResult } from "../model/types.js";
 import { TERRESTRIAL_POWER_SOURCE_SPECS } from "../model/defaults.js";
-import { formatUsdCompact } from "../../app/lib/formatters.js";
-import styles from "./TerrestrialPanel.module.css";
+import { CostBreakdownList, type CostCategory } from "../../app/components/CostBreakdownList.js";
 
 interface Props {
   result: TerrestrialModelResult;
 }
 
-/** Self-wrapping lifecycle cost breakdown, mirroring CostBreakdown.tsx's pattern on the ocean side. */
+/** Terrestrial lifecycle cost breakdown; shares the ranked bar list with the ocean side so the pair reads identically. */
 export function TerrestrialResults({ result }: Props) {
   const spec = TERRESTRIAL_POWER_SOURCE_SPECS[result.inputs.power_source];
   const isCcgt = result.inputs.power_source === "ccgt";
   const powerSystemDescription = isCcgt
     ? "CCGT capital, fuel, fixed and variable O&M, decommissioning"
     : `${spec.label} capital${spec.hasStorage ? " (incl. battery)" : ""}, fixed O&M${spec.hasStorage ? ", storage O&M" : spec.hasVariableOm ? ", variable O&M" : ""}, decommissioning`;
-  const buckets = [
+
+  const categories: CostCategory[] = [
     {
       label: "Power system",
       description: powerSystemDescription,
@@ -40,50 +40,12 @@ export function TerrestrialResults({ result }: Props) {
       color: "var(--cat-workload)",
     },
   ];
-  const bucketTotal = buckets.reduce((sum, b) => sum + b.value, 0);
-
-  function formatBucketPercent(value: number): string {
-    const pct = (value / bucketTotal) * 100;
-    return pct > 0 && pct < 0.01 ? "<0.01%" : `${pct.toFixed(1)}%`;
-  }
 
   return (
-    <div className="card">
-      <div className={styles.breakdownWrap}>
-        <div className={styles.breakdownTitleRow}>
-          <span className={styles.breakdownTitle}>Lifecycle cost breakdown</span>
-          <span className={`${styles.breakdownTotal} num`}>{formatUsdCompact(bucketTotal)} total</span>
-        </div>
-
-        <div className={styles.bar}>
-          {buckets.map((b) => (
-            <div
-              key={b.label}
-              className={styles.segment}
-              style={{ flexBasis: `${(b.value / bucketTotal) * 100}%`, background: b.color }}
-              title={`${b.label}: ${formatUsdCompact(b.value)}`}
-            />
-          ))}
-        </div>
-
-        <div className={styles.legend}>
-          {buckets.map((b) => (
-            <div key={b.label} className={styles.legendItem}>
-              <span className={styles.swatch} style={{ background: b.color }} />
-              <span className={styles.legendText}>
-                <span className={styles.legendLabel}>{b.label}</span>
-                <span className={`${styles.legendValue} num`}>
-                  {formatUsdCompact(b.value)}{" "}
-                  <span className={styles.legendPercent}>({formatBucketPercent(b.value)})</span>
-                </span>
-                <span className={styles.legendDescription}>{b.description}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <p className={styles.boundary}>{result.methodology.lifecycle_cost_boundary}</p>
-      </div>
-    </div>
+    <CostBreakdownList
+      title="Lifecycle cost breakdown"
+      categories={categories}
+      footnote={result.methodology.lifecycle_cost_boundary}
+    />
   );
 }

@@ -1,0 +1,88 @@
+/* Compound selector so this beats the global .card border. This is the one emphasised card on the page. */
+:global(.card).verdictCard {
+  border: 2px solid var(--fai-cod-gray);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 24px 48px;
+  align-items: end;
+}
+
+.values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+}
+
+.value dt {
+  font-family: var(--font-utility);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0 0 4px;
+}
+
+.value dd {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+}
+
+.ocean dd {
+  color: var(--text-primary);
+}
+
+.verdict {
+  font-family: var(--font-body);
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.verdict :global(.num) {
+  font-weight: 600;
+}
+
+.lower :global(.num) {
+  color: var(--positive);
+}
+
+.higher :global(.num) {
+  color: var(--negative);
+}
+
+@media (max-width: 1311px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

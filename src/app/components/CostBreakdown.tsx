@@ -1,6 +1,5 @@
 import type { ModelResult } from "../../model/index.js";
-import { formatUsdCompact } from "../lib/formatters.js";
-import styles from "./CostBreakdown.module.css";
+import { CostBreakdownList, type CostCategory } from "./CostBreakdownList.js";
 
 interface Props {
   result: ModelResult;
@@ -9,7 +8,7 @@ interface Props {
 export function CostBreakdown({ result }: Props) {
   const { costs } = result;
 
-  const categories = [
+  const categories: CostCategory[] = [
     {
       label: "Physical node cost",
       description: "Hull, PTO, battery, and onboard systems capex",
@@ -49,42 +48,5 @@ export function CostBreakdown({ result }: Props) {
     },
   ];
 
-  const total = categories.reduce((sum, c) => sum + c.value, 0);
-
-  return (
-    <div className="card">
-      <div className={styles.wrap}>
-        <div className={styles.titleRow}>
-          <span className={styles.title}>Lifecycle cost breakdown</span>
-          <span className={`${styles.totalValue} num`}>{formatUsdCompact(total)} total</span>
-        </div>
-
-        <div className={styles.bar}>
-          {categories.map((c) => (
-            <div
-              key={c.label}
-              className={styles.segment}
-              style={{ flexBasis: `${(c.value / total) * 100}%`, background: c.color }}
-              title={`${c.label}: ${formatUsdCompact(c.value)}`}
-            />
-          ))}
-        </div>
-
-        <div className={styles.legend}>
-          {categories.map((c) => (
-            <div key={c.label} className={styles.legendItem}>
-              <span className={styles.swatch} style={{ background: c.color }} />
-              <span className={styles.legendText}>
-                <span className={styles.legendLabel}>{c.label}</span>
-                <span className={`${styles.legendValue} num`}>
-                  {formatUsdCompact(c.value)}{" "}
-                  <span className={styles.legendPercent}>({((c.value / total) * 100).toFixed(1)}%)</span>
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return <CostBreakdownList title="Lifecycle cost breakdown" categories={categories} />;
 }
