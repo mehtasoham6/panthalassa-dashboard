@@ -144,21 +144,23 @@
   color: var(--fg);
 }
 
+/* Below the hero: an asymmetric two-column cut on the 16-column grid (9 | 6, one column gutter). */
 .body {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
-  padding: 64px var(--gutter) 96px;
+  grid-template-columns: minmax(0, 9fr) minmax(0, 6fr);
+  column-gap: 96px;
+  row-gap: 48px;
+  padding: 80px var(--gutter) 96px;
   border-top: 1px solid var(--hairline);
 }
 
 .body h2 {
   font-family: var(--font-body);
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--fg);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .body p {
@@ -166,6 +168,75 @@
   font-size: 16px;
   line-height: 1.6;
   color: var(--fg-muted);
+}
+
+.stepsLead {
+  max-width: 36rem;
+  margin-bottom: 32px;
+}
+
+.stepList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.stepIndex {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fg-muted);
+}
+
+.body .stepQuestion {
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.body .stepResult {
+  font-family: var(--font-utility);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  margin-top: 4px;
+}
+
+.scope {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scope h2 {
+  margin-bottom: 0;
+}
+
+.scopeLink {
+  align-self: flex-start;
+  margin-top: 8px;
+  font-family: var(--font-utility);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.scopeLink:hover {
+  color: var(--accent);
 }
 
 .canvas {
@@ -194,7 +265,14 @@
     display: none;
   }
   .body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 48px;
     padding: 48px 16px 64px;
+  }
+  .body h2 {
+    font-size: 20px;
+  }
+  .body .stepQuestion {
+    font-size: 16px;
   }
 }

@@ -8,6 +8,10 @@ import styles from "./WireframeHome.module.css";
  * sea below it where the copy sits. The two-plane background and the WebGL
  * hero share HORIZON_FRAC so the split lands on the horizon the sea
  * converges to.
+ *
+ * All copy on this page is placeholder on purpose. It has to be written by
+ * a human before launch; the lorem ipsum stays visible so nobody mistakes
+ * the layout for finished content.
  */
 
 const LOREM_LEAD =
@@ -21,7 +25,15 @@ const LOREM_2 =
   "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt " +
   "mollit anim id est laborum. Curabitur pretium tincidunt lacus, nulla gravida orci a odio.";
 
-const SECTIONS = ["Section one", "Section two", "Section three"];
+/** Six placeholder steps; the real list is the model's calculation order (spec § 1). */
+const STEPS = [
+  { question: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor?", result: "Lorem ipsum dolor sit amet" },
+  { question: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris?", result: "Consectetur adipiscing elit" },
+  { question: "Duis aute irure dolor in reprehenderit in voluptate velit esse?", result: "Sed do eiusmod tempor" },
+  { question: "Excepteur sint occaecat cupidatat non proident, sunt in culpa?", result: "Incididunt ut labore et dolore" },
+  { question: "Curabitur pretium tincidunt lacus, nulla gravida orci a odio?", result: "Magna aliqua ut enim" },
+  { question: "Nullam varius, turpis et commodo pharetra, est eros bibendum elit?", result: "Ad minim veniam quis nostrud" },
+];
 
 export function WireframeHome() {
   const pageStyle = { "--horizon": `${HORIZON_FRAC * 100}%` } as CSSProperties;
@@ -36,7 +48,7 @@ export function WireframeHome() {
             Panthalassa
           </Link>
           <nav className={styles.nav}>
-            <Link to="/old" className={styles.navLink}>
+            <Link to="/model" className={styles.navLink}>
               Model dashboard
             </Link>
           </nav>
@@ -49,19 +61,37 @@ export function WireframeHome() {
         <div className={styles.copy}>
           <p>{LOREM_LEAD}</p>
           <p>{LOREM}</p>
-          <Link to="/old" className={styles.cta}>
+          <Link to="/model" className={styles.cta}>
             Explore the model
           </Link>
         </div>
       </section>
 
-      <section className={styles.body}>
-        {SECTIONS.map((title) => (
-          <div key={title}>
-            <h2>{title}</h2>
-            <p>{LOREM_2}</p>
-          </div>
-        ))}
+      <section className={styles.body} aria-labelledby="how-title">
+        <div className={styles.steps}>
+          <h2 id="how-title">Section one</h2>
+          <p className={styles.stepsLead}>{LOREM_2}</p>
+          <ol className={styles.stepList}>
+            {STEPS.map((step, i) => (
+              <li key={step.result} className={styles.step}>
+                <span className={`${styles.stepIndex} num`}>{i + 1}</span>
+                <div>
+                  <p className={styles.stepQuestion}>{step.question}</p>
+                  <p className={styles.stepResult}>{step.result}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <aside className={styles.scope}>
+          <h2>Section two</h2>
+          <p>{LOREM}</p>
+          <p>{LOREM_2}</p>
+          <Link to="/model" className={styles.scopeLink}>
+            Open the model dashboard
+          </Link>
+        </aside>
       </section>
     </div>
   );

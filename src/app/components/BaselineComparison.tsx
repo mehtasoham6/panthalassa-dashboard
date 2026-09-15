@@ -30,13 +30,8 @@ export function BaselineComparison({ result }: Props) {
   const [expanded, setExpanded] = useState(false);
   const changed = getChangedInputs(result.inputs);
 
-  if (changed.length === 0) {
-    return (
-      <div className={`card ${styles.collapsed}`}>
-        <span className={styles.collapsedText}>Current scenario matches baseline</span>
-      </div>
-    );
-  }
+  // Nothing to compare until an input moves; an empty-state card would only take up a row.
+  if (changed.length === 0) return null;
 
   const metrics = [
     {
@@ -75,9 +70,9 @@ export function BaselineComparison({ result }: Props) {
   const remaining = changed.length - VISIBLE_CHANGES;
 
   return (
-    <div className="card">
+    <section className="card">
       <div className={styles.wrap}>
-        <span className={styles.title}>Baseline vs. current</span>
+        <h2 className={styles.title}>Baseline vs. current</h2>
 
         <div className={styles.metricRow}>
           {metrics.map((m) => (
@@ -110,6 +105,6 @@ export function BaselineComparison({ result }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

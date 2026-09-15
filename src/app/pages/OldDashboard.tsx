@@ -4,7 +4,7 @@ import { useModel } from "../hooks/useModel.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { SliderPanel } from "../components/SliderPanel.js";
 import { SharedInputsPanel } from "../components/SharedInputsPanel.js";
-import { TotalOutputBand } from "../components/TotalOutputBand.js";
+import { ComparisonVerdict } from "../components/ComparisonVerdict.js";
 import { ResultsHeader } from "../components/ResultsHeader.js";
 import { CostBreakdown } from "../components/CostBreakdown.js";
 import { BaselineComparison } from "../components/BaselineComparison.js";
@@ -16,7 +16,6 @@ import {
   TerrestrialBaselineComparison,
   TerrestrialControls,
   TerrestrialDiagnostics,
-  TerrestrialOutputBand,
   TerrestrialResults,
   buildTerrestrialInputs,
   runTerrestrialModel,
@@ -125,10 +124,7 @@ export function OldDashboard() {
 
           <SharedInputsPanel inputs={inputs} setInput={setInput} />
 
-          <div className={styles.compareRow}>
-            <TotalOutputBand result={result} />
-            <TerrestrialOutputBand result={terrestrialResult} />
-          </div>
+          <ComparisonVerdict oceanResult={result} terrestrialResult={terrestrialResult} />
 
           <ArchitectureComparison oceanResult={result} terrestrialResult={terrestrialResult} />
           <CostPerWattBreakdown oceanResult={result} terrestrialResult={terrestrialResult} />
@@ -136,13 +132,26 @@ export function OldDashboard() {
           <div className={styles.compareRow}>
             <CostBreakdown result={result} />
             <TerrestrialResults result={terrestrialResult} />
+          </div>
 
+          {/* Each side renders nothing until one of its inputs moves; the pair stays in one row so the columns line up. */}
+          <div className={styles.compareRow}>
             <BaselineComparison result={result} />
             <TerrestrialBaselineComparison result={terrestrialResult} />
-
-            <ResultsHeader result={result} isPending={isPending} />
-            <TerrestrialDiagnostics result={terrestrialResult} />
           </div>
+
+          <section className={styles.group} aria-labelledby="ocean-diagnostics">
+            <h2 id="ocean-diagnostics" className={styles.groupTitle}>
+              Panthalassa diagnostics
+            </h2>
+            <ResultsHeader result={result} isPending={isPending} />
+          </section>
+          <section className={styles.group} aria-labelledby="terrestrial-diagnostics">
+            <h2 id="terrestrial-diagnostics" className={styles.groupTitle}>
+              Terrestrial diagnostics
+            </h2>
+            <TerrestrialDiagnostics result={terrestrialResult} />
+          </section>
         </main>
 
         {!compact && (
