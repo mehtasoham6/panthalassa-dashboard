@@ -68,41 +68,66 @@
   align-items: start;
 }
 
-/*
- * Below this, three columns (two fixed 340px sidebars + a flexible main
- * area) don't comfortably fit. Rather than a partial state (drop to two
- * columns, push the terrestrial sidebar into a full-width row below), we
- * go straight to a single stacked column for all three regions. A partial
- * state was tried and found genuinely broken: a sticky sidebar's
- * containing block does not reliably bound itself to a single grid row
- * track across browsers, so the still-sticky ocean sidebar visually
- * covered the terrestrial sidebar's row while scrolling through it,
- * hiding its slider labels. Stacking everything avoids relying on that
- * sticky/grid interaction entirely.
- */
-@media (max-width: 1400px) {
+.inputsDock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dockCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.dockSummary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dockSummary::-webkit-details-marker {
+  display: none;
+}
+
+.dockChevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 150ms ease;
+}
+
+.dockCard[open] > .dockSummary .dockChevron {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 1311px) {
   .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar,
-  .terrestrialSidebar {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-left: none;
-    border-top: 1px solid var(--border);
-  }
-
-  .main {
-    padding: 16px 16px;
-  }
-
-  .topbar {
-    padding: 16px 16px;
+    grid-template-columns: 280px 1fr 280px;
   }
 
   .compareRow {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1055px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .topbar {
+    padding: 16px;
   }
 }

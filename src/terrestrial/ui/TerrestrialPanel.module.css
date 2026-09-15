@@ -59,8 +59,15 @@
 
 .tileGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  .tile {
+    grid-column: 1 / -1;
+  }
 }
 
 .tile {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useModel } from "../hooks/useModel.js";
+import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { SliderPanel } from "../components/SliderPanel.js";
 import { SharedInputsPanel } from "../components/SharedInputsPanel.js";
 import { TotalOutputBand } from "../components/TotalOutputBand.js";
@@ -47,6 +48,8 @@ export function OldDashboard() {
     [inputs, terrestrialInputs],
   );
 
+  const compact = useMediaQuery("(max-width: 1055px)");
+
   return (
     <div className={styles.shell}>
       <header className={styles.topbar}>
@@ -55,11 +58,67 @@ export function OldDashboard() {
       </header>
 
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} />
-        </aside>
+        {!compact && (
+          <aside className={styles.sidebar}>
+            <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} />
+          </aside>
+        )}
 
         <main className={styles.main}>
+          {compact && (
+            <div className={styles.inputsDock}>
+              <details className={styles.dockCard}>
+                <summary className={styles.dockSummary}>
+                  Panthalassa inputs
+                  <svg
+                    className={styles.dockChevron}
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 2.5 7.5 6 4 9.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </summary>
+                <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} />
+              </details>
+              <details className={styles.dockCard}>
+                <summary className={styles.dockSummary}>
+                  Terrestrial inputs
+                  <svg
+                    className={styles.dockChevron}
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 2.5 7.5 6 4 9.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </summary>
+                <TerrestrialControls
+                  inputs={terrestrialInputs}
+                  onChange={setTerrestrialInput}
+                  onSelectPowerSource={setPowerSource}
+                  onReset={resetTerrestrial}
+                />
+              </details>
+            </div>
+          )}
+
           <SharedInputsPanel inputs={inputs} setInput={setInput} />
 
           <div className={styles.compareRow}>
@@ -82,14 +141,16 @@ export function OldDashboard() {
           </div>
         </main>
 
-        <aside className={styles.terrestrialSidebar}>
-          <TerrestrialControls
-            inputs={terrestrialInputs}
-            onChange={setTerrestrialInput}
-            onSelectPowerSource={setPowerSource}
-            onReset={resetTerrestrial}
-          />
-        </aside>
+        {!compact && (
+          <aside className={styles.terrestrialSidebar}>
+            <TerrestrialControls
+              inputs={terrestrialInputs}
+              onChange={setTerrestrialInput}
+              onSelectPowerSource={setPowerSource}
+              onReset={resetTerrestrial}
+            />
+          </aside>
+        )}
       </div>
     </div>
   );
