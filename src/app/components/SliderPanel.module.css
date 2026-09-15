@@ -18,6 +18,7 @@
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
+  margin: 0;
 }
 
 .resetBtn {
@@ -71,11 +72,10 @@
 }
 
 .chevron {
-  color: var(--text-tertiary);
-  font-size: 11px;
-  transition: transform 0.15s ease;
+  color: var(--text-secondary);
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: 2px;
+  transition: transform 0.15s ease;
 }
 
 .group[open] > .groupSummary .chevron {
