@@ -237,8 +237,9 @@
 
 @media (max-width: 672px) {
   .hero {
-    --fs-h: calc((100vw - 32px) / 3.235);
-    --fs-v: calc((100vw - 32px) / 3.57);
+    /* A hair under the measured lengths so neither word can clip at the 16px edges. */
+    --fs-h: calc((100vw - 32px) / 3.27);
+    --fs-v: calc((100vw - 32px) / 3.61);
     min-height: 720px;
   }
   .brandWord {
