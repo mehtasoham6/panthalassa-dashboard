@@ -66,9 +66,6 @@ const FACE_FAR = 400_000;                    // m, the last face row is within a
 /** Column fade along the camera's depth axis, metres behind the node: opaque until [0], gone by [1]. */
 const COL_FADE: [number, number] = [2500, 5000];
 const NODE_DEPTH_DIM = 0.55;
-const SOLID_BINS = 96;                       // heights the body profile is sampled at
-const SOLID_SEGMENTS = 32;                   // facets around the axis
-const SOLID_SHRINK = 0.97;                   // body radius under the wires, so they sit just proud of the surface
 
 /**
  * Experiment: draw the sea as opaque faces under the wires, so it meets
@@ -77,8 +74,7 @@ const SOLID_SHRINK = 0.97;                   // body radius under the wires, so 
 const SEA_FACES = true;
 const FACE_HAZE_RANGE: [number, number] = [500, 8000];  // m behind the node over which faces tint toward the haze colour
 
-const NODE_COLOR: [number, number, number, number] = [0.071, 0.071, 0.071, 0.9];  // Cod Gray wires over the body
-const NODE_FILL_COLOR: [number, number, number, number] = [1.0, 0.31, 0.0, 1.0];  // International Orange body, opaque
+const NODE_COLOR: [number, number, number, number] = [0.953, 0.953, 0.953, 0.82];  // Smoke White
 const WAVE_COLOR: [number, number, number, number] = [0.953, 0.953, 0.953, 0.42];  // Smoke White
 const SEA_FACE_COLOR: [number, number, number, number] = [0.071, 0.071, 0.071, 1.0];  // Cod Gray
 const SEA_HAZE_COLOR: [number, number, number] = [0.36, 0.36, 0.36];  // Cod Gray tint toward the sky
@@ -159,65 +155,6 @@ function decodeNodeWire(buf: ArrayBuffer): Float32Array {
   for (let i = 0; i < q.length; i++) {
     const axis = i % 3;
     out[i] = min[axis]! + ((q[i]! + 32768) / 65535) * (max[axis]! - min[axis]!);
-  }
-  return out;
-}
-
-/**
- * A closed body of revolution under the wires. The node is a spar buoy, so
- * its silhouette is the radial profile of the wire vertices: the widest point
- * at each height, swept around the axis and closed at both ends. Drawn opaque
- * before the wires, it hides the sea behind the node; with depth testing on,
- * it also hides the wires on the far side.
- */
-function buildNodeSolid(pos: Float32Array): Float32Array {
-  let zMin = Infinity;
-  let zMax = -Infinity;
-  for (let i = 2; i < pos.length; i += 3) {
-    const z = pos[i]!;
-    if (z < zMin) zMin = z;
-    if (z > zMax) zMax = z;
-  }
-  const dz = (zMax - zMin) / (SOLID_BINS - 1);
-  const radii = new Float32Array(SOLID_BINS);
-  const filled = new Uint8Array(SOLID_BINS);
-  for (let i = 0; i < pos.length; i += 3) {
-    const bin = Math.round((pos[i + 2]! - zMin) / dz);
-    const r = Math.hypot(pos[i]!, pos[i + 1]!);
-    if (r > radii[bin]!) radii[bin] = r;
-    filled[bin] = 1;
-  }
-  // Heights with no wire vertex (the middle of a long strut) take the line between their neighbours.
-  for (let i = 0; i < SOLID_BINS; i++) {
-    if (filled[i]) continue;
-    let lo = i - 1;
-    while (lo >= 0 && !filled[lo]) lo--;
-    let hi = i + 1;
-    while (hi < SOLID_BINS && !filled[hi]) hi++;
-    const a = lo >= 0 ? radii[lo]! : radii[hi]!;
-    const b = hi < SOLID_BINS ? radii[hi]! : radii[lo]!;
-    const t = lo >= 0 && hi < SOLID_BINS ? (i - lo) / (hi - lo) : 0;
-    radii[i] = a + (b - a) * t;
-  }
-  const rings: { z: number; r: number }[] = [{ z: zMin, r: 0 }];
-  for (let i = 0; i < SOLID_BINS; i++) rings.push({ z: zMin + i * dz, r: radii[i]! * SOLID_SHRINK });
-  rings.push({ z: zMax, r: 0 });
-
-  const out = new Float32Array((rings.length - 1) * SOLID_SEGMENTS * 18);
-  let o = 0;
-  const put = (ring: { z: number; r: number }, k: number) => {
-    const a = (k / SOLID_SEGMENTS) * Math.PI * 2;
-    out[o++] = ring.r * Math.cos(a);
-    out[o++] = ring.r * Math.sin(a);
-    out[o++] = ring.z;
-  };
-  for (let i = 0; i < rings.length - 1; i++) {
-    const a = rings[i]!;
-    const b = rings[i + 1]!;
-    for (let k = 0; k < SOLID_SEGMENTS; k++) {
-      put(a, k); put(a, k + 1); put(b, k);
-      put(b, k); put(a, k + 1); put(b, k + 1);
-    }
   }
   return out;
 }
@@ -431,7 +368,6 @@ class HeroRenderer {
   private sea: { vao: WebGLVertexArrayObject; rowVertices: number; colVertices: number };
   private faces: { vao: WebGLVertexArrayObject; count: number } | null = null;
   private node: { vao: WebGLVertexArrayObject; count: number } | null = null;
-  private nodeSolid: { vao: WebGLVertexArrayObject; count: number } | null = null;
 
   private view = buildView();
   private proj = mat4.create();
@@ -472,7 +408,6 @@ class HeroRenderer {
 
   setNode(positions: Float32Array) {
     this.node = makeLineVao(this.gl, this.program, positions);
-    this.nodeSolid = makeLineVao(this.gl, this.program, buildNodeSolid(positions));
   }
 
   setAspect(aspect: number) {
@@ -508,28 +443,16 @@ class HeroRenderer {
     gl.uniform4f(this.u.u_fade!, -1e9, -1e9 + 1, ...COL_FADE);
     gl.drawArrays(gl.LINES, this.sea.rowVertices, this.sea.colVertices);
 
-    // node: the opaque body first, hiding the sea behind it, then the wires
-    // depth-tested against the body so only the near side draws.
+    // node, far side dimmed
     if (this.node) {
       buildNodeModel(this.nodeModel, t, spin, animate);
       gl.uniformMatrix4fv(this.u.u_model!, false, this.nodeModel);
       gl.uniform1i(this.u.u_isWave!, 0);
-      gl.uniform4f(this.u.u_fade!, -1e4, -1e4 + 1, 1e4 - 1, 1e4);
-      gl.enable(gl.DEPTH_TEST);
-      gl.clear(gl.DEPTH_BUFFER_BIT);
-      if (this.nodeSolid) {
-        gl.depthMask(true);
-        gl.uniform4f(this.u.u_color!, ...NODE_FILL_COLOR);
-        gl.uniform1f(this.u.u_depthDim!, 0);
-        gl.bindVertexArray(this.nodeSolid.vao);
-        gl.drawArrays(gl.TRIANGLES, 0, this.nodeSolid.count);
-      }
-      gl.depthMask(false);
       gl.uniform4f(this.u.u_color!, ...NODE_COLOR);
+      gl.uniform4f(this.u.u_fade!, -1e4, -1e4 + 1, 1e4 - 1, 1e4);
       gl.uniform1f(this.u.u_depthDim!, NODE_DEPTH_DIM);
       gl.bindVertexArray(this.node.vao);
       gl.drawArrays(gl.LINES, 0, this.node.count);
-      gl.disable(gl.DEPTH_TEST);
     }
     gl.bindVertexArray(null);
   }
@@ -542,7 +465,6 @@ class HeroRenderer {
     gl.deleteVertexArray(this.sea.vao);
     if (this.faces) gl.deleteVertexArray(this.faces.vao);
     if (this.node) gl.deleteVertexArray(this.node.vao);
-    if (this.nodeSolid) gl.deleteVertexArray(this.nodeSolid.vao);
   }
 }
 

@@ -43,23 +43,12 @@ export function WireframeHome() {
       <section className={styles.hero}>
         <NodeWaveHero className={styles.canvas} />
 
-        <header className={styles.topbar}>
-          <Link to="/" className={styles.brand}>
-            Panthalassa
-          </Link>
-          <nav className={styles.nav}>
-            <Link to="/model" className={styles.navLink}>
-              Model dashboard
-            </Link>
-          </nav>
-        </header>
-
+        {/* Two words, one corner: the name stands in the sea along the left, the
+            headline runs from its top edge along the horizon. Nothing overlaps. */}
+        <h1 className={styles.brandWord}>Panthalassa</h1>
         <div className={styles.title}>
           <p className={styles.headline}>Wave Power</p>
         </div>
-
-        {/* The name stands up out of the sea and cuts across the headline. */}
-        <h1 className={styles.brandWord}>Panthalassa</h1>
 
         <div className={styles.copy}>
           <p>{LOREM_LEAD}</p>
