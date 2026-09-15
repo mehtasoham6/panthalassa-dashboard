@@ -167,6 +167,25 @@ a {
   color: var(--text-primary);
 }
 
+/* Side key. Panthalassa (ocean) is International Orange, Terrestrial (land) is Cod Gray.
+   The same two fills mark a side wherever it is named: panel headers, column heads, the verdict. */
+.side-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  box-sizing: border-box;
+}
+
+.side-mark-ocean {
+  background: var(--fai-international-orange);
+}
+
+.side-mark-land {
+  background: var(--fai-cod-gray);
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

@@ -129,29 +129,27 @@ export function OldDashboard() {
           <ArchitectureComparison oceanResult={result} terrestrialResult={terrestrialResult} />
           <CostPerWattBreakdown oceanResult={result} terrestrialResult={terrestrialResult} />
 
-          <div className={styles.compareRow}>
-            <CostBreakdown result={result} />
-            <TerrestrialResults result={terrestrialResult} />
+          {/* Below the shared comparison, each architecture gets its own column under a
+              side-coloured head: International Orange for the ocean fleet, Cod Gray for the
+              terrestrial plant. Everything in a column belongs to that side. */}
+          <div className={styles.sides}>
+            <section className={styles.side} aria-labelledby="ocean-side">
+              <h2 id="ocean-side" className={`${styles.sideHead} ${styles.sideOcean}`}>
+                Panthalassa
+              </h2>
+              <CostBreakdown result={result} />
+              <BaselineComparison result={result} />
+              <ResultsHeader result={result} isPending={isPending} />
+            </section>
+            <section className={styles.side} aria-labelledby="land-side">
+              <h2 id="land-side" className={`${styles.sideHead} ${styles.sideLand}`}>
+                Terrestrial
+              </h2>
+              <TerrestrialResults result={terrestrialResult} />
+              <TerrestrialBaselineComparison result={terrestrialResult} />
+              <TerrestrialDiagnostics result={terrestrialResult} />
+            </section>
           </div>
-
-          {/* Each side renders nothing until one of its inputs moves; the pair stays in one row so the columns line up. */}
-          <div className={styles.compareRow}>
-            <BaselineComparison result={result} />
-            <TerrestrialBaselineComparison result={terrestrialResult} />
-          </div>
-
-          <section className={styles.group} aria-labelledby="ocean-diagnostics">
-            <h2 id="ocean-diagnostics" className={styles.groupTitle}>
-              Panthalassa diagnostics
-            </h2>
-            <ResultsHeader result={result} isPending={isPending} />
-          </section>
-          <section className={styles.group} aria-labelledby="terrestrial-diagnostics">
-            <h2 id="terrestrial-diagnostics" className={styles.groupTitle}>
-              Terrestrial diagnostics
-            </h2>
-            <TerrestrialDiagnostics result={terrestrialResult} />
-          </section>
         </main>
 
         {!compact && (

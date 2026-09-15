@@ -108,8 +108,8 @@
   width: 12px;
   height: 12px;
   border-radius: 0;
-  background: var(--accent);
-  border: 1px solid var(--fai-cod-gray);
+  background: var(--fai-cod-gray);
+  border: 0;
   cursor: pointer;
 }
 
@@ -117,8 +117,8 @@
   width: 12px;
   height: 12px;
   border-radius: 0;
-  background: var(--accent);
-  border: 1px solid var(--fai-cod-gray);
+  background: var(--fai-cod-gray);
+  border: 0;
   cursor: pointer;
 }
 

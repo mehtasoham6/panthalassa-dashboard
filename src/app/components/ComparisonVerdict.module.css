@@ -1,4 +1,6 @@
-/* Compound selector so this beats the global .card border. This is the one emphasised card on the page. */
+/* The emphasised card on the page: compound selector so its border beats the global .card rule.
+   Paper surface. Panthalassa's bar is International Orange, Terrestrial's is Cod Gray, and the
+   stretch the dearer build runs past the cheaper one breaks into Frontier Crimson. */
 :global(.card).verdictCard {
   border: 2px solid var(--fai-cod-gray);
   padding: 24px;
@@ -25,64 +27,111 @@
   color: var(--text-tertiary);
 }
 
-.row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 24px 48px;
-  align-items: end;
-}
-
-.values {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+/* Two bars on one scale. Label and value on the first line, the bar on the second. */
+.bars {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.value dt {
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 16px;
+  row-gap: 8px;
+}
+
+.barLabel {
+  display: flex;
+  align-items: center;
   font-family: var(--font-utility);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-tertiary);
-  margin: 0 0 4px;
 }
 
-.value dd {
-  margin: 0;
-  font-size: 28px;
+.barValue {
+  font-size: 20px;
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1;
   letter-spacing: -0.01em;
-  color: var(--text-secondary);
-}
-
-.ocean dd {
   color: var(--text-primary);
 }
 
+.track {
+  grid-column: 1 / -1;
+  display: flex;
+  height: 48px;
+  background: var(--surface-alt);
+}
+
+.fill {
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.fillOcean {
+  background: var(--fai-international-orange);
+}
+
+.fillLand {
+  background: var(--fai-cod-gray);
+}
+
+/* The overage: what one build costs beyond the other. Smoke label on crimson. */
+.diff {
+  flex-shrink: 0;
+  height: 100%;
+  background: var(--fai-frontier-crimson);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.diffLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fai-smoke-white);
+  white-space: nowrap;
+}
+
+/* The finding, with the percentage at display size. */
 .verdict {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
   font-family: var(--font-body);
   font-size: 20px;
   line-height: 1.3;
   color: var(--text-primary);
 }
 
-.verdict :global(.num) {
+.big {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.verdictText {
+  max-width: 34em;
+}
+
+.verdictText :global(.num) {
   font-weight: 600;
 }
 
-.lower :global(.num) {
-  color: var(--positive);
-}
-
-.higher :global(.num) {
-  color: var(--negative);
-}
-
 @media (max-width: 1311px) {
-  .row {
-    grid-template-columns: minmax(0, 1fr);
+  .verdict {
+    flex-direction: column;
+    gap: 8px;
   }
 }

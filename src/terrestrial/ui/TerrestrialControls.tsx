@@ -23,7 +23,7 @@ export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onR
 
   return (
     <div className={panelStyles.panel}>
-      <div className={panelStyles.header}>
+      <div className={`${panelStyles.header} ${panelStyles.headerLand}`}>
         <h2 className={panelStyles.headerTitle}>Terrestrial inputs</h2>
         <button type="button" className={panelStyles.resetBtn} onClick={onReset}>
           Reset to defaults
@@ -48,8 +48,9 @@ export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onR
           </div>
         </div>
 
+        {/* Only the chosen power source's own sliders start open; the rest is context. */}
         {groups.map((group) => (
-          <details key={group.title} className={panelStyles.group} open>
+          <details key={group.title} className={panelStyles.group} open={group === activeGroup}>
             <summary className={panelStyles.groupSummary}>
               <span className={panelStyles.groupTitle}>{group.title}</span>
               <svg

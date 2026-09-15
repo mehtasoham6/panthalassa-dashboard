@@ -56,6 +56,26 @@
   overflow-wrap: break-word;
 }
 
+/* The lower figure in a row is highlighted in its side's colour; the other goes quiet. */
+.betterOcean,
+.betterLand {
+  padding: 2px 6px;
+  margin: -2px 0 -2px -6px;
+}
+
+.betterOcean {
+  background: color-mix(in srgb, var(--fai-international-orange) 22%, var(--fai-smoke-white));
+}
+
+.betterLand {
+  background: color-mix(in srgb, var(--fai-cod-gray) 14%, var(--fai-smoke-white));
+}
+
+.worse {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 640px) {
   .headerRow {
     display: none;
