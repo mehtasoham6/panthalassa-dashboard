@@ -41,8 +41,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px var(--gutter);
-  background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--ink);
   z-index: 2;
 }
 
@@ -50,7 +49,7 @@
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
-  color: var(--accent-ink);
+  color: var(--ink);
   text-decoration: none;
 }
 
@@ -63,13 +62,13 @@
   font-family: var(--font-utility);
   font-size: 13px;
   font-weight: 500;
-  color: var(--accent-ink);
+  color: var(--ink);
   text-decoration: none;
   border-bottom: 1px solid transparent;
 }
 
 .navLink:hover {
-  border-bottom-color: var(--accent-ink);
+  border-bottom-color: var(--ink);
 }
 
 /* The headline sits behind the sea canvas with its base just below the
