@@ -4,3 +4,6 @@ dist/
 *.local
 .vercel
 .claude/
+
+# Licensed FAI display face. Provided out of band; never committed to this public repo.
+public/fonts/*.woff2

@@ -73,10 +73,10 @@ const NODE_DEPTH_DIM = 0.55;
 const SEA_FACES = true;
 const FACE_HAZE_RANGE: [number, number] = [500, 8000];  // m behind the node over which faces tint toward the haze colour
 
-const NODE_COLOR: [number, number, number, number] = [0.94, 0.97, 0.99, 0.82];
-const WAVE_COLOR: [number, number, number, number] = [0.80, 0.92, 1.0, 0.42];
-const SEA_FACE_COLOR: [number, number, number, number] = [0.08, 0.26, 0.41, 1.0];
-const SEA_HAZE_COLOR: [number, number, number] = [0.19, 0.41, 0.59];
+const NODE_COLOR: [number, number, number, number] = [0.953, 0.953, 0.953, 0.82];  // Smoke White
+const WAVE_COLOR: [number, number, number, number] = [0.953, 0.953, 0.953, 0.42];  // Smoke White
+const SEA_FACE_COLOR: [number, number, number, number] = [0.071, 0.071, 0.071, 1.0];  // Cod Gray
+const SEA_HAZE_COLOR: [number, number, number] = [0.36, 0.36, 0.36];  // Cod Gray tint toward the sky
 const FAR_PLANE = 400_000;
 
 /* ------------------------------------------------------------------ */

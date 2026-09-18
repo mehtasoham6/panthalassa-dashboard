@@ -1,8 +1,8 @@
 .header {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  padding: 16px 20px 4px;
+  gap: 12px;
+  padding: 16px 24px 4px;
 }
 
 .eyebrow {
@@ -14,6 +14,7 @@
 }
 
 .title {
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
@@ -23,5 +24,5 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 4px 24px;
-  padding: 4px 20px 16px;
+  padding: 4px 24px 16px;
 }
