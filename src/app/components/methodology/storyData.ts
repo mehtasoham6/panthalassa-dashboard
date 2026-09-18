@@ -31,10 +31,10 @@ export const STEPS: StoryStep[] = [
 ];
 
 export const FAILURES = [
-  ['Chip failures', 'Individual chip failures gradually reduce working computing capacity. A hot-spare margin within the installed payload lets the node tolerate some failures before returning for chip replacement. The model counts both declining capacity and the interruption for service.'],
-  ['Returns under its own power', 'Some failures interrupt computing but leave the node able to travel home. The model counts the contribution lost during its return, repair, and journey back to the sea park.'],
-  ['Needs a tow', 'More disabling failures require a tug to retrieve the node. The model accounts for the longer interruption associated with retrieval, repair, and redeployment.'],
-  ['Node lost', 'An unrecoverable node must be replaced. The model counts the interruption until a replacement arrives and the associated replacement costs. It distinguishes deep-water losses from shallow-water incidents that can also require costly cleanup.'],
+  ['Chip failures', 'Gradually declining computing capacity, plus service downtime. The hot-spare margin delays the return for chip replacement.'],
+  ['Returns independently', 'Computing lost during the trip home, repair, and redeployment.'],
+  ['Requires tug retrieval', 'Computing lost during tug retrieval, repair, and redeployment.'],
+  ['Node lost', 'Computing lost until a replacement arrives. Replacement and any cleanup also add costs.'],
 ] as const;
 
 export const COSTS = [

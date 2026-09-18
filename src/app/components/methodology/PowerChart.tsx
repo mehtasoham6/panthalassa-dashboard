@@ -4,17 +4,61 @@ import type { VisualState } from './storyData.js';
 import styles from './Methodology.module.css';
 
 type Point = [number, number];
-export function PowerChart({ state, progress = 1, still = false }: {state: VisualState; progress?: number; still?: boolean}) {
+export function PowerChart({ state, active = true, still = false }: {state: VisualState; active?: boolean; still?: boolean}) {
   const ref = useRef<HTMLDivElement>(null);
   const [width,setWidth] = useState(540);
   useEffect(() => { const ro = new ResizeObserver(e => setWidth(Math.max(280,e[0]!.contentRect.width))); if(ref.current) ro.observe(ref.current); return()=>ro.disconnect(); },[]);
+  const [waveMix, setWaveMix] = useState(0);
+  const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  useEffect(() => {
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(media.matches);
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  useEffect(() => {
+    setWaveMix(0);
+    if (state !== 'resource' || !active || still || reduced || !ref.current) return;
+    let frame = 0, inView = false, startedAt = 0;
+    const holdMs = 2000, transitionMs = 400;
+    const halfCycle = holdMs + transitionMs;
+    const tick = (now: number) => {
+      const phase = (now - startedAt) % (2 * halfCycle);
+      const rising = phase < halfCycle;
+      const elapsed = rising ? phase : phase - halfCycle;
+      const t = Math.max(0, Math.min(1, (elapsed - holdMs) / transitionMs));
+      const smooth = t * t * (3 - 2 * t);
+      setWaveMix(rising ? smooth : 1 - smooth);
+      frame = requestAnimationFrame(tick);
+    };
+    const restart = () => {
+      cancelAnimationFrame(frame);
+      setWaveMix(0);
+      if (inView && !document.hidden) {
+        startedAt = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    };
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries[0]?.isIntersecting ?? false;
+      if (visible !== inView) { inView = visible; restart(); }
+    }, { root: ref.current.closest('[data-prototype-scroll]'), threshold: 0 });
+    observer.observe(ref.current);
+    document.addEventListener('visibilitychange', restart);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', restart);
+    };
+  }, [state, active, still, reduced]);
   const uid = useId().replace(/:/g,'');
-  const variable = state === 'battery' || (state === 'resource' && (progress > .42 || still));
+  const mix = state === 'battery' || (state === 'resource' && (still || reduced)) ? 1 : state === 'resource' && active ? waveMix : 0;
+  const variable = mix >= .5;
   const capped = state !== 'resource'; const battery = state === 'battery';
   const left = 38, right = width-12, top=66, bottom=320, span=right-left;
   const x = (fraction:number) => left+fraction*span;
   const y = (power:number) => bottom-power/660*(bottom-top);
-  const resource: Point[] = [[0,0],[.11,215],[.26,537], ...(variable ? SEA.map(([t,p]):Point => [.26+t/36*.40,p]) : [[.66,537] as Point]), [.81,215],[.92,0],[1,0]];
+  const resource: Point[] = [[0,0],[.11,215],[.26,537], ...SEA.map(([t,p]):Point => [.26+t/36*.40,537 + mix * (p-537)]), [.81,215],[.92,0],[1,0]];
   const compute: Point[] = [[0,0],[.11*200/215,200],[.11,200],[.26,200], ...(variable ? SEA.map(([t,p]):Point => [.26+t/36*.4,Math.min(p,200)]) : [[.66,200] as Point]),[.81,200],[.81+.11*(1-200/215),200],[.92,0],[1,0]];
   const supported: Point[] = [...Array.from({length:151},(_,i):Point => [.11*i/150,travelBatteryPower(i/150,true)]),[.26,200],...SEA.map(([t,p]):Point=>[.26+t/36*.4,recoverSeaPower(t,p)]),[.81,200],...Array.from({length:151},(_,i):Point=>[.81+.11*i/150,travelBatteryPower(i/150,false)]),[.92,0],[1,0]];
   const line = (pts:Point[]) => pts.map(([a,b],i)=>`${i?'L':'M'}${x(a).toFixed(2)},${y(b).toFixed(2)}`).join(' ');
