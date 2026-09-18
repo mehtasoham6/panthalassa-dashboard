@@ -20,7 +20,7 @@ export function PowerChart({ state, active = true, still = false }: {state: Visu
     setWaveMix(0);
     if (state !== 'resource' || !active || still || reduced || !ref.current) return;
     let frame = 0, inView = false, startedAt = 0;
-    const holdMs = 2000, transitionMs = 400;
+    const holdMs = 1600, transitionMs = 400;
     const halfCycle = holdMs + transitionMs;
     const tick = (now: number) => {
       const phase = (now - startedAt) % (2 * halfCycle);
