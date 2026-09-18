@@ -37,7 +37,7 @@
   right: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 20px var(--gutter);
   z-index: 2;
 }
@@ -72,7 +72,7 @@
 
 .title {
   position: absolute;
-  top: 14vh;
+  top: 11vh;
   left: var(--gutter);
   z-index: 2;
   max-width: 60vw;
@@ -89,11 +89,19 @@
 }
 
 .headline {
-  font-size: clamp(44px, 7.5vw, 104px);
+  font-size: clamp(36px, 5vw, 72px);
   font-weight: 600;
   line-height: 0.95;
   letter-spacing: -0.03em;
   color: var(--ink);
+}
+
+.heroSubtitle {
+  max-width: 38rem;
+  margin: 16px 0 0;
+  font-size: clamp(15px, 1.3vw, 17px);
+  line-height: 1.55;
+  color: var(--ink-muted);
 }
 
 .copy {
