@@ -26,14 +26,6 @@ export function WireframeHome() {
       <section className={styles.hero}>
         <NodeWaveHero className={styles.canvas} />
 
-        <header className={styles.topbar}>
-          <nav className={styles.nav}>
-            <Link to="/old" className={styles.navLink}>
-              Model dashboard
-            </Link>
-          </nav>
-        </header>
-
         <div className={styles.title}>
           <h1 className={styles.headline}>Can the Ocean Power AI?</h1>
           <p className={styles.heroSubtitle}>

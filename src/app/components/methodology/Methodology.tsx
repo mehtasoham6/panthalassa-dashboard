@@ -17,9 +17,9 @@ function Visual({ state, active = true, still = false }: {state: VisualState; ac
           {node ? <NodeScene waves={state==='waves'} still={still}/> : <SeaMap state={state}/>}
         </div>
       </div>
-      <div className={styles.visualCaption}>
-        {node ? <><span>THE PHYSICAL NODE</span><span>Original Ocean-2 geometry</span></> : <><span>{state === 'geography' ? 'THE WAVE RESOURCE' : state === 'outbound' ? 'OUTBOUND JOURNEY' : 'RETURN & MAINTENANCE'}</span><span>{state === 'geography' ? 'Model reference location · Natural Earth basemap' : 'Illustrative route · model reference location'}</span></>}
-      </div>
+      {!node && <div className={styles.visualCaption}>
+        <span>{state === 'geography' ? 'THE WAVE RESOURCE' : state === 'outbound' ? 'OUTBOUND JOURNEY' : 'RETURN & MAINTENANCE'}</span><span>{state === 'geography' ? 'Model reference location · Natural Earth basemap' : 'Illustrative route · model reference location'}</span>
+      </div>}
     </>}
   </div>;
 }
@@ -61,14 +61,12 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
   const inline = compact || reduced;
   return <section ref={host} className={styles.methodology} id="methodology" aria-labelledby="methodology-heading">
     <header className={styles.sectionHead}>
-      <div><span className={styles.eyebrow}>THE METHODOLOGY</span><h2 id="methodology-heading">From ocean waves<br/>to a computing fleet.</h2></div>
-      <div className={styles.headAside}><p>Follow the physical system.<br/>Then follow the calculation.</p><a href={dashboardHref}>Go straight to the dashboard <span aria-hidden="true">↗</span></a></div>
+      <div><span className={styles.eyebrow}>THE METHODOLOGY</span><h2 id="methodology-heading">How the model works.</h2></div>
     </header>
     <div className={`${styles.story} ${inline ? styles.inlineStory : ''}`}>
       {!inline && <aside className={styles.stickyVisual} aria-label="Illustration accompanying the current explanation"><Visual state={STEPS[active]!.visual}/></aside>}
       <div className={styles.copyColumn}>
         {STEPS.map((step,index)=><article key={step.id} id={step.id} data-story-step={index} className={styles.step}>
-          <span className={styles.eyebrow}>{step.chapter}</span>
           <h3>{step.title}</h3>
           <div className={styles.paragraphs}>{step.paragraphs.map(p=><p key={p.slice(0,24)}>{p.split(/(\*\*.+?\*\*)/g).map((part,i)=>part.startsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part)}</p>)}</div>
           {inline && <Visual state={step.visual} active={index === active} still={reduced}/>}

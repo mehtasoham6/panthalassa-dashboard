@@ -2,21 +2,21 @@ export type VisualState = 'node' | 'waves' | 'geography' | 'outbound' | 'return'
 export interface StoryStep { id: string; chapter: string; title: string; visual: VisualState; paragraphs: string[]; note?: string; }
 
 export const STEPS: StoryStep[] = [
-  { id: 'physical-node', chapter: '01 / The physical system', title: 'One node. Power and computing.', visual: 'node', paragraphs: [
+  { id: 'physical-node', chapter: '01 / The physical system', title: 'This is a node.', visual: 'node', paragraphs: [
     'A node is a floating power plant with computing hardware onboard. As waves lift and lower it, water is pushed up an internal tube into a pressurized reservoir, then flows through a turbine that drives an electrical generator. The electricity powers onboard computers, while the surrounding ocean helps cool them. Inputs and results travel between the node and land by satellite.'
   ] },
   { id: 'wave-resource', chapter: '01 / The physical system', title: 'An ocean of stored energy.', visual: 'waves', paragraphs: [
     'Ocean waves act like a giant solar battery: uneven heating by the sun creates winds, which transfer energy into the water. That energy travels as swell, persisting after the wind has subsided.',
     'How much energy a node captures depends on its size and how effectively it absorbs wave motion. Its “capture width ratio” compares the power it absorbs with the wave power arriving across a span as wide as its hull. In this model, a larger hull captures more power but requires more steel.'
   ] },
-  { id: 'sea-park', chapter: '01 / The physical system', title: 'Go where the waves are.', visual: 'geography', paragraphs: [
+  { id: 'sea-park', chapter: '01 / The physical system', title: 'Go where the best waves are', visual: 'geography', paragraphs: [
     'Some of the most energetic waves lie in the Southern Ocean, where strong winds blow across vast, uninterrupted stretches of water. Imagine a football field-length line across the ocean. At this model’s representative location, waves passing that line carry, on average, energy equivalent to the electricity usage of **~8,000 American homes**.',
     'Considering this is only 100 meters of the vast ocean, this resource is enormous even if only a fraction of it can be captured. The challenge historically is its remoteness. Panthalassa’s approach is to put computing where the strongest waves are and send their results home, rather than bring the electricity back to shore.'
   ], note: 'Operating far from shore can reduce exposure to coastal fouling organisms, limiting the need for cleaning that can damage protective marine coatings. Inside the node, darkness prevents sunlight-dependent growth, while recirculating water limits the influx of nutrients and organisms. The model assumes biofouling and corrosion are managed through routine maintenance rather than modeling them separately.' },
-  { id: 'outbound-journey', chapter: '02 / Follow one node', title: 'The journey is productive, too.', visual: 'outbound', paragraphs: [
+  { id: 'outbound-journey', chapter: '02 / Follow one node', title: 'The journey out to sea', visual: 'outbound', paragraphs: [
     'The model follows one node from port to a representative offshore operating location (the “sea park”). In the model, a tug takes it about 50 km from shore before it begins traveling under its own power to the sea park. It can generate electricity and run its computers along the way.'
   ] },
-  { id: 'return-journey', chapter: '02 / Follow one node', title: 'Work. Return. Repeat.', visual: 'return', paragraphs: [
+  { id: 'return-journey', chapter: '02 / Follow one node', title: 'Routine maintenance', visual: 'return', paragraphs: [
     'The node spends most of its time at the sea park, generating power for onboard computing. For scheduled maintenance, it travels back under its own power and a tug brings it into port. Computing stops during dockside service, then the cycle begins again. Repairs can also require an earlier return.'
   ] },
   { id: 'available-power', chapter: '03 / Estimate the contribution', title: 'Start with the power available.', visual: 'resource', paragraphs: [

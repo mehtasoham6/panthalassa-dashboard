@@ -60,18 +60,15 @@ export function NodeScene({ waves, still = false }: { waves: boolean; still?: bo
         ctx.beginPath(); ctx.moveTo(a[0]!,a[1]!); ctx.lineTo(b[0]!,b[1]!); ctx.stroke();
       }
       ctx.font = `${11 * Math.max(1,500/Math.max(280,canvas.clientWidth))}px ui-monospace, monospace`; ctx.fillStyle = '#aac4d6';
-      ctx.fillText('MEAN WATERLINE', 30, 76);
-      ctx.strokeStyle = '#7495ab'; ctx.setLineDash([2,4]); ctx.beginPath(); ctx.moveTo(35,89); ctx.lineTo(204,89); ctx.stroke(); ctx.setLineDash([]);
       if (waves) {
         ctx.fillText('DIAMETER', 308, 163);
         ctx.strokeStyle = '#9de4d2'; ctx.beginPath(); ctx.moveTo(222,139);ctx.lineTo(278,139);ctx.moveTo(222,135);ctx.lineTo(222,143);ctx.moveTo(278,135);ctx.lineTo(278,143);ctx.stroke();
       }
-      ctx.fillStyle = '#829faf'; ctx.fillText('OCEAN-2 / UPRIGHT VIEW', 153, 461);
     }
     const loop = (t: number) => { if (visible) draw(t); frame = requestAnimationFrame(loop); };
     const resize = new ResizeObserver(() => draw(performance.now())); resize.observe(canvas);
     draw(0); frame = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(frame); observer.disconnect(); resize.disconnect(); };
   }, [waves, still]);
-  return <canvas ref={ref} style={{ width: '100%', display: 'block' }} role="img" aria-label={waves ? 'The original node geometry, floating upright as smooth waves pass; most of its spar is underwater.' : 'The original node geometry upright, with a marked waterline and submerged spar.'} />;
+  return <canvas ref={ref} style={{ width: '100%', display: 'block' }} role="img" aria-label={waves ? 'The original node geometry, floating upright as smooth waves pass; most of its spar is underwater.' : 'The original node geometry upright, with most of its spar underwater.'} />;
 }

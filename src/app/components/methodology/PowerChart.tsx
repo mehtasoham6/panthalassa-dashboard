@@ -65,7 +65,7 @@ export function PowerChart({ state, active = true, still = false }: {state: Visu
   const fill = (pts:Point[]) => `${line(pts)} L${right},${bottom} L${left},${bottom} Z`;
   const stages = [{a:0,b:.11,lines:['Tug','out']},{a:.11,b:.26,lines:['Travel','out']},{a:.26,b:.66,lines:['Sea','park']},{a:.66,b:.81,lines:['Travel','back']},{a:.81,b:.92,lines:['Tug','in']},{a:.92,b:1,lines:['Mainte-','nance']}];
   return <div ref={ref} className={styles.chart}>
-    <div className={styles.chartHeading}><span>ONE OPERATING CYCLE</span><span>{battery ? '03 / Add battery support' : capped ? '02 / Apply the computing limit' : '01 / Available wave resource'}</span></div>
+    <div className={styles.chartHeading}><span>ONE OPERATING CYCLE</span></div>
     <svg width="100%" viewBox={`0 0 ${width} 396`} role="img" aria-label={battery ? 'Battery support fills a 60 kilowatt-hour lull and partly fills a 360 kilowatt-hour lull. The shaded area represents energy supplied to computing.' : capped ? 'The 200 kilowatt computing limit is reached before outbound tugging ends, below the 300 kilowatt generator limit.' : 'Illustrative wave-derived power rises during travel, fluctuates at the sea park, and falls to zero in port.'}>
       <defs><linearGradient id={`${uid}-fill`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#9dddc9" stopOpacity=".22"/><stop offset="1" stopColor="#9dddc9" stopOpacity=".03"/></linearGradient></defs>
       <text x={left} y="32" fill="#a5bece" fontSize="11">Power (kW)</text>

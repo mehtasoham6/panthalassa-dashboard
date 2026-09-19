@@ -5,8 +5,7 @@ import styles from './Methodology.module.css';
 export function FailureSection() {
   return <section id="failures" className={styles.failureSection} aria-labelledby="failure-heading">
     <div className={styles.failureIntro}>
-      <span className={styles.eyebrow}>04 / Account for failures</span>
-      <h2 id="failure-heading">What reduces the node’s contribution?</h2>
+      <h2 id="failure-heading">Adjusting for failures</h2>
       <p>Output lost from failures that cause unexpected downtime, maintenance, or even total node loss is then subtracted from the scheduled output calculated in the previous step. Gradual chip degradation is modeled separately from incidents that interrupt the whole node. For those incidents, the failure rate slider sets their overall frequency: for example, a 3% setting means an average of three incidents per 100 nodes operating for one year.</p>
       <p>The model divides that rate among four kinds of node failures using fixed probability weights. It then multiplies each outcome’s expected number of incidents by the computing contribution lost per incident, and adds those losses together.</p>
     </div>
