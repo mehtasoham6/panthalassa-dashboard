@@ -2,10 +2,10 @@ export type VisualState = 'node' | 'waves' | 'geography' | 'outbound' | 'return'
 export interface StoryStep { id: string; chapter: string; title: string; visual: VisualState; paragraphs: string[]; note?: string; }
 
 export const STEPS: StoryStep[] = [
-  { id: 'physical-node', chapter: '01 / The physical system', title: 'This is a node.', visual: 'node', paragraphs: [
+  { id: 'physical-node', chapter: '01 / The physical system', title: 'This is a node', visual: 'node', paragraphs: [
     'A node is a floating power plant with computing hardware onboard. As waves lift and lower it, water is pushed up an internal tube into a pressurized reservoir, then flows through a turbine that drives an electrical generator. The electricity powers onboard computers, while the surrounding ocean helps cool them. Inputs and results travel between the node and land by satellite.'
   ] },
-  { id: 'wave-resource', chapter: '01 / The physical system', title: 'An ocean of stored energy.', visual: 'waves', paragraphs: [
+  { id: 'wave-resource', chapter: '01 / The physical system', title: 'An ocean of stored energy', visual: 'waves', paragraphs: [
     'Ocean waves act like a giant solar battery: uneven heating by the sun creates winds, which transfer energy into the water. That energy travels as swell, persisting after the wind has subsided.',
     'How much energy a node captures depends on its size and how effectively it absorbs wave motion. Its “capture width ratio” compares the power it absorbs with the wave power arriving across a span as wide as its hull. In this model, a larger hull captures more power but requires more steel.'
   ] },
@@ -19,13 +19,13 @@ export const STEPS: StoryStep[] = [
   { id: 'return-journey', chapter: '02 / Follow one node', title: 'Routine maintenance', visual: 'return', paragraphs: [
     'The node spends most of its time at the sea park, generating power for onboard computing. For scheduled maintenance, it travels back under its own power and a tug brings it into port. Computing stops during dockside service, then the cycle begins again. Repairs can also require an earlier return.'
   ] },
-  { id: 'available-power', chapter: '03 / Estimate the contribution', title: 'Start with the power available.', visual: 'resource', paragraphs: [
+  { id: 'available-power', chapter: '03 / Estimate the contribution', title: 'Start with the power available', visual: 'resource', paragraphs: [
     'The model starts by estimating the electricity waves could supply throughout a node’s operating cycle. It uses simplified wave conditions during travel and historical wave data at the sea park. The node can power computing while traveling, but computing stops during dockside maintenance.'
   ] },
-  { id: 'computing-limit', chapter: '03 / Estimate the contribution', title: 'Full power, before the strongest waves.', visual: 'capacity', paragraphs: [
+  { id: 'computing-limit', chapter: '03 / Estimate the contribution', title: 'Full power, before the strongest waves', visual: 'capacity', paragraphs: [
     'The computing payload is deliberately sized below what strong waves can support. At the defaults, its 200 kW requirement is met before outbound tugging ends. This headroom helps keep the computers fully powered through weaker waves, improving availability. A larger payload can do more computing per node, but is harder to keep running at full power all the time.'
   ] },
-  { id: 'battery-output', chapter: '03 / Estimate the contribution', title: 'Bridge the gaps. Add up the energy.', visual: 'battery', paragraphs: [
+  { id: 'battery-output', chapter: '03 / Estimate the contribution', title: 'Bridge the gaps, add up the energy', visual: 'battery', paragraphs: [
     'Batteries bridge short gaps when wave power falls below the computers’ needs. Adding up the electricity supplied to computing over time gives the node’s scheduled contribution—including productive travel, weaker-wave periods, and maintenance pauses. This energy is the model’s proxy for computing delivered.'
   ] },
 ];

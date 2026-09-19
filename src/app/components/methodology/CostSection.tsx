@@ -8,7 +8,7 @@ export function CostSection() {
       <div className={styles.fleetIntro}>
       <FleetScene />
       <div className={styles.fleetCopy}>
-      <h2 id="cost-heading">Now, make it fleet-sized.</h2>
+      <h2 id="cost-heading">Now, make it fleet-sized</h2>
       <div className={styles.costIntro}><p>Once we know one node’s expected contribution, we calculate how many nodes are needed to meet the selected computing target over the analysis period.</p><p>We then multiply that fleet size by the cost of building and equipping each node, and then add the costs of operating, maintaining, and replacing equipment over the analysis period. The costs broadly fall into the following buckets:</p></div>
       </div>
       </div>

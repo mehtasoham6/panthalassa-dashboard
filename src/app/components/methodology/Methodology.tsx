@@ -61,7 +61,7 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
   const inline = compact || reduced;
   return <section ref={host} className={styles.methodology} id="methodology" aria-labelledby="methodology-heading">
     <header className={styles.sectionHead}>
-      <div><span className={styles.eyebrow}>THE METHODOLOGY</span><h2 id="methodology-heading">How the model works.</h2></div>
+      <div><span className={styles.eyebrow}>THE METHODOLOGY</span><h2 id="methodology-heading">How the model works</h2></div>
     </header>
     <div className={`${styles.story} ${inline ? styles.inlineStory : ''}`}>
       {!inline && <aside className={styles.stickyVisual} aria-label="Illustration accompanying the current explanation"><Visual state={STEPS[active]!.visual}/></aside>}
@@ -76,7 +76,7 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
     </div>
     <FailureSection />
     <CostSection />
-    <footer className={styles.end}><div><span className={styles.eyebrow}>EXPLORE THE ASSUMPTIONS</span><h2>Now, make the model yours.</h2></div><a href={dashboardHref}>Explore the dashboard <span aria-hidden="true">↗</span></a></footer>
+    <footer className={styles.end}><div><span className={styles.eyebrow}>EXPLORE THE ASSUMPTIONS</span><h2>Now, make the model yours</h2></div><a href={dashboardHref}>Explore the dashboard <span aria-hidden="true">↗</span></a></footer>
     {preview && <p className={styles.previewFoot}>Local design preview · tour and appendix are not included in this prototype.</p>}
   </section>;
 }
