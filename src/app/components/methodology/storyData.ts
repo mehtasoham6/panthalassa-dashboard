@@ -31,15 +31,16 @@ export const STEPS: StoryStep[] = [
 ];
 
 export const FAILURES = [
-  ['Chip failures', 'Gradually declining computing capacity, plus service downtime. The hot-spare margin delays the return for chip replacement.'],
-  ['Returns independently', 'Computing lost during the trip home, repair, and redeployment.'],
-  ['Requires tug retrieval', 'Computing lost during tug retrieval, repair, and redeployment.'],
-  ['Node lost', 'Computing lost until a replacement arrives. Replacement and any cleanup also add costs.'],
+  ['Chip failures', 'As chips fail, output declines. The hot spare margin is the percent of installed compute that can degrade before a surprise maintenance trip is triggered.'],
+  ['Compute disabled, node self returns', 'Computing stops until repairs are completed, but propulsion still works. The model counts lost output during the return and repair, then credits computing produced during redeployment.'],
+  ['Loss of control, tug retrieval', 'The node cannot return independently. The model counts lost computing while a tug is dispatched, the node is recovered and repaired, and it is redeployed. Retrieval also adds tug costs.'],
+  ['Unrecoverable deep water loss', 'The node and its computing payload must be replaced. The model assumes a replacement is ready to depart immediately and can compute during deployment, limiting the output interruption despite the substantial replacement cost.'],
+  ['Catastrophic shallow water loss', 'Replacement follows the same assumptions as a deep-water loss, with an additional wreckage cleanup cost.'],
 ] as const;
 
 export const COSTS = [
   ['Computing hardware', 'The initial computing payload and replacements for failed chips.'],
-  ['Hull and power systems', 'The fabricated hull, equipment that converts wave motion into electricity, batteries, and onboard navigation and communications hardware.'],
-  ['Operations and upkeep', 'Tug services, scheduled maintenance, repairs, retrieval of disabled nodes, and node replacement or retirement—including cleanup where applicable.'],
+  ['Hull and power systems', 'The fabricated hull, the power take-off equipment that converts wave motion into electricity, batteries, and onboard communications and navigation controls.'],
+  ['Operations and upkeep', 'Tugging, scheduled maintenance, surprise maintenance, repairs, retrieval of disabled nodes, node replacement or retirement, and wreckage cleanup (when applicable).'],
   ['Data transfer', 'Satellite transmission of workload inputs and results, based on the amount of computing delivered and the workload’s data requirements.'],
 ] as const;

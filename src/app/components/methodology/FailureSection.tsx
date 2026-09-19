@@ -7,20 +7,16 @@ export function FailureSection() {
     <div className={styles.failureIntro}>
       <span className={styles.eyebrow}>04 / Account for failures</span>
       <h2 id="failure-heading">What reduces the node’s contribution?</h2>
-      <p>The model estimates chip losses separately. For other failures, it weights each outcome’s lost output by its probability.</p>
+      <p>Output lost from failures that cause unexpected downtime, maintenance, or even total node loss is then subtracted from the scheduled output calculated in the previous step. Gradual chip degradation is modeled separately from incidents that interrupt the whole node. For those incidents, the failure rate slider sets their overall frequency: for example, a 3% setting means an average of three incidents per 100 nodes operating for one year.</p>
+      <p>The model divides that rate among four kinds of node failures using fixed probability weights. It then multiplies each outcome’s expected number of incidents by the computing contribution lost per incident, and adds those losses together.</p>
     </div>
     <table className={styles.failureTable} aria-label="Failure categories and their effects on the model">
       <thead><tr><th scope="col">Failure</th><th scope="col">What the model counts</th></tr></thead>
-      <tbody>{FAILURES.map(([title,body]) => <tr key={title}><th scope="row">{title}</th><td>{body}</td></tr>)}</tbody>
+      <tbody>{FAILURES.map(([title,body],index) => <tr key={title} className={index > 0 ? styles.nodeFailureRow : undefined}><th scope="row">{title}</th><td>{body}</td></tr>)}</tbody>
     </table>
-    <div className={styles.failureCalculation} aria-label="Scheduled contribution minus expected losses equals expected contribution">
-      <span>Scheduled contribution</span>
-      <span><span aria-hidden="true">− </span>expected losses</span>
-      <strong><span aria-hidden="true">= </span>expected contribution</strong>
-    </div>
     <aside className={styles.failureAssumptions} aria-labelledby="failure-assumptions-heading">
-      <h3 id="failure-assumptions-heading">The assumptions behind the estimate</h3>
-      <p>Non-chip failure assumptions draw on maritime incident data. The <strong>failure-rate slider</strong> changes their overall frequency; outcome probabilities and detailed assumptions are in the appendix.</p>
+      <h3 id="failure-assumptions-heading">Where the failure assumptions come from</h3>
+      <p>The assumed mix of outcomes is informed by maritime incident data, rather than measured Panthalassa fleet performance. Exact outcome probabilities, sources, and calculation details are provided in the appendix.</p>
     </aside>
   </section>;
 }
