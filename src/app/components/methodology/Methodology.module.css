@@ -43,6 +43,19 @@
 .cardGrid p { font-size:14px; line-height:1.8; }
 .methodology .sharedNote { font-size:12px; margin-top:30px; color:#8faaba; max-width:810px; }
 .costSection { padding:65px 0; border-top:1px solid var(--m-line); }
+.fleetIntro { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:42px; align-items:center; }
+.fleetCopy .costIntro { display:block; }
+.fleetCopy .costIntro p+p { border-top:1px dotted #638296; margin-top:23px; padding-top:23px; }
+.fleetFigure { min-width:0; margin:0; }
+.fleetCircle { position:relative; aspect-ratio:1; width:100%; max-width:440px; margin:auto; border-radius:50%; overflow:hidden; border:1px solid var(--m-line); background:#0e263b; }
+.fleetCircle canvas { display:block; width:100%; height:100%; }
+.fleetSceneLabel { position:absolute; top:12%; left:0; right:0; text-align:center; font:10px var(--font-mono,monospace); letter-spacing:.16em; color:#c3d8e1; pointer-events:none; }
+.fleetFigure figcaption { margin:18px auto 0; text-align:center; color:#93b0c1; font-size:11px; line-height:1.7; }
+.fleetReplay { display:block; margin:8px auto 0; padding:5px 10px; background:none; border:0; color:#c1dacd; font:11px/1.5 var(--font-mono,monospace); text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
+.fleetReplay[hidden] { display:none; }
+.fleetReplay:focus-visible { outline:2px solid var(--m-accent); outline-offset:3px; }
+.fleetCosts { margin-top:38px; }
+@media(max-width:719px) { .fleetIntro { grid-template-columns:1fr; gap:28px; } .fleetFigure { grid-row:2; } .fleetCircle { max-width:380px; } .fleetCopy { grid-row:1; } }
 .costIntro { display:grid; grid-template-columns:1fr 1fr; gap:40px; max-width:1040px; }
 .costGrid { margin-top:40px; gap:0; }
 .costGrid article { padding:28px 30px; border-top:1px solid var(--m-line); }

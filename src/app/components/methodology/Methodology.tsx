@@ -4,6 +4,7 @@ import { NodeScene } from './NodeScene.js';
 import { SeaMap } from './SeaMap.js';
 import { PowerChart } from './PowerChart.js';
 import { FailureSection } from './FailureSection.js';
+import { FleetScene } from './FleetScene.js';
 import styles from './Methodology.module.css';
 
 function Visual({ state, active = true, still = false }: {state: VisualState; active?: boolean; still?: boolean}) {
@@ -69,7 +70,7 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
         {STEPS.map((step,index)=><article key={step.id} id={step.id} data-story-step={index} className={styles.step}>
           <span className={styles.eyebrow}>{step.chapter}</span>
           <h3>{step.title}</h3>
-          <div className={styles.paragraphs}>{step.paragraphs.map(p=><p key={p.slice(0,24)}>{p}</p>)}</div>
+          <div className={styles.paragraphs}>{step.paragraphs.map(p=><p key={p.slice(0,24)}>{p.split(/(\*\*.+?\*\*)/g).map((part,i)=>part.startsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part)}</p>)}</div>
           {inline && <Visual state={step.visual} active={index === active} still={reduced}/>}
           {step.note && <aside className={styles.note}><h4>What about corrosion and marine growth?</h4><p>{step.note}</p></aside>}
         </article>)}
@@ -77,9 +78,14 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
     </div>
     <FailureSection />
     <section className={styles.costSection} id="fleet-cost" aria-labelledby="cost-heading">
+      <div className={styles.fleetIntro}>
+      <FleetScene />
+      <div className={styles.fleetCopy}>
       <span className={styles.eyebrow}>05 / Scale the fleet & calculate cost</span><h2 id="cost-heading">One contribution.<br/>A fleet-sized calculation.</h2>
       <div className={styles.costIntro}><p>Once we know one node’s expected contribution, we calculate how many are needed to meet the selected computing target over the analysis period. This matches total expected energy supplied to computing, rather than guaranteeing the target at every moment.</p><p>Once we estimate how many nodes are needed, we multiply that fleet size by the cost of building and equipping each node. We then add the costs of operating, maintaining, and replacing equipment over the analysis period.</p></div>
-      <div className={`${styles.cardGrid} ${styles.costGrid}`}>{COSTS.map(([title,body],i)=><article key={title}><span className={styles.cardNumber}>0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div>
+      </div>
+      </div>
+      <div className={`${styles.cardGrid} ${styles.costGrid} ${styles.fleetCosts}`}>{COSTS.map(([title,body],i)=><article key={title}><span className={styles.cardNumber}>0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div>
       <p className={styles.sharedNote}>Specific cost assumptions, sources, and accounting details are provided in the appendix.</p>
     </section>
     <footer className={styles.end}><div><span className={styles.eyebrow}>EXPLORE THE ASSUMPTIONS</span><h2>Now, make the model yours.</h2></div><a href={dashboardHref}>Explore the dashboard <span aria-hidden="true">↗</span></a></footer>

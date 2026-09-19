@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { SEA, recoverSeaPower, travelBatteryPower } from './chartData.js';
+import { SEA, seaBatteryProfile, travelBatteryPower } from './chartData.js';
 import type { VisualState } from './storyData.js';
 import styles from './Methodology.module.css';
 
@@ -60,7 +60,7 @@ export function PowerChart({ state, active = true, still = false }: {state: Visu
   const y = (power:number) => bottom-power/660*(bottom-top);
   const resource: Point[] = [[0,0],[.11,215],[.26,537], ...SEA.map(([t,p]):Point => [.26+t/36*.40,537 + mix * (p-537)]), [.81,215],[.92,0],[1,0]];
   const compute: Point[] = [[0,0],[.11*200/215,200],[.11,200],[.26,200], ...(variable ? SEA.map(([t,p]):Point => [.26+t/36*.4,Math.min(p,200)]) : [[.66,200] as Point]),[.81,200],[.81+.11*(1-200/215),200],[.92,0],[1,0]];
-  const supported: Point[] = [...Array.from({length:151},(_,i):Point => [.11*i/150,travelBatteryPower(i/150,true)]),[.26,200],...SEA.map(([t,p]):Point=>[.26+t/36*.4,recoverSeaPower(t,p)]),[.81,200],...Array.from({length:151},(_,i):Point=>[.81+.11*i/150,travelBatteryPower(i/150,false)]),[.92,0],[1,0]];
+  const supported: Point[] = [...Array.from({length:151},(_,i):Point => [.11*i/150,travelBatteryPower(i/150,true)]),[.26,200],...seaBatteryProfile().map(([t,p]):Point=>[.26+t/36*.4,p]),[.81,200],...Array.from({length:151},(_,i):Point=>[.81+.11*i/150,travelBatteryPower(i/150,false)]),[.92,0],[1,0]];
   const line = (pts:Point[]) => pts.map(([a,b],i)=>`${i?'L':'M'}${x(a).toFixed(2)},${y(b).toFixed(2)}`).join(' ');
   const fill = (pts:Point[]) => `${line(pts)} L${right},${bottom} L${left},${bottom} Z`;
   const stages = [{a:0,b:.11,lines:['Tug','out']},{a:.11,b:.26,lines:['Travel','out']},{a:.26,b:.66,lines:['Sea','park']},{a:.66,b:.81,lines:['Travel','back']},{a:.81,b:.92,lines:['Tug','in']},{a:.92,b:1,lines:['Mainte-','nance']}];
@@ -89,8 +89,8 @@ export function PowerChart({ state, active = true, still = false }: {state: Visu
     </svg>
     <div className={styles.legend}>
       <span><i className={styles.resourceKey}/>Wave-derived power before equipment limits</span>
-      {capped && <span><i className={styles.computeKey}/>Power supplied to computing{battery?'':' · before batteries'}</span>}
-      {battery && <span><i className={styles.batteryKey}/>Battery support · 100 kWh</span>}
+      {capped && <span><i className={styles.computeKey}/>{battery ? 'Power Supplied to Compute sans battery' : 'Power supplied to computing · before batteries'}</span>}
+      {battery && <span><i className={styles.batteryKey}/>Power Supplied to Compute with Battery</span>}
     </div>
     <p className={styles.chartCaption}>{variable ? 'Illustrative wave variability' : 'Simplified resource profile'} · stage durations not to scale</p>
     {battery && <div className={styles.chartFoot}>Shaded area: energy supplied to computing.<br/>Short lull fully bridged; deeper lull only partly bridged.</div>}
