@@ -47,7 +47,7 @@ export function computePresentValueAndUnitCosts(
   const yearlyWorkload: number[] = new Array(numBuckets).fill(0);
   const yearlyEnergyMwh: number[] = new Array(numBuckets).fill(0);
 
-  const tug_50km_leg_cost_usd = CONST.tug_cost_usd_per_day * derived.one_way_tug_days;
+  const tug_50km_leg_cost_usd = inputs.tugCostUsdPerDay * derived.one_way_tug_days;
   const compute_capex_per_node_usd = costs.physical_node_cost_usd - costs.non_compute_node_cost_usd;
 
   // 1. Node generation purchases (+ each generation's initial deployment tug
@@ -109,7 +109,7 @@ export function computePresentValueAndUnitCosts(
     N_fleet *
     inputs.analysis_period_years *
     modeLosses.mode_3_rate_annual *
-    CONST.tug_cost_usd_per_day *
+    inputs.tugCostUsdPerDay *
     ((2 * inputs.sea_park_distance_km) / CONST.tug_speed_km_per_day + derived.one_way_tug_days);
   const replacement_deployment_tug_cost_usd = expectedTotalLossEventsFleet * tug_50km_leg_cost_usd;
   // Modes 4/5 full-node replacement cost is NOT part of the uniform spread
@@ -120,7 +120,7 @@ export function computePresentValueAndUnitCosts(
   // to node age and stay uniformly spread; all of this uniform spread is
   // non-compute, so it's tagged nodes.
   const unexpected_mechanical_repair_cost_usd =
-    CONST.disabling_mechanical_repair_cost_usd *
+    inputs.mode23RepairCostUsd *
     N_fleet *
     inputs.analysis_period_years *
     (modeLosses.mode_2_rate_annual + modeLosses.mode_3_rate_annual);

@@ -30,9 +30,11 @@ export const CONST = {
   battery_pack_cost_usd_per_kwh: 100,
   battery_power_system_cost_usd_per_kw: 75,
   onboard_systems_cost_usd_per_node: 25_000,
-  tug_cost_usd_per_day: 10_000,
+  // tug_cost_usd_per_day and disabling_mechanical_repair_cost_usd were
+  // promoted to user-configurable sliders (ModelInputs.tugCostUsdPerDay,
+  // ModelInputs.mode23RepairCostUsd) -- do not reintroduce fixed constants
+  // for either here.
   scheduled_node_maintenance_cost_fraction: 0.03,
-  disabling_mechanical_repair_cost_usd: 50_000,
   mode_5_catastrophic_cost_usd: 2_000_000,
   node_retirement_processing_cost_fraction: 0.01,
   // GB transferred per (Mbps/kW of intensity) per kWh of delivered compute:

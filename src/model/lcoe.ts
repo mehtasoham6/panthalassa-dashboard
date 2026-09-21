@@ -134,7 +134,7 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
   const returnYears = derived.one_way_journey_days / CONST.days_per_year;
   const maintenanceDockYears = CONST.node_maintenance_dock_days / CONST.days_per_year;
   const batteryCapacityKwh = inputs.payload_rating_kw * inputs.battery_duration_hours;
-  const tugLegCostUsd = CONST.tug_cost_usd_per_day * derived.one_way_tug_days;
+  const tugLegCostUsd = inputs.tugCostUsdPerDay * derived.one_way_tug_days;
 
   const outboundSegments = outboundLegSegments(legInputs);
   const returnSegments = returnLegSegments(legInputs);
@@ -239,11 +239,11 @@ export function computeLcoe(inputs: ModelInputs, derived: DerivedQuantities): Lc
   const mode_2_tug_cost_per_year = 2 * tugLegCostUsd * mode_2_rate_annual;
   const mode_3_tug_cost_per_year =
     mode_3_rate_annual *
-    CONST.tug_cost_usd_per_day *
+    inputs.tugCostUsdPerDay *
     ((2 * inputs.sea_park_distance_km) / CONST.tug_speed_km_per_day + derived.one_way_tug_days);
   const replacement_deployment_tug_cost_per_year = (mode_4_rate_annual + mode_5_rate_annual) * tugLegCostUsd;
   const mechanical_repair_cost_per_year =
-    CONST.disabling_mechanical_repair_cost_usd * (mode_2_rate_annual + mode_3_rate_annual);
+    inputs.mode23RepairCostUsd * (mode_2_rate_annual + mode_3_rate_annual);
   const mode_5_cleanup_cost_per_year = CONST.mode_5_catastrophic_cost_usd * mode_5_rate_annual;
 
   const uniformCostPerYear =

@@ -203,7 +203,7 @@ describe("schedule regression: the six-month maintenance-consolidation rule move
     // LCOE's own maintenance-driven cost bumps land exactly at nominal years 5, 10, 15 (t-indices 5, 10, 15).
     const maintenanceLaborPlusTug =
       CONST.scheduled_node_maintenance_cost_fraction * combine.costs.non_compute_node_cost_usd +
-      2 * CONST.tug_cost_usd_per_day * combine.derived.one_way_tug_days;
+      2 * DEFAULT_INPUTS.tugCostUsdPerDay * combine.derived.one_way_tug_days;
     for (const t of [5, 10, 15]) {
       expect(combine.lcoe.yearly_power_system_cost_usd[t]!).toBeGreaterThanOrEqual(maintenanceLaborPlusTug - 1e-6);
     }

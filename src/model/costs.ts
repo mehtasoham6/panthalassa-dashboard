@@ -70,7 +70,7 @@ export function computeCosts(
     fleet_compute_replacement_cost_usd + fleet_complete_payload_replacement_cost_usd;
 
   // 7.3 / A.5 Non-compute maintenance and failure costs
-  const tug_50km_leg_cost_usd = CONST.tug_cost_usd_per_day * derived.one_way_tug_days;
+  const tug_50km_leg_cost_usd = inputs.tugCostUsdPerDay * derived.one_way_tug_days;
 
   const normal_tug_cost_usd =
     tug_50km_leg_cost_usd *
@@ -90,7 +90,7 @@ export function computeCosts(
     N_fleet *
     inputs.analysis_period_years *
     modeLosses.mode_3_rate_annual *
-    CONST.tug_cost_usd_per_day *
+    inputs.tugCostUsdPerDay *
     ((2 * inputs.sea_park_distance_km) / CONST.tug_speed_km_per_day + derived.one_way_tug_days);
 
   const replacement_deployment_tug_cost_usd = expected_total_loss_events_fleet * tug_50km_leg_cost_usd;
@@ -101,7 +101,7 @@ export function computeCosts(
     expected_total_loss_events_fleet * non_compute_node_cost_usd * avgRemainingLifeFraction;
 
   const unexpected_mechanical_repair_cost_usd =
-    CONST.disabling_mechanical_repair_cost_usd *
+    inputs.mode23RepairCostUsd *
     N_fleet *
     inputs.analysis_period_years *
     (modeLosses.mode_2_rate_annual + modeLosses.mode_3_rate_annual);

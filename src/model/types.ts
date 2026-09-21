@@ -18,6 +18,10 @@ export interface ModelInputs {
   /** Average external workload data traffic per active kW of delivered compute (not intra-node networking). */
   workloadBandwidthIntensityMbpsPerKw: number;
   dataTransferCostPerGb: number;
+  /** Parts/labor cost per Mode 2 or Mode 3 disabling-but-recoverable repair event, once the node reaches port. Excludes retrieval (see tugCostUsdPerDay) and chip replacement (compute_hardware_cost_usd_per_kw). */
+  mode23RepairCostUsd: number;
+  /** Charter rate for tug service. The model separately determines how many days of tug time each event requires; this only sets the $/day price. */
+  tugCostUsdPerDay: number;
 }
 
 export const DEFAULT_INPUTS: ModelInputs = {
@@ -37,6 +41,8 @@ export const DEFAULT_INPUTS: ModelInputs = {
   compute_hardware_cost_usd_per_kw: 25000,
   workloadBandwidthIntensityMbpsPerKw: 0.03,
   dataTransferCostPerGb: 1.0,
+  mode23RepairCostUsd: 50_000,
+  tugCostUsdPerDay: 10_000,
 };
 
 /**

@@ -14,6 +14,8 @@ export interface GenericSliderConfig {
   displayScale?: number;
   decimals?: number;
   helpText?: string;
+  /** Overrides the default `(raw * displayScale).toFixed(decimals)` numeric formatting (e.g. compact "$50k" instead of "50000"). Calculations always use the raw value regardless of this. */
+  format?: (raw: number) => string;
 }
 
 interface Props {
@@ -25,7 +27,7 @@ interface Props {
 export function SliderControl({ config, value, onChange }: Props) {
   const scale = config.displayScale ?? 1;
   const decimals = config.decimals ?? 1;
-  const displayValue = value * scale;
+  const format = config.format ?? ((raw: number) => (raw * scale).toFixed(decimals));
   const isDefault = Math.abs(value - config.default) < 1e-9;
 
   return (
@@ -42,7 +44,7 @@ export function SliderControl({ config, value, onChange }: Props) {
           <span className={styles.label}>{config.label}</span>
         )}
         <span className={styles.valueGroup}>
-          <span className={`${styles.value} num`}>{displayValue.toFixed(decimals)}</span>
+          <span className={`${styles.value} num`}>{format(value)}</span>
           <span className={styles.unit}>{config.unit}</span>
         </span>
       </div>
@@ -60,7 +62,7 @@ export function SliderControl({ config, value, onChange }: Props) {
       </div>
       <div className={styles.bottomLine}>
         <span className={`${styles.rangeLabel} num`}>
-          {(config.min * scale).toFixed(decimals)}–{(config.max * scale).toFixed(decimals)} {config.unit}
+          {format(config.min)}–{format(config.max)} {config.unit}
         </span>
         <button
           type="button"
@@ -68,7 +70,7 @@ export function SliderControl({ config, value, onChange }: Props) {
           disabled={isDefault}
           onClick={() => onChange(config.default)}
         >
-          default: {(config.default * scale).toFixed(decimals)}
+          default: {format(config.default)}
         </button>
       </div>
     </div>

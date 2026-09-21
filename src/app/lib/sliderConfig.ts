@@ -1,5 +1,8 @@
 import type { ModelInputs } from "../../model/index.js";
 
+/** Compact "$50k"-style formatting for large round-thousands cost sliders. Display only -- calculations always use the raw dollar value. */
+const formatCompactUsd = (raw: number): string => `$${Math.round(raw / 1000)}k`;
+
 export interface SliderConfig {
   key: keyof ModelInputs;
   label: string;
@@ -12,6 +15,8 @@ export interface SliderConfig {
   displayScale?: number;
   decimals?: number;
   helpText?: string;
+  /** Overrides the default numeric formatting (e.g. compact "$50k" instead of "50000"). Calculations always use the raw value. */
+  format?: (raw: number) => string;
 }
 
 export interface SliderGroupConfig {
@@ -218,6 +223,30 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 200,
         decimals: 0,
         helpText: "Power take-off (generator) cost per kW of installed PTO rating (PTO is sized at 1.5x payload)",
+      },
+      {
+        key: "mode23RepairCostUsd",
+        label: "Node Repair Cost",
+        unit: "/ event",
+        min: 20_000,
+        max: 500_000,
+        step: 10_000,
+        default: 50_000,
+        decimals: 0,
+        format: formatCompactUsd,
+        helpText: "Cost of parts and labor after a serious but recoverable node failure. Range: roughly small workboat repair to major commercial vessel repair",
+      },
+      {
+        key: "tugCostUsdPerDay",
+        label: "Tug Cost",
+        unit: "per day",
+        min: 5_000,
+        max: 50_000,
+        step: 1_000,
+        default: 10_000,
+        decimals: 0,
+        format: formatCompactUsd,
+        helpText: "Daily cost of hiring a tug to move or recover a node",
       },
     ],
   },
