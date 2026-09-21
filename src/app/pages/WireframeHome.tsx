@@ -26,20 +26,11 @@ export function WireframeHome() {
       <section className={styles.hero}>
         <NodeWaveHero className={styles.canvas} />
 
-        <header className={styles.topbar}>
-          <Link to="/" className={styles.brand}>
-            Panthalassa
-          </Link>
-          <nav className={styles.nav}>
-            <Link to="/old" className={styles.navLink}>
-              Model dashboard
-            </Link>
-          </nav>
-        </header>
-
         <div className={styles.title}>
-          <span className={styles.eyebrow}>Ocean-2 node</span>
-          <h1 className={styles.headline}>Wave Power</h1>
+          <h1 className={styles.headline}>Can the Ocean Power AI?</h1>
+          <p className={styles.heroSubtitle}>
+            Modeling the cost and reliability of wave-powered data centers, and how they compare with data centers on land.
+          </p>
         </div>
 
         <div className={styles.copy}>

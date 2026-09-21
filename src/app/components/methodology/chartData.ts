@@ -17,7 +17,32 @@ export const LULLS = [
 export function recoverSeaPower(time: number, resource: number): number {
   const base = Math.min(COMPUTE_KW, resource, PTO_KW);
   const lull = LULLS.find(l => time >= l.start && time <= l.end);
-  return lull ? base + Math.min(1, BATTERY_KWH/lull.deficit) * (COMPUTE_KW-base) : base;
+  if (!lull) return base;
+  const duration = lull.end - lull.start;
+  const elapsed = time - lull.start;
+  const slope = 4 * lull.deficit / duration ** 2;
+  const used = elapsed <= duration / 2
+    ? slope * elapsed ** 2 / 2
+    : lull.deficit - slope * (duration - elapsed) ** 2 / 2;
+  // Hold full compute power until the battery is empty, then follow wave power.
+  return used <= BATTERY_KWH ? COMPUTE_KW : base;
+}
+export function seaBatteryProfile(): [number, number][] {
+  const points: [number, number][] = SEA.map(([t,p]) => [t,recoverSeaPower(t,p)]);
+  for (const lull of LULLS) {
+    if (lull.deficit <= BATTERY_KWH) continue;
+    const duration = lull.end - lull.start;
+    const slope = 4 * lull.deficit / duration ** 2;
+    const elapsed = BATTERY_KWH <= lull.deficit / 2
+      ? Math.sqrt(2 * BATTERY_KWH / slope)
+      : duration - Math.sqrt(2 * (lull.deficit - BATTERY_KWH) / slope);
+    const time = lull.start + elapsed;
+    const raw = COMPUTE_KW - slope * Math.min(elapsed, duration - elapsed);
+    const index = points.findIndex(([t]) => t >= time);
+    // Two points at depletion show the change without inventing a gradual taper.
+    points.splice(index, 0, [time,COMPUTE_KW], [time,raw]);
+  }
+  return points;
 }
 export function travelBatteryPower(fraction: number, outbound: boolean): number {
   const slope = TUG_END_KW/TUG_HOURS;
