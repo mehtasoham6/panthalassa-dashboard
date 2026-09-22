@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
-import { Link } from "react-router";
+import { useEffect, type CSSProperties } from "react";
 import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
 import { Methodology } from "../components/methodology/Methodology.js";
+import { OldDashboard } from "./OldDashboard.js";
 
 /**
  * Home page, option A: toned-down wireframe look. Mid-day sky above the
@@ -21,6 +21,13 @@ const LOREM =
 export function WireframeHome() {
   const pageStyle = { "--horizon": `${HORIZON_FRAC * 100}%` } as CSSProperties;
 
+  // React renders the target after initial navigation, including legacy /old links.
+  useEffect(() => {
+    if (window.location.hash === "#dashboard") {
+      document.getElementById("dashboard")?.scrollIntoView({ behavior: "instant" });
+    }
+  }, []);
+
   return (
     <div className={styles.page} style={pageStyle}>
       <section className={styles.hero}>
@@ -36,14 +43,17 @@ export function WireframeHome() {
         <div className={styles.copy}>
           <p>{LOREM_LEAD}</p>
           <p>{LOREM}</p>
-          <Link to="/old" className={styles.cta}>
+          <a href="#dashboard" className={styles.cta}>
             Explore the model
-            <span aria-hidden="true">&rarr;</span>
-          </Link>
+            <span aria-hidden="true">&darr;</span>
+          </a>
         </div>
       </section>
 
       <Methodology />
+      <section id="dashboard" className={styles.dashboard} aria-label="Interactive model dashboard" tabIndex={-1}>
+        <OldDashboard />
+      </section>
     </div>
   );
 }

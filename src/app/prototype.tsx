@@ -19,7 +19,7 @@ function Prototype() {
           <a className={styles.cta} href="#methodology" onClick={e=>{e.preventDefault();document.getElementById('panthalassa-preview')?.querySelector('#methodology')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}}>Read the methodology <span aria-hidden="true">↓</span></a>
         </div>
       </section>
-      <Methodology preview dashboardHref={dashboard}/>
+      <Methodology preview/>
     </div>
   </div>;
 }
