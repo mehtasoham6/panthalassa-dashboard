@@ -49,10 +49,7 @@ export function OldDashboard() {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.topbar}>
-        <span className={styles.title}>Panthalassa Wave-Powered Data-Center Model</span>
-        <span className={styles.subtitle}>Analytical techno-economic dashboard</span>
-      </header>
+      <header className={styles.topbar}></header>
 
       <div className={styles.layout}>
         <aside className={styles.sidebar}>

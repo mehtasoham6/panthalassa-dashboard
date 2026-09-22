@@ -13,7 +13,7 @@ export function SliderPanel({ inputs, setInput, resetAll }: Props) {
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <span className={styles.headerTitle}>Inputs</span>
+        <span className={styles.headerTitle}>Panthalassa Inputs</span>
         <button type="button" className={styles.resetBtn} onClick={resetAll}>
           Reset to defaults
         </button>

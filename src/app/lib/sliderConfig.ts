@@ -32,7 +32,7 @@ export interface SliderGroupConfig {
 export const SHARED_SLIDERS: SliderConfig[] = [
   {
     key: "target_capacity_gw",
-    label: "Target compute capacity",
+    label: "Target capacity",
     unit: "GW",
     min: 0.1,
     max: 100,
@@ -183,7 +183,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         default: 0.1,
         displayScale: 100,
         decimals: 1,
-        helpText: "Extra compute capacity kept in reserve so some chips can fail without reducing the node's promised output; once that reserve is used up, the node returns for service",
+        helpText: "Share of the installed computing capacity that can fail before triggering a service trip. This capacity also does work while healthy, so output declines as chips fail",
       },
       {
         key: "node_failure_rate_annual",

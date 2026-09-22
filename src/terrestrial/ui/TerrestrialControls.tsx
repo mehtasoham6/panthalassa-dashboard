@@ -24,7 +24,7 @@ export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onR
   return (
     <div className={panelStyles.panel}>
       <div className={panelStyles.header}>
-        <span className={panelStyles.headerTitle}>Terrestrial inputs</span>
+        <span className={panelStyles.headerTitle}>Land-based Inputs</span>
         <button type="button" className={panelStyles.resetBtn} onClick={onReset}>
           Reset to defaults
         </button>
