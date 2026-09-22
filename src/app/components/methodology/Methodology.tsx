@@ -24,7 +24,7 @@ function Visual({ state, active = true, still = false }: {state: VisualState; ac
   </div>;
 }
 
-export function Methodology({ dashboardHref = '/old', preview = false }: {dashboardHref?: string; preview?: boolean}) {
+export function Methodology({ preview = false }: {preview?: boolean}) {
   const host = useRef<HTMLElement>(null);
   const [active,setActive] = useState(0);
   const [compact,setCompact] = useState(false);
@@ -76,7 +76,7 @@ export function Methodology({ dashboardHref = '/old', preview = false }: {dashbo
     </div>
     <FailureSection />
     <CostSection />
-    <footer className={styles.end}><div><span className={styles.eyebrow}>EXPLORE THE ASSUMPTIONS</span><h2>Now, make the model yours</h2></div><a href={dashboardHref}>Explore the dashboard <span aria-hidden="true">↗</span></a></footer>
+    <footer className={styles.end}><div><span className={styles.eyebrow}>EXPLORE THE ASSUMPTIONS</span><h2>Now, make the model yours</h2></div></footer>
     {preview && <p className={styles.previewFoot}>Local design preview · tour and appendix are not included in this prototype.</p>}
   </section>;
 }
