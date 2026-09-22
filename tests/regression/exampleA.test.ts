@@ -50,57 +50,57 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
     expect(r.chip.expected_failed_capacity_kw_replaced_per_position).toBe(0);
   });
 
-  it("internal battery-adjusted sea-park factor ~= 96.66% at the default 0.5h battery (never displayed)", () => {
-    expect(r.derived.effective_sea_park_cf).toBeCloseTo(0.9666, 3);
+  it("internal battery-adjusted sea-park factor ~= 97.63% at the default 4h battery (never displayed)", () => {
+    expect(r.derived.effective_sea_park_cf).toBeCloseTo(0.9763, 3);
   });
 
   it("output declines from chip degradation AND the wave-resource correction, even with no service visit", () => {
     const avgKwPerNode = (r.expected_delivered_energy_per_position_mw_years / 5) * 1000;
     expect(avgKwPerNode).toBeLessThan(DEFAULT_INPUTS.payload_rating_kw);
-    expect(avgKwPerNode).toBeCloseTo(188.327, 2);
+    expect(avgKwPerNode).toBeCloseTo(190.198, 2);
   });
 
-  it("chip-adjusted output ~= 8,261,444.000 kWh", () => {
-    expect(r.chip.chip_adjusted_energy_kwh).toBeCloseTo(8_261_444.000, 0);
+  it("chip-adjusted output ~= 8,343,614.978 kWh", () => {
+    expect(r.chip.chip_adjusted_energy_kwh).toBeCloseTo(8_343_614.978, 0);
   });
 
-  it("Modes 2-5 total loss ~= 12,729.323 kWh (lower than the pre-WAVERYS figure since the Mode 2/3 counterfactual is now also resource-adjusted)", () => {
-    expect(r.modeLosses.total_modes_2_5_loss_kwh).toBeCloseTo(12_729.323, 0);
+  it("Modes 2-5 total loss ~= 12,925.765 kWh (lower than the pre-WAVERYS figure since the Mode 2/3 counterfactual is now also resource-adjusted)", () => {
+    expect(r.modeLosses.total_modes_2_5_loss_kwh).toBeCloseTo(12_925.765, 0);
   });
 
-  it("delivered output per slot ~= 0.941634 MW-years", () => {
-    expect(r.expected_delivered_energy_per_position_mw_years).toBeCloseTo(0.941634, 4);
+  it("delivered output per slot ~= 0.950992 MW-years", () => {
+    expect(r.expected_delivered_energy_per_position_mw_years).toBeCloseTo(0.950992, 4);
   });
 
-  it("N_fleet == 5310", () => {
-    expect(r.N_fleet).toBe(5310);
+  it("N_fleet == 5258", () => {
+    expect(r.N_fleet).toBe(5258);
   });
 
   it("per-node physical cost table (hull cost now cubically scaled: ~261t at 20m x $2,000/t)", () => {
-    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_632_068, 0);
-    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(632_068, 0);
+    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_702_068, 0);
+    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(702_068, 0);
   });
 
-  it("planned physical fleet cost ~= $29.90628 billion", () => {
-    expect(r.costs.total_planned_physical_node_cost_usd).toBeCloseTo(29_906_280_488, -3);
+  it("planned physical fleet cost ~= $29.98147 billion", () => {
+    expect(r.costs.total_planned_physical_node_cost_usd).toBeCloseTo(29_981_472_958, -3);
   });
 
-  it("compute replacement ~= $104.541 million (Modes 4/5 complete-payload replacement only, remaining-life-depreciated -- no chip capacity has been replaced since no visit occurred)", () => {
-    expect(r.costs.total_compute_replacement_cost_usd / 1e6).toBeCloseTo(104.541, 1);
+  it("compute replacement ~= $103.517 million (Modes 4/5 complete-payload replacement only, remaining-life-depreciated -- no chip capacity has been replaced since no visit occurred)", () => {
+    expect(r.costs.total_compute_replacement_cost_usd / 1e6).toBeCloseTo(103.517, 1);
   });
 
-  it("non-compute maintenance/failure ~= $92.410 million", () => {
-    expect(r.costs.total_non_compute_maintenance_failure_cost_usd / 1e6).toBeCloseTo(92.410, 1);
+  it("non-compute maintenance/failure ~= $92.954 million", () => {
+    expect(r.costs.total_non_compute_maintenance_failure_cost_usd / 1e6).toBeCloseTo(92.954, 1);
   });
 
-  it("workload data-transfer cost ~= $591.309 million undiscounted", () => {
-    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.309, 0);
+  it("workload data-transfer cost ~= $591.337 million undiscounted", () => {
+    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.337, 0);
   });
 
   it("dashboard cost buckets (billions), initial generation charged in full (only one planned generation at these defaults)", () => {
-    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(26.655, 2);
-    expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(3.356, 2);
-    expect(r.costs.buckets.non_compute_maintenance_failure_usd / 1e9).toBeCloseTo(0.0924, 3);
+    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(26.394, 2);
+    expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(3.691, 2);
+    expect(r.costs.buckets.non_compute_maintenance_failure_usd / 1e9).toBeCloseTo(0.0930, 3);
     expect(r.costs.buckets.workload_data_transfer_usd / 1e9).toBeCloseTo(0.591, 2);
   });
 
@@ -109,19 +109,19 @@ describe("Worked Example A - all defaults (revised route/battery/consolidation/d
     expect(Object.keys(r.costs.lineItems)).not.toContain("terminal_residual_value_usd");
   });
 
-  it("undiscounted lifecycle cost rounds to $30.69 billion (initial fleet charged in full, pre-proration-era value)", () => {
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 2);
+  it("undiscounted lifecycle cost rounds to $30.77 billion (initial fleet charged in full, pre-proration-era value)", () => {
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.77, 2);
   });
 
   it("annual cost schedule (no terminal credit at year 5/Tend)", () => {
-    const target = [29_915_130_488.21, 161_082_985.85, 158_373_356.91, 155_837_633.57, 153_313_750.34, 150_801_589.40];
+    const target = [29_990_236_291.33, 160_989_681.67, 158_310_810.83, 155_771_568.19, 153_244_167.01, 150_728_489.46];
     r.presentValue.yearly_cost_usd.forEach((v, i) => {
       expect(v).toBeCloseTo(target[i]!, -3);
     });
   });
 
-  it("present-value lifecycle cost ~= $30.539 billion (8% real discount rate)", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.539, 2);
+  it("present-value lifecycle cost ~= $30.614 billion (8% real discount rate)", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.614, 2);
   });
 
   it("power-system LCOE (compute-agnostic, over the 20-year node life, not the 5-year analysis period) lands in a sane $/MWh range", () => {

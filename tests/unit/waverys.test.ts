@@ -74,9 +74,9 @@ describe("internal energy-average sea-park factor (drives energy delivery/fleet 
     expect(rawWaveResourceCF(seaParkParams(DEFAULT_INPUTS))).toBeCloseTo(0.9645, 3);
   });
 
-  it("battery-adjusted effective sea-park factor at the default 0.5h battery ~= 96.66%", () => {
+  it("battery-adjusted effective sea-park factor at the default 4h battery ~= 97.63%", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
-    expect(derived.effective_sea_park_cf).toBeCloseTo(0.9666, 3);
+    expect(derived.effective_sea_park_cf).toBeCloseTo(0.9763, 3);
   });
 
   it("effective factor is always >= raw factor (battery only ever helps) and > raw at a nonzero battery", () => {
@@ -168,10 +168,10 @@ describe("descriptive resource metrics (capacity factor, rated power availabilit
   // matching the spec's expected ranges. Small differences from the exact
   // quoted figures are expected/acceptable per the spec; large differences
   // would mean the formulas are wrong.
-  it("REGRESSION: at defaults (0.5h / 100 kWh battery), Resource Capacity Factor ~96.1%, Rated Power Availability ~88.8%, Keepalive Availability ~100.0%", () => {
+  it("REGRESSION: at defaults (4h / 800 kWh battery), Resource Capacity Factor ~97.2%, Rated Power Availability ~93.2%, Keepalive Availability ~100.0%", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
-    expect(derived.resource_capacity_factor).toBeCloseTo(0.961, 2);
-    expect(derived.rated_power_availability).toBeCloseTo(0.888, 2);
+    expect(derived.resource_capacity_factor).toBeCloseTo(0.972, 2);
+    expect(derived.rated_power_availability).toBeCloseTo(0.932, 2);
     expect(derived.keepalive_availability).toBeCloseTo(1.0, 2);
   });
 
@@ -288,13 +288,13 @@ describe("descriptive resource metrics (capacity factor, rated power availabilit
     expect(chipWithMutated.chip_adjusted_energy_kwh).toBe(chipWithReal.chip_adjusted_energy_kwh);
   });
 
-  it("does NOT change fleet size or lifecycle cost relative to the pre-existing, unrelated regression baseline (5,310 nodes, $30.69B undiscounted)", () => {
+  it("does NOT change fleet size or lifecycle cost relative to the pre-existing, unrelated regression baseline (5,258 nodes, $30.77B undiscounted)", () => {
     // effective_sea_park_cf (the only capacity-factor-family value that
     // actually drives economics) is untouched by this change, so these
     // figures must match the model's long-standing reference values exactly.
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.N_fleet).toBe(5_310);
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 1);
+    expect(r.N_fleet).toBe(5_258);
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.77, 1);
   });
 });
 
@@ -329,9 +329,10 @@ describe("existing route assumptions remain unchanged", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
     // outbound_energy_kwh depends only on the route ramp/battery logic
     // (energy.ts), never on waverys.ts -- confirm it lands at the
-    // already-verified Change-1/2 regression figure.
+    // already-verified Change-1/2 regression figure (fully eliminated at
+    // the current 4h/800kWh default battery).
     const shortfall = 24 * derived.power_cap_kw * derived.outbound_days - derived.outbound_energy_kwh;
-    expect(shortfall).toBeCloseTo(272.301, 1);
+    expect(shortfall).toBeCloseTo(0, 6);
   });
 });
 
@@ -381,7 +382,7 @@ describe("existing failure rates, maintenance rules, remaining-life logic, and u
 
   it("per-node unit costs (physical_node_cost_usd, non_compute_node_cost_usd) are unaffected by the wave-resource correction", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_632_068, -1);
-    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(632_068, -1);
+    expect(r.costs.physical_node_cost_usd).toBeCloseTo(5_702_068, -1);
+    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(702_068, -1);
   });
 });

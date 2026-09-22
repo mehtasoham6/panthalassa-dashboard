@@ -33,41 +33,41 @@ describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/
     expect(r.chip.expected_failed_capacity_kw_replaced_per_position).toBeCloseTo(83.108, 2);
   });
 
-  it("chip-adjusted output ~= 8,045,383.711 kWh", () => {
-    expect(r.chip.chip_adjusted_energy_kwh).toBeCloseTo(8_045_383.711, 0);
+  it("chip-adjusted output ~= 8,121,840.507 kWh", () => {
+    expect(r.chip.chip_adjusted_energy_kwh).toBeCloseTo(8_121_840.507, 0);
   });
 
-  it("Modes 2-5 total loss ~= 12,729.323 kWh (same as Example A -- unaffected by chip hazard)", () => {
-    expect(r.modeLosses.total_modes_2_5_loss_kwh).toBeCloseTo(12_729.323, 0);
+  it("Modes 2-5 total loss ~= 12,925.765 kWh (same as Example A -- unaffected by chip hazard)", () => {
+    expect(r.modeLosses.total_modes_2_5_loss_kwh).toBeCloseTo(12_925.765, 0);
   });
 
-  it("delivered output per slot ~= 0.916970 MW-years", () => {
-    expect(r.expected_delivered_energy_per_position_mw_years).toBeCloseTo(0.916970, 4);
+  it("delivered output per slot ~= 0.925675 MW-years", () => {
+    expect(r.expected_delivered_energy_per_position_mw_years).toBeCloseTo(0.925675, 4);
   });
 
-  it("N_fleet == 5453", () => {
-    expect(r.N_fleet).toBe(5453);
+  it("N_fleet == 5402", () => {
+    expect(r.N_fleet).toBe(5402);
   });
 
-  it("planned physical fleet cost ~= $30.71167 billion", () => {
-    expect(r.costs.total_planned_physical_node_cost_usd / 1e9).toBeCloseTo(30.71167, 3);
+  it("planned physical fleet cost ~= $30.80257 billion", () => {
+    expect(r.costs.total_planned_physical_node_cost_usd / 1e9).toBeCloseTo(30.80257, 3);
   });
 
-  it("compute replacement ~= $11.43710 billion", () => {
-    expect(r.costs.total_compute_replacement_cost_usd / 1e9).toBeCloseTo(11.43710, 3);
+  it("compute replacement ~= $11.33013 billion", () => {
+    expect(r.costs.total_compute_replacement_cost_usd / 1e9).toBeCloseTo(11.33013, 3);
   });
 
-  it("non-compute maintenance/failure ~= $167.605 million", () => {
-    expect(r.costs.total_non_compute_maintenance_failure_cost_usd / 1e6).toBeCloseTo(167.605, 1);
+  it("non-compute maintenance/failure ~= $167.526 million", () => {
+    expect(r.costs.total_non_compute_maintenance_failure_cost_usd / 1e6).toBeCloseTo(167.526, 1);
   });
 
-  it("workload data-transfer cost ~= $591.328 million undiscounted (~same as Example A -- both fleets size to ~the same target)", () => {
-    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.328, 0);
+  it("workload data-transfer cost ~= $591.359 million undiscounted (~same as Example A -- both fleets size to ~the same target)", () => {
+    expect(r.costs.total_workload_data_transfer_cost_usd / 1e6).toBeCloseTo(591.359, 0);
   });
 
   it("dashboard cost buckets (billions), initial generation charged in full (only one planned generation at these defaults)", () => {
-    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(38.702, 2);
-    expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(3.447, 2);
+    expect(r.costs.buckets.compute_and_replacement_usd / 1e9).toBeCloseTo(38.340, 2);
+    expect(r.costs.buckets.initial_non_compute_physical_usd / 1e9).toBeCloseTo(3.793, 2);
     expect(r.costs.buckets.non_compute_maintenance_failure_usd / 1e9).toBeCloseTo(0.168, 2);
     expect(r.costs.buckets.workload_data_transfer_usd / 1e9).toBeCloseTo(0.591, 2);
   });
@@ -77,12 +77,12 @@ describe("Worked Example B - 10% chip-degradation hazard (revised route/battery/
     expect(Object.keys(r.costs.lineItems)).not.toContain("terminal_residual_value_usd");
   });
 
-  it("undiscounted lifecycle cost rounds to $42.91 billion (Appendix A.7 hard check)", () => {
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(42.91, 1);
+  it("undiscounted lifecycle cost rounds to $42.89 billion (Appendix A.7 hard check)", () => {
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(42.89, 1);
   });
 
-  it("present-value lifecycle cost ~= $40.090 billion (8% real discount rate)", () => {
-    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(40.090, 2);
+  it("present-value lifecycle cost ~= $40.099 billion (8% real discount rate)", () => {
+    expect(r.presentValue.present_value_total_node_fleet_cost_usd / 1e9).toBeCloseTo(40.099, 2);
   });
 
   it("power-system LCOE is identical to Example A's -- chip_failure_rate_annual is compute-only and never touches LCOE", () => {

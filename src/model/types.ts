@@ -29,7 +29,7 @@ export const DEFAULT_INPUTS: ModelInputs = {
   analysis_period_years: 5,
   real_discount_rate: 0.08,
   payload_rating_kw: 200,
-  battery_duration_hours: 0.5,
+  battery_duration_hours: 4,
   hull_diameter_m: 20,
   sea_park_distance_km: 800,
   node_lifetime_years: 20,

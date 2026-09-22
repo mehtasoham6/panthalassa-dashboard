@@ -17,12 +17,12 @@ describe("hull structural mass and cost (cubic scaling off the 397t @ 23m design
     return computeNodeUnitCosts(inputs, computeDerived(inputs));
   }
 
-  it("REGRESSION: at the 20 m default, structural mass ~261t, hull cost ~$522k, non-compute capital ~$632k, total node cost ~$5.632m", () => {
+  it("REGRESSION: at the 20 m default, structural mass ~261t, hull cost ~$522k, non-compute capital ~$702k, total node cost ~$5.702m", () => {
     const unit = unitAt(20);
     expect(unit.hull_steel_mass_tonnes).toBeCloseTo(261.034, 2);
     expect(unit.hull_cost_usd).toBeCloseTo(522_068, -2);
-    expect(unit.non_compute_node_cost_usd).toBeCloseTo(632_068, -2);
-    expect(unit.physical_node_cost_usd).toBeCloseTo(5_632_068, -2);
+    expect(unit.non_compute_node_cost_usd).toBeCloseTo(702_068, -2);
+    expect(unit.physical_node_cost_usd).toBeCloseTo(5_702_068, -2);
   });
 
   it("REGRESSION: at the 23 m empirical design point, structural mass is exactly 397t", () => {
@@ -90,6 +90,6 @@ describe("hull structural mass and cost (cubic scaling off the 397t @ 23m design
     expect(CONST.reference_hull_diameter_m).toBe(23);
     const r = runModel(DEFAULT_INPUTS);
     expect(r.costs.non_compute_node_cost_usd).not.toBeCloseTo(410_000, -3);
-    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(632_068, -2);
+    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(702_068, -2);
   });
 });

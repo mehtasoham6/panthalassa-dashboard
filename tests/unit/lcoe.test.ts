@@ -34,9 +34,9 @@ describe("LCOE sanity check at defaults", () => {
     expect(r.lcoe.yearly_power_system_cost_usd.length).toBe(21); // t=0..20
   });
 
-  it("initial non-compute capital at t=0 matches the ~$632,068 power-system capex", () => {
+  it("initial non-compute capital at t=0 matches the ~$702,068 power-system capex", () => {
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(632_068, -2);
+    expect(r.costs.non_compute_node_cost_usd).toBeCloseTo(702_068, -2);
     expect(r.lcoe.yearly_power_system_cost_usd[0]).toBeCloseTo(r.costs.non_compute_node_cost_usd, 6);
   });
 });
@@ -114,7 +114,7 @@ describe("LCOE responds to physical/power-system inputs", () => {
   });
 
   it("battery duration", () => {
-    const r = runModel({ ...DEFAULT_INPUTS, battery_duration_hours: 4 });
+    const r = runModel({ ...DEFAULT_INPUTS, battery_duration_hours: 8 });
     expect(r.lcoe.lcoe_usd_per_mwh).not.toBe(base.lcoe.lcoe_usd_per_mwh);
   });
 
@@ -351,10 +351,10 @@ describe("LCOE electrical-output cap is the installed PTO rating, not the comput
     const r = runModel(DEFAULT_INPUTS);
     // These figures are unrelated to LCOE and must be exactly what the rest
     // of the test suite (exampleA/B.test.ts, appendixA7.test.ts) expects.
-    expect(r.N_fleet).toBe(5_310);
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 1);
-    expect(r.derived.resource_capacity_factor).toBeCloseTo(0.9607, 3);
-    expect(r.derived.rated_power_availability).toBeCloseTo(0.8878, 3);
+    expect(r.N_fleet).toBe(5_258);
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.77, 1);
+    expect(r.derived.resource_capacity_factor).toBeCloseTo(0.9721, 3);
+    expect(r.derived.rated_power_availability).toBeCloseTo(0.9319, 3);
     expect(r.derived.keepalive_availability).toBeCloseTo(1.0, 3);
   });
 });

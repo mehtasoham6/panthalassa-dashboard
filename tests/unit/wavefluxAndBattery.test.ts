@@ -67,15 +67,15 @@ describe("self-propelled transit connects continuously to the sea park (Change 1
 });
 
 describe("battery starts fully charged at every port departure (Change 2)", () => {
-  it("battery capacity scales with battery_duration_hours (200 kW x 0.5h = 100 kWh at defaults)", () => {
+  it("battery capacity scales with battery_duration_hours (200 kW x 4h = 800 kWh at defaults)", () => {
     const capacityKwh = DEFAULT_INPUTS.payload_rating_kw * DEFAULT_INPUTS.battery_duration_hours;
-    expect(capacityKwh).toBeCloseTo(100, 6);
+    expect(capacityKwh).toBeCloseTo(800, 6);
   });
 
-  it("the battery-assisted outbound shortfall matches the ~272 kWh sanity check (was ~372 kWh with an empty departure battery)", () => {
+  it("the battery-assisted outbound shortfall is fully eliminated at the default 4h/800kWh battery (was ~372 kWh with an empty departure battery, ~272 kWh at the old 0.5h/100kWh default)", () => {
     const derived = computeDerived(DEFAULT_INPUTS);
     const shortfall = 24 * derived.power_cap_kw * derived.outbound_days - derived.outbound_energy_kwh;
-    expect(shortfall).toBeCloseTo(272.301, 1);
+    expect(shortfall).toBeCloseTo(0, 6);
   });
 
   it("a larger battery duration further reduces the outbound shortfall (more stored energy to cover the weak-wave ramp)", () => {

@@ -17,8 +17,8 @@ describe("Node Repair Cost and Tug Cost sliders", () => {
     expect(DEFAULT_INPUTS.mode23RepairCostUsd).toBe(50_000);
     expect(DEFAULT_INPUTS.tugCostUsdPerDay).toBe(10_000);
     const r = runModel(DEFAULT_INPUTS);
-    expect(r.N_fleet).toBe(5_310);
-    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.69, 1);
+    expect(r.N_fleet).toBe(5_258);
+    expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.77, 1);
   });
 
   it("A: changing repair cost (20k / 500k) moves Mode 2/3 repair dollars, total lifecycle cost, and LCOE, but not failure rates or downtime", () => {
