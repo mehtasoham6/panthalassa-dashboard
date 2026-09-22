@@ -53,7 +53,9 @@ export function OldDashboard() {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.topbar}></header>
+      <header className={styles.topbar}>
+        <h2 className={styles.title}>The Interactive Model</h2>
+      </header>
 
       <div className={styles.layout}>
         <aside className={styles.sidebar}>

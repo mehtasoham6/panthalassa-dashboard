@@ -15,6 +15,13 @@
   flex-wrap: wrap;
 }
 
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .layout {
   flex: 1;
   display: grid;
