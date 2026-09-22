@@ -2,6 +2,7 @@ import { useEffect, type CSSProperties } from "react";
 import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
 import { Methodology } from "../components/methodology/Methodology.js";
+import { Takeaways } from "../components/Takeaways.js";
 import { OldDashboard } from "./OldDashboard.js";
 
 /**
@@ -54,6 +55,7 @@ export function WireframeHome() {
       <section id="dashboard" className={styles.dashboard} aria-label="Interactive model dashboard" tabIndex={-1}>
         <OldDashboard />
       </section>
+      <Takeaways />
     </div>
   );
 }
