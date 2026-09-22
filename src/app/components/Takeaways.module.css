@@ -1,50 +1,54 @@
 .section {
-  margin: 0 12px 24px;
-  padding: 64px 32px 80px;
-  border: 1px solid #cbd5da;
-  border-radius: 8px;
-  background: #f8fafb;
-  color: #263c4a;
+  padding: 44px max(28px, calc((100% - 1160px) / 2)) 64px;
+  background: #112a40;
+  color: #a6bac8;
   scroll-margin-top: 24px;
 }
-.content { max-width: 740px; margin: 0 auto; }
+.content { max-width: 1160px; margin: 0 auto; }
 .title {
-  margin: 0 0 40px;
-  color: #112a40;
-  font-size: clamp(32px, 4vw, 42px);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.15;
+  margin: 0 0 28px;
+  color: #e1ebf0;
+  font-size: clamp(30px, 3.8vw, 40px);
+  font-weight: 450;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
-.takeaway { padding: 40px 0; border-top: 1px solid #cbd5da; }
+.takeaway {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 2fr);
+  gap: 48px;
+  padding: 30px 0;
+  border-top: 1px solid rgba(178, 210, 227, .18);
+}
 .takeaway:last-child { padding-bottom: 0; }
 .takeaway h3 {
-  margin: 0 0 22px;
-  color: #112a40;
-  font-size: clamp(25px, 3vw, 30px);
-  font-weight: 600;
+  margin: 0;
+  color: #e1ebf0;
+  font-size: 25px;
+  font-weight: 450;
   line-height: 1.25;
   letter-spacing: -0.025em;
   text-wrap: pretty;
 }
-.takeaway p, .takeaway li { font-size: 18px; line-height: 1.7; }
-.takeaway p { margin: 0 0 22px; }
+.body { min-width: 0; }
+.takeaway p, .takeaway li { font-size: 15px; line-height: 1.65; }
+.takeaway p { margin: 0 0 14px; }
 .takeaway p:last-child { margin-bottom: 0; }
-.takeaway strong { color: #112a40; font-weight: 650; }
-.takeaway ul { padding-left: 24px; margin: 24px 0; }
-.takeaway li { padding-left: 6px; margin-bottom: 24px; }
-.takeaway li::marker { color: #367b7b; }
-.figure { margin: 32px -80px 0; }
-.figure > a { display: block; background: white; border: 1px solid #d5dfe4; border-radius: 4px; padding: 12px; }
+.takeaway strong { color: #e1ebf0; font-weight: 550; }
+.takeaway ul { padding-left: 19px; margin: 16px 0; }
+.takeaway li { padding-left: 3px; margin-bottom: 16px; }
+.takeaway li::marker { color: #b4e6d5; }
+.figure { margin: 22px 0 0; }
+.figure > a { display: block; background: #fff; border: 1px solid rgba(178,210,227,.18); padding: 6px; }
 .figure img { display: block; width: 100%; height: auto; }
-.figure figcaption { margin-top: 12px; color: #536674; font-size: 13px; line-height: 1.6; }
-.figure figcaption a { color: #225e68; text-underline-offset: 3px; }
-.figure a:focus-visible { outline: 3px solid #367b7b; outline-offset: 4px; }
-@media (max-width: 1020px) { .figure { margin-inline: 0; } }
-@media (max-width: 720px) {
-  .section { margin-inline: 6px; padding: 40px 20px 48px; }
-  .title { margin-bottom: 28px; }
-  .takeaway { padding-block: 32px; }
-  .takeaway p, .takeaway li { font-size: 17px; line-height: 1.65; }
+.figure figcaption { margin-top: 10px; color: #a6bac8; font-size: 12px; line-height: 1.6; }
+.figure figcaption a { color: #b4e6d5; text-underline-offset: 3px; }
+.figure a:focus-visible { outline: 2px solid #b4e6d5; outline-offset: 4px; }
+@media (max-width: 900px) { .takeaway { gap: 28px; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } .takeaway h3 { font-size: 23px; } }
+@media (max-width: 719px) {
+  .section { padding: 32px 24px 48px; }
+  .title { margin-bottom: 24px; }
+  .takeaway { grid-template-columns: 1fr; gap: 16px; padding-block: 24px; }
+  .takeaway h3 { font-size: 24px; }
   .figure > a { padding: 4px; }
 }
