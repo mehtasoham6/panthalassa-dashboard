@@ -47,6 +47,10 @@ export function OldDashboard() {
     [inputs, terrestrialInputs],
   );
 
+  const costDifferencePercent =
+    100 * (1 - result.costs.total_node_fleet_cost_usd / terrestrialResult.costs.total_lifecycle_cost_usd);
+  const roundedDifference = Math.abs(costDifferencePercent).toFixed(1);
+
   return (
     <div className={styles.shell}>
       <header className={styles.topbar}></header>
@@ -62,6 +66,16 @@ export function OldDashboard() {
           <div className={styles.compareRow}>
             <TotalOutputBand result={result} />
             <TerrestrialOutputBand result={terrestrialResult} />
+          </div>
+
+          <div
+            className={`${styles.costComparison} ${costDifferencePercent < 0 ? styles.costPremium : ""}`}
+            aria-live="polite"
+          >
+            {roundedDifference === "0.0" ? "Same cost as terrestrial" : <>
+              <strong className="num">{roundedDifference}%</strong>
+              <span>{costDifferencePercent > 0 ? "less" : "more"} than terrestrial</span>
+            </>}
           </div>
 
           <ArchitectureComparison oceanResult={result} terrestrialResult={terrestrialResult} />

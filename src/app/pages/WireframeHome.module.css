@@ -16,8 +16,27 @@
 }
 
 .dashboard {
+  container: dashboard / inline-size;
+  margin: 0 12px 24px;
+  border: 1px solid #9eafb9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   background: var(--bg);
   color: var(--text-primary);
+}
+
+.dashboard > div {
+  border-radius: inherit;
+}
+
+.dashboard header {
+  border-radius: 8px 8px 0 0;
+}
+
+@media (max-width: 720px) {
+  .dashboard {
+    margin-inline: 6px;
+  }
 }
 
 .hero {

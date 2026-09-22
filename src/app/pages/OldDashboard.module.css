@@ -54,6 +54,32 @@
   align-items: start;
 }
 
+.costComparison {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 14px 20px;
+  border: 1px solid #bdd3cc;
+  border-radius: var(--radius);
+  background: #e8f1ed;
+  color: #244b40;
+  font-size: 15px;
+}
+
+.costComparison strong {
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.costPremium {
+  background: #f5eeea;
+  border-color: #dfc9bc;
+  color: #74442e;
+}
+
 /*
  * Below this, three columns (two fixed 340px sidebars + a flexible main
  * area) don't comfortably fit. Rather than a partial state (drop to two
@@ -66,7 +92,7 @@
  * hiding its slider labels. Stacking everything avoids relying on that
  * sticky/grid interaction entirely.
  */
-@media (max-width: 1400px) {
+@container dashboard (max-width: 1400px) {
   .layout {
     grid-template-columns: 1fr;
   }
