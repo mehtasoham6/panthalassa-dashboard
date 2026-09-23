@@ -70,7 +70,7 @@ export function Methodology({ preview = false }: {preview?: boolean}) {
           <h3>{step.title}</h3>
           <div className={styles.paragraphs}>{step.paragraphs.map(p=><p key={p.slice(0,24)}>{p.split(/(\*\*.+?\*\*)/g).map((part,i)=>part.startsWith('**') ? <strong key={i}>{part.slice(2,-2)}</strong> : part)}</p>)}</div>
           {inline && <Visual state={step.visual} active={index === active} still={reduced}/>}
-          {step.note && <aside className={styles.note}><h4>What about corrosion and marine growth?</h4><p>{step.note}</p></aside>}
+          {step.note && <aside className={styles.note}><h4>{step.note.title}</h4><p>{step.note.body}</p></aside>}
         </article>)}
       </div>
     </div>
