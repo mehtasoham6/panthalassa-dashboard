@@ -2,6 +2,7 @@ import { useEffect, type CSSProperties } from "react";
 import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
 import { Methodology } from "../components/methodology/Methodology.js";
+import { Appendix } from "../components/appendix/Appendix.js";
 import { Takeaways } from "../components/Takeaways.js";
 import { OldDashboard } from "./OldDashboard.js";
 
@@ -24,8 +25,8 @@ export function WireframeHome() {
 
   // React renders the target after initial navigation, including legacy /old links.
   useEffect(() => {
-    if (window.location.hash === "#dashboard") {
-      document.getElementById("dashboard")?.scrollIntoView({ behavior: "instant" });
+    if (["#dashboard", "#appendix"].includes(window.location.hash)) {
+      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: "instant" });
     }
   }, []);
 
@@ -56,6 +57,7 @@ export function WireframeHome() {
         <OldDashboard />
       </section>
       <Takeaways />
+      <Appendix />
     </div>
   );
 }
