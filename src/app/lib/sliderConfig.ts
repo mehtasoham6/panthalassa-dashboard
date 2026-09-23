@@ -122,7 +122,7 @@ export const SLIDER_GROUPS: SliderGroupConfig[] = [
         key: "battery_duration_hours",
         label: "Battery duration",
         unit: "hours",
-        min: 0.25,
+        min: 0,
         max: 20,
         step: 0.25,
         default: 4,
