@@ -26,11 +26,13 @@
   flex: 1;
   display: grid;
   grid-template-columns: clamp(260px, 20cqw, 340px) minmax(0, 1fr) clamp(260px, 20cqw, 340px);
+  grid-template-areas: "ocean results land";
   min-height: 0;
   align-items: start;
 }
 
 .sidebar {
+  grid-area: ocean;
   min-width: 0;
   position: sticky;
   top: 0;
@@ -40,6 +42,7 @@
 }
 
 .terrestrialSidebar {
+  grid-area: land;
   min-width: 0;
   position: sticky;
   top: 0;
@@ -49,6 +52,7 @@
 }
 
 .main {
+  grid-area: results;
   container: results / inline-size;
   padding: 24px;
   display: flex;
@@ -97,9 +101,6 @@
     grid-template-areas: "ocean land" "results results";
   }
 
-  .sidebar { grid-area: ocean; }
-  .terrestrialSidebar { grid-area: land; border-left: 1px solid var(--border); }
-
   .sidebar,
   .terrestrialSidebar {
     position: static;
@@ -109,7 +110,6 @@
   }
 
   .main {
-    grid-area: results;
     padding: 18px 16px;
   }
 

@@ -72,6 +72,16 @@ export function OldDashboard() {
           <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} collapsible={compactControls} />
         </aside>
 
+        <aside className={styles.terrestrialSidebar}>
+          <TerrestrialControls
+            inputs={terrestrialInputs}
+            onChange={setTerrestrialInput}
+            onSelectPowerSource={setPowerSource}
+            onReset={resetTerrestrial}
+            collapsible={compactControls}
+          />
+        </aside>
+
         <main className={styles.main}>
           <SharedInputsPanel inputs={inputs} setInput={setInput} />
 
@@ -105,15 +115,7 @@ export function OldDashboard() {
           </div>
         </main>
 
-        <aside className={styles.terrestrialSidebar}>
-          <TerrestrialControls
-            inputs={terrestrialInputs}
-            onChange={setTerrestrialInput}
-            onSelectPowerSource={setPowerSource}
-            onReset={resetTerrestrial}
-            collapsible={compactControls}
-          />
-        </aside>
+
       </div>
     </div>
   );
