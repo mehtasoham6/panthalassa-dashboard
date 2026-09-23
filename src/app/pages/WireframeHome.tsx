@@ -36,7 +36,7 @@ export function WireframeHome() {
         </div>
 
         <div className={styles.copy}>
-          <p><strong>Yes it can, under a set of reasonable constraints</strong>. In fact, done right, <strong>it may be cheaper than building data centers on land.</strong></p>
+          <p><strong>Yes it can and, done right, it would be cheaper than building data centers on land.</strong></p>
           <p>This work models one approach to harnessing wave energy put forward by the startup <strong>Panthalassa</strong>, which would place floating power plants far offshore in the South Pacific, and compares this to a range of land-based behind-the-meter alternatives. While Panthalassa’s approach poses significant operational challenges, <strong>my model finds that these challenges are likely surmountable.</strong></p>
           <p>You can go straight to the dashboard, where you can change my default assumptions, but since few of us have any physical intuition for ocean data centers, <strong>I strongly encourage you to first read my short explanation of how Panthalassa operates and how my model works.</strong></p>
           <a href="#dashboard" className={styles.cta}>
