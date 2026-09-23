@@ -453,35 +453,6 @@ exact instant during the ramp when a battery would run out. The sea-park
 stage retains its separate historical-lull battery approximation; its
 charge state is not reconstructed continuously across decades of
 observations.</p>
-<p><strong>Why keepalive can still be 100% at departure.</strong> The
-modeled wave ramp begins at zero at port, but the default 200 kW payload
-has an 800 kWh usable battery (four hours at full payload power). It
-needs about <strong>372 kWh</strong> to fill the entire early outbound
-shortfall below full power before the waves can supply 200 kW unaided.
-That includes the shorter interval below the 30 kW keepalive threshold.
-The battery can therefore keep the servers on and at full rated power
-throughout the modeled outbound leg; wave surplus later recharges it.
-The shortfall estimate comes from the model’s simplified linear tug-out
-wave ramp and assumes the battery begins full, has adequate discharge
-power, and operates without energy losses. It is not a guarantee about
-actual coastal conditions or node uptime.</p>
-<p>At the default five-year horizon, this weighting changes
-sea-park-only resource capacity factor from <strong>97.21% to
-97.23%</strong> and rated power availability from <strong>93.19% to
-93.25%</strong>; keepalive remains <strong>100%</strong>. At
-<strong>zero battery</strong>, the outward leg no longer receives
-battery support: the displayed journey estimates are about
-<strong>95.86%</strong> capacity factor, <strong>87.13%</strong> rated
-availability, and <strong>99.999%</strong> keepalive. The last value is
-slightly below 100% because the node briefly lacks even idle power as it
-leaves port. The site-specific historical sea-park keepalive measure
-remains 100% without storage. Small departures from 100% are shown with
-additional decimal places on the dashboard so they are not hidden by
-rounding.</p>
-<p>All three displayed metrics are fractions expressed as percentages. A
-100% modeled keepalive value reflects the particular wave record, route
-approximation, battery assumptions, and analysis calendar; it does not
-guarantee continuous fleet uptime.</p>
 </div></details><details id="how-chip-failures-trigger-service-and-reduce-output"><summary>How chip
 failures trigger service and reduce output</summary><div class="panel">
 <p>Chip failures gradually reduce expected healthy capacity. Let
