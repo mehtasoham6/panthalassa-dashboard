@@ -291,11 +291,13 @@ switched on?</strong> Servers need some electricity even when they are
 not doing useful work. This metric checks whether wave power and storage
 can meet that minimum; it does not require a full workload.</li>
 </ul>
-<p>These are resource metrics for the historical sea-park record and
-selected hardware. They do not include chip failures, maintenance trips,
-or other incidents. Scheduled output and fleet sizing are calculated
-separately from electrical energy and expected losses; the displayed
-percentages are not fed back into those calculations.</p>
+<p>The sea-park calculations below use the historical record at the
+selected site. The dashboard then weights each of these percentages by
+time at the sea park, time in transit, and time at dock over the
+selected analysis period. The displayed journey-wide percentages do not
+reduce expected output or determine fleet size; those calculations
+independently account for travel, service, chip degradation, and
+expected failures.</p>
 <p><strong>Shared quantities.</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
 is rated compute power in kW;
@@ -405,11 +407,81 @@ is that lull’s duration in hours.
 is the estimated share of historical time the idle requirement can be
 met. If there are no below-idle lulls, the sum is zero and this metric
 is 100%.</p>
-<p>All three metrics are fractions displayed as percentages. Keepalive
-and rated availability are separate diagnostics, not two simultaneous
-allocations from the same simulated battery. A result of 100% keepalive
-availability describes this historical dataset and these assumptions; it
-is not a guarantee of continuous fleet uptime.</p>
+<p><strong>From the sea park to a working life.</strong> The dashboard’s
+three percentages use the <em>same operating calendar</em> as scheduled
+output: outbound tugging and self-propulsion, sea-park operation, return
+travel when it falls within the analysis period, and dockside work. For
+any one of the three metrics, the combination is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mrow><mi mathvariant="normal">j</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">y</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>T</mi><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi></mrow></msub><msub><mi>M</mi><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi></mrow></msub><mo>+</mo><msub><mi>T</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">l</mi></mrow></msub><msub><mi>M</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">l</mi></mrow></msub></mrow><mrow><msub><mi>T</mi><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi></mrow></msub><mo>+</mo><msub><mi>T</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">l</mi></mrow></msub><mo>+</mo><msub><mi>T</mi><mrow><mi mathvariant="normal">d</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">k</mi></mrow></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+M_{\mathrm{journey}}=
+\frac{T_{\mathrm{sea}}M_{\mathrm{sea}}+T_{\mathrm{travel}}M_{\mathrm{travel}}}
+{T_{\mathrm{sea}}+T_{\mathrm{travel}}+T_{\mathrm{dock}}}.
+</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi mathvariant="normal">j</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">y</mi></mrow></msub><annotation encoding="application/x-tex">M_{\mathrm{journey}}</annotation></semantics></math>
+is the displayed percentage expressed as a fraction;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi></mrow></msub><annotation encoding="application/x-tex">M_{\mathrm{sea}}</annotation></semantics></math>
+is the corresponding sea-park fraction calculated above; and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>M</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">l</mi></mrow></msub><annotation encoding="application/x-tex">M_{\mathrm{travel}}</annotation></semantics></math>
+is its value during travel.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mrow><mi mathvariant="normal">s</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi></mrow></msub><annotation encoding="application/x-tex">T_{\mathrm{sea}}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">v</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">l</mi></mrow></msub><annotation encoding="application/x-tex">T_{\mathrm{travel}}</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mrow><mi mathvariant="normal">d</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">k</mi></mrow></msub><annotation encoding="application/x-tex">T_{\mathrm{dock}}</annotation></semantics></math>
+are the hours spent in each setting during the selected analysis period.
+Dockside work contributes zero because computing stops there. The model
+excludes a visit that would finish exactly at the analysis endpoint, so
+the default five-year calculation includes the initial outward trip but
+no return or dockside service. Chip-triggered service trips do count if
+they occur within the period. These resource percentages hold computing
+hardware healthy and exclude unexpected whole-node failures, even though
+chip wear determines whether a surprise service trip occurs. They are
+descriptive and are <strong>not</strong> multiplied into scheduled
+energy or fleet sizing.</p>
+<p>For travel, the existing linear wave-flux ramps determine when wave
+power reaches the full payload requirement or the lower idle
+requirement. The model integrates partial power above the idle
+requirement for capacity factor; it credits equivalent hours at full
+payload power for rated availability and equivalent hours above idle for
+keepalive availability. The battery starts full when the node leaves
+port, discharges to cover shortfalls, and can recharge from surplus wave
+power during travel. As with the sea-park calculations, rated and
+keepalive are separate ways of assessing battery support, not
+simultaneous claims on the same stored energy. For a partially covered
+segment, the model spreads the fraction of its energy deficit the
+battery can cover across that segment’s hours. It does not simulate the
+exact instant during the ramp when a battery would run out. The sea-park
+stage retains its separate historical-lull battery approximation; its
+charge state is not reconstructed continuously across decades of
+observations.</p>
+<p><strong>Why keepalive can still be 100% at departure.</strong> The
+modeled wave ramp begins at zero at port, but the default 200 kW payload
+has an 800 kWh usable battery (four hours at full payload power). It
+needs about <strong>372 kWh</strong> to fill the entire early outbound
+shortfall below full power before the waves can supply 200 kW unaided.
+That includes the shorter interval below the 30 kW keepalive threshold.
+The battery can therefore keep the servers on and at full rated power
+throughout the modeled outbound leg; wave surplus later recharges it.
+The shortfall estimate comes from the model’s simplified linear tug-out
+wave ramp and assumes the battery begins full, has adequate discharge
+power, and operates without energy losses. It is not a guarantee about
+actual coastal conditions or node uptime.</p>
+<p>At the default five-year horizon, this weighting changes
+sea-park-only resource capacity factor from <strong>97.21% to
+97.23%</strong> and rated power availability from <strong>93.19% to
+93.25%</strong>; keepalive remains <strong>100%</strong>. At
+<strong>zero battery</strong>, the outward leg no longer receives
+battery support: the displayed journey estimates are about
+<strong>95.86%</strong> capacity factor, <strong>87.13%</strong> rated
+availability, and <strong>99.999%</strong> keepalive. The last value is
+slightly below 100% because the node briefly lacks even idle power as it
+leaves port. The site-specific historical sea-park keepalive measure
+remains 100% without storage. Small departures from 100% are shown with
+additional decimal places on the dashboard so they are not hidden by
+rounding.</p>
+<p>All three displayed metrics are fractions expressed as percentages. A
+100% modeled keepalive value reflects the particular wave record, route
+approximation, battery assumptions, and analysis calendar; it does not
+guarantee continuous fleet uptime.</p>
 </div></details><details id="how-chip-failures-trigger-service-and-reduce-output"><summary>How chip
 failures trigger service and reduce output</summary><div class="panel">
 <p>Chip failures gradually reduce expected healthy capacity. Let

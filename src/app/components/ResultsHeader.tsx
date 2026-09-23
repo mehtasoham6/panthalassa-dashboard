@@ -43,17 +43,17 @@ export function ResultsHeader({ result, isPending }: Props) {
     {
       label: "Resource capacity factor",
       value: formatPercent(result.derived.resource_capacity_factor, 1),
-      sub: "Useful compute work delivered relative to continuous full-power operation.",
+      sub: "Useful compute work supported across the modeled journey, including travel and dockside service.",
       secondary: [
         {
           label: "Rated power availability",
           value: formatPercent(result.derived.rated_power_availability, 1),
-          sub: "Time the full payload can run at 100%",
+          sub: "Share of modeled journey at full payload power",
         },
         {
           label: "Keepalive availability",
-          value: formatPercent(result.derived.keepalive_availability, 1),
-          sub: "Time there is enough power to keep servers on",
+          value: formatPercent(result.derived.keepalive_availability, result.derived.keepalive_availability < 1 && result.derived.keepalive_availability > 0.999 ? 3 : 1),
+          sub: "Share of modeled journey with enough power to keep servers on",
         },
       ],
     },

@@ -8,6 +8,13 @@ import {
   type BatteryState,
   type LegSegment,
 } from "./energy.js";
+import {
+  creditJourneyTravel,
+  journeyResourceMetrics,
+  makeJourneyResourceTotals,
+  resetJourneyResourceBattery,
+  type JourneyResourceTotals,
+} from "./journeyAvailability.js";
 
 /**
  * Unified compute-health and service-schedule engine. This module now owns
@@ -84,6 +91,7 @@ interface CapParams {
 
 interface Totals {
   chipAdjustedEnergyKwh: number;
+  journey: JourneyResourceTotals;
   surpriseServiceEvents: number;
   maintenanceEvents: number;
   failedCapacityKwReplaced: number;
@@ -95,9 +103,10 @@ interface Totals {
   yearlyTugRoundTrips: number[];
 }
 
-function makeTotals(years: number): Totals {
+function makeTotals(years: number, batteryCapacityKwh: number): Totals {
   return {
     chipAdjustedEnergyKwh: 0,
+    journey: makeJourneyResourceTotals(batteryCapacityKwh),
     surpriseServiceEvents: 0,
     maintenanceEvents: 0,
     failedCapacityKwReplaced: 0,
@@ -190,7 +199,12 @@ function creditRampSegments(
   lambda: number,
   totals: Totals,
   Tend: number,
+  captureCoefficient: number,
 ): { age: number; absTime: number } {
+  creditJourneyTravel(
+    totals.journey, segments, captureCoefficient, P, batteryCapacityKwh,
+    Math.max(0, (Tend - absTime) * CONST.hours_per_year),
+  );
   let a = age;
   let t = absTime;
   for (const seg of segments) {
@@ -223,6 +237,7 @@ function creditSeaPark(
   Tend: number,
 ): { age: number; absTime: number } {
   if (seaParkDays <= 0) return { age, absTime };
+  totals.journey.seaParkHours += seaParkDays * 24;
   const ageEnd = age + seaParkDays / 365;
   const absEnd = absTime + seaParkDays / 365;
 
@@ -273,7 +288,7 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
 
   const triggerAgeYears = lambda > 0 ? -Math.log(1 - h) / lambda : Infinity;
 
-  const totals = makeTotals(Tend);
+  const totals = makeTotals(Tend, batteryCapacityKwh);
   let s = 0; // absolute time, dock-departure (fresh, fully-healthy payload)
   let nextMaintenanceTime = CONST.node_maintenance_interval_years;
 
@@ -283,15 +298,16 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
     // Every departure from port -- initial deployment and every redeployment
     // after dockside service -- starts with a fully charged battery.
     battery.socKwh = batteryCapacityKwh;
+    resetJourneyResourceBattery(totals.journey, batteryCapacityKwh);
 
     // Outbound leg, truncated at the analysis horizon if it would run past it.
     const daysUntilTend = (Tend - s) * CONST.days_per_year;
     if (daysUntilTend < outboundDays) {
-      creditRampSegments(outboundLegSegmentsPartial(legInputs, daysUntilTend), 0, s, battery, batteryCapacityKwh, P, lambda, totals, Tend);
+      creditRampSegments(outboundLegSegmentsPartial(legInputs, daysUntilTend), 0, s, battery, batteryCapacityKwh, P, lambda, totals, Tend, derived.capture_coefficient);
       break;
     }
 
-    const outboundResult = creditRampSegments(outboundSegments, 0, s, battery, batteryCapacityKwh, P, lambda, totals, Tend);
+    const outboundResult = creditRampSegments(outboundSegments, 0, s, battery, batteryCapacityKwh, P, lambda, totals, Tend, derived.capture_coefficient);
     const arrivalAbs = outboundResult.absTime; // == s + arrivalLocal
     if (arrivalAbs >= Tend - 1e-9) break;
 
@@ -327,9 +343,10 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
         break;
       }
 
-      const returnResult = creditRampSegments(returnSegments, seaPark.age, seaPark.absTime, battery, batteryCapacityKwh, P, lambda, totals, Tend);
+      const returnResult = creditRampSegments(returnSegments, seaPark.age, seaPark.absTime, battery, batteryCapacityKwh, P, lambda, totals, Tend, derived.capture_coefficient);
       const ageAtService = returnResult.age;
       const completionAbs = nextMaintenanceTime;
+      totals.journey.dockHours += CONST.node_maintenance_dock_days * 24;
 
       const failedKw = P * (1 - Math.exp(-lambda * ageAtService));
       creditServiceEvent(failedKw, completionAbs, totals, Tend);
@@ -354,15 +371,18 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
     const seaParkDays = Math.max(0, (triggerDepartAbs - arrivalAbs) * CONST.days_per_year);
     const seaPark = creditSeaPark(seaParkDays, arrivalLocal, arrivalAbs, P, lambda, effectiveSeaParkCF, totals, Tend);
 
-    const returnResult = creditRampSegments(returnSegments, seaPark.age, seaPark.absTime, battery, batteryCapacityKwh, P, lambda, totals, Tend);
+    const returnResult = creditRampSegments(returnSegments, seaPark.age, seaPark.absTime, battery, batteryCapacityKwh, P, lambda, totals, Tend, derived.capture_coefficient);
     const ageAtService = returnResult.age;
     const completionAbs = seaPark.absTime + returnYears + dockYears;
 
     if (completionAbs >= Tend - 1e-9) {
       // Trip launched (and its degraded travel output already credited above), but doesn't
       // complete within the horizon: no redeploy, no replacement event credited.
+      totals.journey.dockHours += Math.max(0, (Tend - seaPark.absTime - returnYears) * CONST.hours_per_year);
       break;
     }
+
+    totals.journey.dockHours += dockYears * CONST.hours_per_year;
 
     const failedKw = P * (1 - Math.exp(-lambda * ageAtService));
     creditServiceEvent(failedKw, completionAbs, totals, Tend);
@@ -383,6 +403,7 @@ export function computeChipFailures(inputs: ModelInputs, derived: DerivedQuantit
 
   return {
     chip_adjusted_energy_kwh: totals.chipAdjustedEnergyKwh,
+    journey_resource_metrics: journeyResourceMetrics(totals.journey, derived),
     expected_mode_1_surprise_service_event_count_per_position: totals.surpriseServiceEvents,
     scheduled_node_maintenance_event_count_per_position: totals.maintenanceEvents,
     expected_failed_capacity_kw_replaced_per_position: totals.failedCapacityKwReplaced,

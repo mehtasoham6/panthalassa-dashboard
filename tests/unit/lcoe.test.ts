@@ -353,8 +353,8 @@ describe("LCOE electrical-output cap is the installed PTO rating, not the comput
     // of the test suite (exampleA/B.test.ts, appendixA7.test.ts) expects.
     expect(r.N_fleet).toBe(5_258);
     expect(r.costs.total_node_fleet_cost_usd / 1e9).toBeCloseTo(30.77, 1);
-    expect(r.derived.resource_capacity_factor).toBeCloseTo(0.9721, 3);
-    expect(r.derived.rated_power_availability).toBeCloseTo(0.9319, 3);
+    expect(r.derived.resource_capacity_factor).toBeCloseTo(0.9723, 4);
+    expect(r.derived.rated_power_availability).toBeCloseTo(0.9325, 4);
     expect(r.derived.keepalive_availability).toBeCloseTo(1.0, 3);
   });
 });
