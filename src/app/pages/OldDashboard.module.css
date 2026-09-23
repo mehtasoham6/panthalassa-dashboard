@@ -25,12 +25,13 @@
 .layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 340px 1fr 340px;
+  grid-template-columns: clamp(260px, 20cqw, 340px) minmax(0, 1fr) clamp(260px, 20cqw, 340px);
   min-height: 0;
   align-items: start;
 }
 
 .sidebar {
+  min-width: 0;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -39,6 +40,7 @@
 }
 
 .terrestrialSidebar {
+  min-width: 0;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -47,6 +49,7 @@
 }
 
 .main {
+  container: results / inline-size;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -56,7 +59,7 @@
 
 .compareRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -87,33 +90,26 @@
   color: #74442e;
 }
 
-/*
- * Below this, three columns (two fixed 340px sidebars + a flexible main
- * area) don't comfortably fit. Rather than a partial state (drop to two
- * columns, push the terrestrial sidebar into a full-width row below), we
- * go straight to a single stacked column for all three regions. A partial
- * state was tried and found genuinely broken: a sticky sidebar's
- * containing block does not reliably bound itself to a single grid row
- * track across browsers, so the still-sticky ocean sidebar visually
- * covered the terrestrial sidebar's row while scrolling through it,
- * hiding its slider labels. Stacking everything avoids relying on that
- * sticky/grid interaction entirely.
- */
-@container dashboard (max-width: 1400px) {
+/* Reflow both controls together; neither remains sticky across grid rows. */
+@container dashboard (max-width: 1200px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "ocean land" "results results";
   }
+
+  .sidebar { grid-area: ocean; }
+  .terrestrialSidebar { grid-area: land; border-left: 1px solid var(--border); }
 
   .sidebar,
   .terrestrialSidebar {
     position: static;
-    height: auto;
+    height: min(420px, 50svh);
     border-right: none;
-    border-left: none;
-    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
 
   .main {
+    grid-area: results;
     padding: 18px 16px;
   }
 
@@ -121,7 +117,17 @@
     padding: 14px 16px;
   }
 
-  .compareRow {
-    grid-template-columns: 1fr;
+}
+
+@container dashboard (max-width: 680px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "ocean" "land" "results";
   }
+  .sidebar, .terrestrialSidebar { height: auto; border-left: none; }
+  .main { padding: 16px 12px; }
+}
+
+@container results (max-width: 640px) {
+  .compareRow { grid-template-columns: minmax(0, 1fr); }
 }

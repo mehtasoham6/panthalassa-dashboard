@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useModel } from "../hooks/useModel.js";
 import { SliderPanel } from "../components/SliderPanel.js";
 import { SharedInputsPanel } from "../components/SharedInputsPanel.js";
@@ -24,6 +24,16 @@ import {
 import styles from "./OldDashboard.module.css";
 
 export function OldDashboard() {
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [compactControls, setCompactControls] = useState(false);
+  useEffect(() => {
+    if (!shellRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setCompactControls(entry.contentRect.width <= 680);
+    });
+    observer.observe(shellRef.current);
+    return () => observer.disconnect();
+  }, []);
   const { inputs, setInput, resetAll, result, isPending } = useModel();
 
   const [terrestrialInputs, setTerrestrialInputs] = useState<TerrestrialArchitectureInputs>(
@@ -52,14 +62,14 @@ export function OldDashboard() {
   const roundedDifference = Math.abs(costDifferencePercent).toFixed(1);
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} ref={shellRef}>
       <header className={styles.topbar}>
         <h2 className={styles.title}>The Interactive Model</h2>
       </header>
 
       <div className={styles.layout}>
         <aside className={styles.sidebar}>
-          <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} />
+          <SliderPanel inputs={inputs} setInput={setInput} resetAll={resetAll} collapsible={compactControls} />
         </aside>
 
         <main className={styles.main}>
@@ -101,6 +111,7 @@ export function OldDashboard() {
             onChange={setTerrestrialInput}
             onSelectPowerSource={setPowerSource}
             onReset={resetTerrestrial}
+            collapsible={compactControls}
           />
         </aside>
       </div>
