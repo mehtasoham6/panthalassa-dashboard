@@ -55,6 +55,12 @@ export const DEFAULT_INPUTS: ModelInputs = {
  */
 export interface ChipFailureResult {
   chip_adjusted_energy_kwh: number;
+  /** Descriptive, calendar-weighted wave/battery measures. Does not feed fleet sizing or costs. */
+  journey_resource_metrics: {
+    resource_capacity_factor: number;
+    rated_power_availability: number;
+    keepalive_availability: number;
+  };
   expected_mode_1_surprise_service_event_count_per_position: number;
   scheduled_node_maintenance_event_count_per_position: number;
   /** Expected compute capacity (kW) actually replaced across all visits over the whole analysis period, per operating slot. */
@@ -101,11 +107,10 @@ export interface DerivedQuantities {
    * compute work actually available, relative to a theoretically perfect
    * continuous-full-power environment. "Useful work" is server power above
    * the fixed idle-power floor (CONST.server_idle_power_fraction of rated
-   * payload) -- a genuine energy-average capacity factor (partial credit
-   * for partial power), NOT the share-of-time metric that name colloquially
-   * suggests (see rated_power_availability for that). Battery folded in via
-   * the same lull-by-lull approximation as the other two metrics below, no
-   * chronological state-of-charge simulation. Bounded to [0,1]. Deliberately
+   * payload). computeDerived initially provides the sea-park-only value;
+   * runModel replaces this with the scheduled-journey weighted diagnostic
+   * from chipFailures.ts, including travel and zero-power dockside time.
+   * Bounded to [0,1]. Deliberately
    * independent of effective_sea_park_cf above -- this is a reporting-only
    * metric and does not affect energy delivery, fleet sizing, or cost. See
    * src/model/waverys.ts.
@@ -114,10 +119,8 @@ export interface DerivedQuantities {
   /**
    * Secondary descriptive metric: share of historical time the full
    * installed compute payload can operate at 100% rated power (no partial
-   * credit at all) -- what this dashboard used to label "Resource capacity
-   * factor" before that name was reserved for the energy-average metric
-   * above. Never called a "capacity factor" in code or UI copy. Same
-   * lull-by-lull battery approximation, bounded to [0,1], reporting-only.
+   * credit at all), weighted across the modeled journey in runModel.
+   * computeDerived's initial value covers the sea park alone.
    */
   rated_power_availability: number;
   /**
@@ -126,7 +129,7 @@ export interface DerivedQuantities {
    * not enough to do any useful compute work. Its own, independent
    * lull-by-lull battery approximation against the (much lower) idle-power
    * threshold -- not jointly optimized with the other two metrics' battery
-   * usage. Bounded to [0,1], reporting-only.
+   * usage. Weighted across the modeled journey in runModel. Bounded to [0,1], reporting-only.
    */
   keepalive_availability: number;
   /**

@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import {
   TERRESTRIAL_ALWAYS_VISIBLE_SLIDER_GROUPS,
   TERRESTRIAL_POWER_SOURCE_OPTIONS,
@@ -14,22 +14,27 @@ interface Props {
   onChange: (key: keyof TerrestrialArchitectureInputs, value: number) => void;
   onSelectPowerSource: (source: TerrestrialPowerSource) => void;
   onReset: () => void;
+  collapsible?: boolean;
 }
 
 /** Mirrors SliderPanel.tsx's markup/styling exactly (same CSS module) so the two sidebars read as a matched pair. */
-export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onReset }: Props) {
+export function TerrestrialControls({ inputs, onChange, onSelectPowerSource, onReset, collapsible = false }: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const controlsId = useId();
   const activeGroup = POWER_SOURCE_SLIDER_GROUPS[inputs.power_source];
   const groups = [...TERRESTRIAL_ALWAYS_VISIBLE_SLIDER_GROUPS, activeGroup];
 
   return (
-    <div className={panelStyles.panel}>
+    <div className={panelStyles.panel} data-collapsed={collapsible && !expanded}>
       <div className={panelStyles.header}>
-        <span className={panelStyles.headerTitle}>Land-based Inputs</span>
+        {collapsible ? <button type="button" className={panelStyles.panelToggle} aria-expanded={expanded} aria-controls={controlsId} onClick={() => setExpanded(!expanded)}>
+          Land-based Inputs <span aria-hidden>{expanded ? '−' : '+'}</span>
+        </button> : <span className={panelStyles.headerTitle}>Land-based Inputs</span>}
         <button type="button" className={panelStyles.resetBtn} onClick={onReset}>
           Reset to defaults
         </button>
       </div>
-      <div className={`${panelStyles.scrollArea} scroll-thin`}>
+      <div id={controlsId} hidden={collapsible && !expanded} className={`${panelStyles.scrollArea} scroll-thin`}>
         <div className={styles.powerSourceRow}>
           <span className={styles.powerSourceLabel}>Power source</span>
           <div className={styles.powerSourceButtons}>

@@ -7,18 +7,23 @@ interface Props {
   inputs: ModelInputs;
   setInput: (key: keyof ModelInputs, value: number) => void;
   resetAll: () => void;
+  collapsible?: boolean;
 }
 
-export function SliderPanel({ inputs, setInput, resetAll }: Props) {
+export function SliderPanel({ inputs, setInput, resetAll, collapsible = false }: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const controlsId = useId();
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} data-collapsed={collapsible && !expanded}>
       <div className={styles.header}>
-        <span className={styles.headerTitle}>Panthalassa Inputs</span>
+        {collapsible ? <button type="button" className={styles.panelToggle} aria-expanded={expanded} aria-controls={controlsId} onClick={() => setExpanded(!expanded)}>
+          Panthalassa Inputs <span aria-hidden>{expanded ? '−' : '+'}</span>
+        </button> : <span className={styles.headerTitle}>Panthalassa Inputs</span>}
         <button type="button" className={styles.resetBtn} onClick={resetAll}>
           Reset to defaults
         </button>
       </div>
-      <div className={`${styles.scrollArea} scroll-thin`}>
+      <div id={controlsId} hidden={collapsible && !expanded} className={`${styles.scrollArea} scroll-thin`}>
         {SLIDER_GROUPS.map((group) => (
           <details key={group.title} className={styles.group} open>
             <summary className={styles.groupSummary}>
@@ -43,3 +48,4 @@ export function SliderPanel({ inputs, setInput, resetAll }: Props) {
     </div>
   );
 }
+import { useId, useState } from "react";

@@ -16,14 +16,33 @@
 }
 
 .dashboard {
+  container: dashboard / inline-size;
+  margin: 0 12px 24px;
+  border: 1px solid #9eafb9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   background: var(--bg);
   color: var(--text-primary);
+}
+
+.dashboard > div {
+  border-radius: inherit;
+}
+
+.dashboard header {
+  border-radius: 8px 8px 0 0;
+}
+
+@media (max-width: 720px) {
+  .dashboard {
+    margin-inline: 6px;
+  }
 }
 
 .hero {
   position: relative;
   height: 100vh;
-  min-height: 640px;
+  min-height: 900px;
   overflow: hidden;
   background: linear-gradient(
     to bottom,
@@ -114,7 +133,7 @@
   left: var(--gutter);
   bottom: 48px;
   z-index: 2;
-  max-width: 34rem;
+  width: min(34rem, 43vw);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -129,6 +148,11 @@
   font-size: 15px;
   line-height: 1.6;
   color: var(--fg-muted);
+}
+
+.copy strong {
+  color: var(--fg);
+  font-weight: 650;
 }
 
 .copy p:first-child {
@@ -205,11 +229,31 @@
     bottom: 28px;
     max-width: none;
   }
-  .copy p:not(:first-child) {
-    display: none;
-  }
   .body {
     grid-template-columns: 1fr;
     padding: 48px 20px 64px;
+  }
+}
+
+/* Keep the full introduction below the illustration when side-by-side space is limited. */
+@media (max-width: 1000px), (max-aspect-ratio: 11/10) {
+  .hero {
+    height: auto;
+    min-height: 0;
+    padding-top: 720px;
+    padding-bottom: 32px;
+    background: linear-gradient(to bottom, var(--sky-top) 0px, var(--sky-mid) 115px, var(--sky-horizon) 288px, var(--deep) 288px, var(--deep) 100%);
+  }
+  .canvas { height: 720px; }
+  .title { top: 56px; left: 24px; max-width: min(600px, calc(100% - 48px)); }
+  .copy {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    max-width: 42rem;
+    margin: 0 24px;
+    padding: 24px;
   }
 }

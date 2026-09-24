@@ -15,6 +15,7 @@ import type { ChipFailureResult, ModelResult } from "../../src/model/types.js";
 
 const ZERO_CHIP: ChipFailureResult = {
   chip_adjusted_energy_kwh: 0,
+  journey_resource_metrics: { resource_capacity_factor: 0, rated_power_availability: 0, keepalive_availability: 0 },
   expected_mode_1_surprise_service_event_count_per_position: 0,
   scheduled_node_maintenance_event_count_per_position: 0,
   expected_failed_capacity_kw_replaced_per_position: 0,

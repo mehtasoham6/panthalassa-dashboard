@@ -11,8 +11,11 @@ export * from "./types.js";
 export { CONST } from "./constants.js";
 
 export function runModel(inputs: ModelInputs): ModelResult {
-  const derived = computeDerived(inputs);
-  const chip = computeChipFailures(inputs, derived);
+  const seaParkDerived = computeDerived(inputs);
+  const chip = computeChipFailures(inputs, seaParkDerived);
+  // The dashboard's descriptive percentages cover the modeled journey;
+  // the internal sea-park electrical factor continues to drive fleet math.
+  const derived = { ...seaParkDerived, ...chip.journey_resource_metrics };
   const modeLosses = computeModeLosses(inputs, derived);
 
   const { delivered_energy_kwh, expected_delivered_energy_per_position_mw_years, target_energy_mw_years, N_fleet } =

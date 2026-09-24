@@ -1,0 +1,58 @@
+.appendix {
+  padding: 0 max(28px, calc((100% - 1160px) / 2)) 72px;
+  color: #a6bac8;
+  background: #112a40;
+  font-size: 15px;
+  line-height: 1.65;
+  scroll-margin-top: 28px;
+}
+.appendix > h2 {
+  margin: 0 0 18px;
+  padding-top: 36px;
+  border-top: 1px solid rgba(178, 210, 227, .18);
+  font-size: clamp(30px, 3.8vw, 40px);
+  font-weight: 450;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+  color: #e1ebf0;
+}
+.appendix > p { max-width: 820px; margin: 0 0 28px; }
+.appendix details { border-top: 1px solid rgba(178, 210, 227, .18); }
+.appendix details:last-child { border-bottom: 1px solid rgba(178, 210, 227, .18); }
+.appendix summary {
+  padding: 20px 0;
+  color: #e1ebf0;
+  font-size: 20px;
+  font-weight: 450;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.appendix summary::marker { color: #b4e6d5; }
+.appendix summary:focus-visible, .appendix a:focus-visible { outline: 2px solid #b4e6d5; outline-offset: 4px; }
+.appendix :global(.panel) { max-width: 820px; margin: 0 0 30px 24px; }
+.appendix p { margin: 0 0 15px; }
+.appendix strong { color: #e1ebf0; font-weight: 550; }
+.appendix a { color: #b4e6d5; text-underline-offset: 3px; }
+.appendix ul, .appendix ol { padding-left: 22px; margin: 16px 0 20px; }
+.appendix li { margin: 0 0 10px; }
+.appendix li::marker { color: #b4e6d5; }
+.appendix math { color: #e1ebf0; font-size: 1.08em; }
+.appendix :global(span.math.display) { display: block; overflow-x: auto; padding: 13px 5px; margin: 10px 0 18px; }
+.appendix :global(.panel) > p:has(> strong:first-child) { margin-top: 20px; }
+.appendix table { width: 100%; border-collapse: collapse; margin: 18px 0 23px; font-size: 14px; }
+.appendix th { color: #e1ebf0; font-weight: 550; text-align: left; }
+.appendix th, .appendix td { padding: 11px 14px 11px 0; border-bottom: 1px solid #355066; vertical-align: top; }
+.appendix td:first-child { min-width: 125px; color: #e1ebf0; }
+.appendix td:nth-child(2) { min-width: 140px; }
+.appendix table p { margin: 0; }
+.appendix :global(.table-wrap) { overflow-x: auto; }
+.appendix figure { margin: 22px 0; }
+.appendix figure img { display: block; width: 100%; height: auto; }
+.appendix figcaption { font-size: 12px; margin-top: 9px; }
+@media (max-width: 719px) {
+  .appendix { padding: 0 24px 48px; }
+  .appendix summary { font-size: 18px; }
+  .appendix :global(.panel) { margin-left: 0; }
+  .appendix math { font-size: 1em; }
+  .appendix table { min-width: 590px; }
+}

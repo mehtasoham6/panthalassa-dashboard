@@ -19,6 +19,27 @@
   font-weight: 600;
 }
 
+.panelToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panelToggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.resetBtn { flex-shrink: 0; }
+
 .resetBtn {
   font-size: 11px;
   font-weight: 500;
@@ -89,13 +110,10 @@
   border-top: 1px solid var(--surface-alt);
 }
 
-@media (max-width: 900px) {
-  .panel {
-    height: auto;
-  }
-
+@container dashboard (max-width: 680px) {
+  .panel { height: auto; }
   .scrollArea {
-    overflow-y: visible;
-    max-height: none;
+    max-height: min(360px, 50svh);
+    flex: auto;
   }
 }

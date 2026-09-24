@@ -236,6 +236,9 @@ export function computeReturnLegEnergyKwhPartial(
 export interface LegSegment {
   kind: "gap" | "atcap";
   days: number;
+  /** Endpoints of this linear wave-flux segment, in kW/m, in travel order. */
+  fluxStartKwPerM: number;
+  fluxEndKwPerM: number;
   /** Energy delivered under the pre-battery capped model. */
   deliveredEnergyKwh: number;
   /** "atcap": surplus available to charge a battery. "gap": shortfall a battery could fill. Always >= 0. */
@@ -248,9 +251,9 @@ function constantLegSegments(fluxKwPerM: number, durationDays: number, params: C
   const waveEnergyKwh = 24 * capture_coefficient * durationDays * fluxKwPerM;
   const cappedEnergyKwh = 24 * power_cap_kw * durationDays;
   if (fluxKwPerM <= full_output_flux_kw_per_m) {
-    return [{ kind: "gap", days: durationDays, deliveredEnergyKwh: waveEnergyKwh, potentialKwh: cappedEnergyKwh - waveEnergyKwh }];
+    return [{ kind: "gap", days: durationDays, fluxStartKwPerM: fluxKwPerM, fluxEndKwPerM: fluxKwPerM, deliveredEnergyKwh: waveEnergyKwh, potentialKwh: cappedEnergyKwh - waveEnergyKwh }];
   }
-  return [{ kind: "atcap", days: durationDays, deliveredEnergyKwh: cappedEnergyKwh, potentialKwh: waveEnergyKwh - cappedEnergyKwh }];
+  return [{ kind: "atcap", days: durationDays, fluxStartKwPerM: fluxKwPerM, fluxEndKwPerM: fluxKwPerM, deliveredEnergyKwh: cappedEnergyKwh, potentialKwh: waveEnergyKwh - cappedEnergyKwh }];
 }
 
 function rampLegSegments(fluxStart: number, fluxEnd: number, durationDays: number, params: CapParams): LegSegment[] {
@@ -262,12 +265,12 @@ function rampLegSegments(fluxStart: number, fluxEnd: number, durationDays: numbe
   if (hi <= full_output_flux_kw_per_m) {
     const deliveredEnergyKwh = 24 * capture_coefficient * durationDays * ((fluxStart + fluxEnd) / 2);
     const cappedEnergyKwh = 24 * power_cap_kw * durationDays;
-    return [{ kind: "gap", days: durationDays, deliveredEnergyKwh, potentialKwh: cappedEnergyKwh - deliveredEnergyKwh }];
+    return [{ kind: "gap", days: durationDays, fluxStartKwPerM: fluxStart, fluxEndKwPerM: fluxEnd, deliveredEnergyKwh, potentialKwh: cappedEnergyKwh - deliveredEnergyKwh }];
   }
   if (lo >= full_output_flux_kw_per_m) {
     const deliveredEnergyKwh = 24 * power_cap_kw * durationDays;
     const waveEnergyKwh = 24 * capture_coefficient * durationDays * ((fluxStart + fluxEnd) / 2);
-    return [{ kind: "atcap", days: durationDays, deliveredEnergyKwh, potentialKwh: waveEnergyKwh - deliveredEnergyKwh }];
+    return [{ kind: "atcap", days: durationDays, fluxStartKwPerM: fluxStart, fluxEndKwPerM: fluxEnd, deliveredEnergyKwh, potentialKwh: waveEnergyKwh - deliveredEnergyKwh }];
   }
   if (fluxStart === fluxEnd) return [];
 
@@ -282,8 +285,8 @@ function rampLegSegments(fluxStart: number, fluxEnd: number, durationDays: numbe
     const atcapDeliveredKwh = 24 * power_cap_kw * afterCrossingDays;
     const atcapWaveKwh = 24 * capture_coefficient * afterCrossingDays * ((full_output_flux_kw_per_m + fluxEnd) / 2);
     return [
-      { kind: "gap", days: beforeCrossingDays, deliveredEnergyKwh: gapDeliveredKwh, potentialKwh: gapCappedKwh - gapDeliveredKwh },
-      { kind: "atcap", days: afterCrossingDays, deliveredEnergyKwh: atcapDeliveredKwh, potentialKwh: atcapWaveKwh - atcapDeliveredKwh },
+      { kind: "gap", days: beforeCrossingDays, fluxStartKwPerM: fluxStart, fluxEndKwPerM: full_output_flux_kw_per_m, deliveredEnergyKwh: gapDeliveredKwh, potentialKwh: gapCappedKwh - gapDeliveredKwh },
+      { kind: "atcap", days: afterCrossingDays, fluxStartKwPerM: full_output_flux_kw_per_m, fluxEndKwPerM: fluxEnd, deliveredEnergyKwh: atcapDeliveredKwh, potentialKwh: atcapWaveKwh - atcapDeliveredKwh },
     ];
   }
   // Ramping down: atcap segment first (fluxStart..threshold), gap segment second (threshold..fluxEnd).
@@ -292,8 +295,8 @@ function rampLegSegments(fluxStart: number, fluxEnd: number, durationDays: numbe
   const gapDeliveredKwh = 24 * capture_coefficient * afterCrossingDays * ((full_output_flux_kw_per_m + fluxEnd) / 2);
   const gapCappedKwh = 24 * power_cap_kw * afterCrossingDays;
   return [
-    { kind: "atcap", days: beforeCrossingDays, deliveredEnergyKwh: atcapDeliveredKwh, potentialKwh: atcapWaveKwh - atcapDeliveredKwh },
-    { kind: "gap", days: afterCrossingDays, deliveredEnergyKwh: gapDeliveredKwh, potentialKwh: gapCappedKwh - gapDeliveredKwh },
+    { kind: "atcap", days: beforeCrossingDays, fluxStartKwPerM: fluxStart, fluxEndKwPerM: full_output_flux_kw_per_m, deliveredEnergyKwh: atcapDeliveredKwh, potentialKwh: atcapWaveKwh - atcapDeliveredKwh },
+    { kind: "gap", days: afterCrossingDays, fluxStartKwPerM: full_output_flux_kw_per_m, fluxEndKwPerM: fluxEnd, deliveredEnergyKwh: gapDeliveredKwh, potentialKwh: gapCappedKwh - gapDeliveredKwh },
   ];
 }
 

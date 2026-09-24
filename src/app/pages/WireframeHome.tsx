@@ -2,6 +2,8 @@ import { useEffect, type CSSProperties } from "react";
 import { HORIZON_FRAC, NodeWaveHero } from "../components/NodeWaveHero.js";
 import styles from "./WireframeHome.module.css";
 import { Methodology } from "../components/methodology/Methodology.js";
+import { Appendix } from "../components/appendix/Appendix.js";
+import { Takeaways } from "../components/Takeaways.js";
 import { OldDashboard } from "./OldDashboard.js";
 
 /**
@@ -11,20 +13,13 @@ import { OldDashboard } from "./OldDashboard.js";
  * horizon the sea converges to.
  */
 
-const LOREM_LEAD =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor " +
-  "incididunt ut labore et dolore magna aliqua.";
-const LOREM =
-  "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip " +
-  "ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit " +
-  "esse cillum dolore eu fugiat nulla pariatur.";
 export function WireframeHome() {
   const pageStyle = { "--horizon": `${HORIZON_FRAC * 100}%` } as CSSProperties;
 
   // React renders the target after initial navigation, including legacy /old links.
   useEffect(() => {
-    if (window.location.hash === "#dashboard") {
-      document.getElementById("dashboard")?.scrollIntoView({ behavior: "instant" });
+    if (["#dashboard", "#appendix"].includes(window.location.hash)) {
+      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: "instant" });
     }
   }, []);
 
@@ -41,10 +36,11 @@ export function WireframeHome() {
         </div>
 
         <div className={styles.copy}>
-          <p>{LOREM_LEAD}</p>
-          <p>{LOREM}</p>
+          <p><strong>Yes it can and, done right, it would be cheaper than building data centers on land.</strong></p>
+          <p>This work models one approach to harnessing wave energy put forward by the startup <strong>Panthalassa</strong>, which would place floating power plants far offshore in the South Pacific, and compares this to a range of land-based behind-the-meter alternatives. While Panthalassa’s approach poses significant operational challenges, <strong>my model finds that these challenges are likely surmountable.</strong></p>
+          <p>You can go straight to the dashboard, where you can change my default assumptions, but since few of us have any physical intuition for ocean data centers, <strong>I strongly encourage you to first read my short explanation of how Panthalassa operates and how my model works.</strong></p>
           <a href="#dashboard" className={styles.cta}>
-            Explore the model
+            Skip the explanation
             <span aria-hidden="true">&darr;</span>
           </a>
         </div>
@@ -54,6 +50,8 @@ export function WireframeHome() {
       <section id="dashboard" className={styles.dashboard} aria-label="Interactive model dashboard" tabIndex={-1}>
         <OldDashboard />
       </section>
+      <Takeaways />
+      <Appendix />
     </div>
   );
 }
