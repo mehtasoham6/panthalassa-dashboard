@@ -103,6 +103,11 @@ export function OldDashboard() {
           </div>
 
           <div className={styles.compareRow}>
+            <CostBreakdown result={result} />
+            <TerrestrialResults result={terrestrialResult} />
+          </div>
+
+          <div className={styles.compareRow}>
             <LcoeBand result={result} />
             <TerrestrialLcoeBand result={terrestrialResult} />
           </div>
@@ -111,9 +116,6 @@ export function OldDashboard() {
           <CostPerWattBreakdown oceanResult={result} terrestrialResult={terrestrialResult} />
 
           <div className={styles.compareRow}>
-            <CostBreakdown result={result} />
-            <TerrestrialResults result={terrestrialResult} />
-
             <BaselineComparison result={result} />
             <TerrestrialBaselineComparison result={terrestrialResult} />
 

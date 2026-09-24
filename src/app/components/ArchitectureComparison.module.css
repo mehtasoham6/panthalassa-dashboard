@@ -94,6 +94,6 @@
   }
 
   .rowValue:nth-of-type(3)::before {
-    content: "Terrestrial";
+    content: "Land-based";
   }
 }

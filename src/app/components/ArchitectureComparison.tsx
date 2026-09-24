@@ -43,7 +43,7 @@ export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props
         <div className={styles.headerRow}>
           <span className={styles.cornerLabel}>Comparable outputs</span>
           <span className={styles.colHeader}>Panthalassa</span>
-          <span className={styles.colHeader}>Terrestrial</span>
+          <span className={styles.colHeader}>Land-based</span>
         </div>
         {rows.map((row) => (
           <div className={styles.row} key={row.label}>

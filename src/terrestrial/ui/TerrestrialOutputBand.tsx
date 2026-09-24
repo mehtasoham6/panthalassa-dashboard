@@ -20,7 +20,7 @@ export function TerrestrialOutputBand({ result }: Props) {
   return (
     <div className={`card ${bandStyles.accentCard}`}>
       <div className={bandStyles.eyebrowRow}>
-        <span className={bandStyles.eyebrow}>Terrestrial</span>
+        <span className={bandStyles.eyebrow}>Land-based</span>
       </div>
       <div className={bandStyles.wrap}>
         <div className={bandStyles.half}>
