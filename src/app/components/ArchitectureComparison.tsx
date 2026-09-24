@@ -1,7 +1,7 @@
 import type { ModelResult } from "../../model/index.js";
 import type { TerrestrialModelResult } from "../../terrestrial/model/types.js";
 import { comparableOutputsFromPanthalassa } from "../../terrestrial/integration/index.js";
-import { formatDataGb, formatUsdCompact, formatUsdPerUnit } from "../lib/formatters.js";
+import { formatUsdCompact } from "../lib/formatters.js";
 import styles from "./ArchitectureComparison.module.css";
 
 interface Props {
@@ -16,7 +16,9 @@ interface Props {
  * off by fleet-rounding) -- a tautology, not a real comparison. Every row
  * kept below reflects a genuine architectural difference. "All-in cost per
  * target watt" is broken down by cost component in CostPerWattBreakdown
- * (rendered just below this card), so it isn't repeated here.
+ * (rendered just below this card), so it isn't repeated here. Power-system
+ * LCOE has its own headline card pair (LcoeBand/TerrestrialLcoeBand) instead
+ * of a row here.
  */
 export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props) {
   const ocean = comparableOutputsFromPanthalassa(oceanResult);
@@ -29,19 +31,9 @@ export function ArchitectureComparison({ oceanResult, terrestrialResult }: Props
       terrestrial: formatUsdCompact(terrestrial.present_value_lifecycle_cost_usd),
     },
     {
-      label: "Power-system LCOE",
-      ocean: formatUsdPerUnit(ocean.power_system_lcoe_usd_per_mwh, 2) + "/MWh",
-      terrestrial: formatUsdPerUnit(terrestrial.power_system_lcoe_usd_per_mwh, 2) + "/MWh",
-    },
-    {
       label: "Initial compute-hardware capex",
       ocean: formatUsdCompact(ocean.initial_compute_hardware_capex_usd),
       terrestrial: formatUsdCompact(terrestrial.initial_compute_hardware_capex_usd),
-    },
-    {
-      label: "Workload data transferred",
-      ocean: `${formatDataGb(ocean.total_workload_data_transferred_gb)} · ${formatUsdCompact(ocean.present_value_workload_data_transfer_cost_usd)} PV`,
-      terrestrial: `${formatDataGb(terrestrial.total_workload_data_transferred_gb)} · ${formatUsdCompact(terrestrial.present_value_workload_data_transfer_cost_usd)} PV`,
     },
   ];
 

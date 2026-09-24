@@ -361,7 +361,7 @@ export interface PowerSourceOption {
 
 /** Colors chosen per explicit request: orange/CCGT, light green/Solar, light gray/Onshore, darker gray/Offshore, light red/Geothermal. */
 export const TERRESTRIAL_POWER_SOURCE_OPTIONS: readonly PowerSourceOption[] = [
-  { key: "ccgt", label: "CCGT", color: "var(--power-ccgt)" },
+  { key: "ccgt", label: "Gas", color: "var(--power-ccgt)" },
   { key: "solar", label: "Solar (with battery)", color: "var(--power-solar)" },
   { key: "wind_onshore", label: "Onshore Wind (with battery)", color: "var(--power-wind-onshore)" },
   { key: "wind_offshore", label: "Offshore Wind (with battery)", color: "var(--power-wind-offshore)" },

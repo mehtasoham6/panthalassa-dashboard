@@ -3,6 +3,7 @@ import { useModel } from "../hooks/useModel.js";
 import { SliderPanel } from "../components/SliderPanel.js";
 import { SharedInputsPanel } from "../components/SharedInputsPanel.js";
 import { TotalOutputBand } from "../components/TotalOutputBand.js";
+import { LcoeBand } from "../components/LcoeBand.js";
 import { ResultsHeader } from "../components/ResultsHeader.js";
 import { CostBreakdown } from "../components/CostBreakdown.js";
 import { BaselineComparison } from "../components/BaselineComparison.js";
@@ -15,6 +16,7 @@ import {
   TerrestrialControls,
   TerrestrialDiagnostics,
   TerrestrialOutputBand,
+  TerrestrialLcoeBand,
   TerrestrialResults,
   buildTerrestrialInputs,
   runTerrestrialModel,
@@ -62,6 +64,11 @@ export function OldDashboard() {
           <div className={styles.compareRow}>
             <TotalOutputBand result={result} />
             <TerrestrialOutputBand result={terrestrialResult} />
+          </div>
+
+          <div className={styles.compareRow}>
+            <LcoeBand result={result} />
+            <TerrestrialLcoeBand result={terrestrialResult} />
           </div>
 
           <ArchitectureComparison oceanResult={result} terrestrialResult={terrestrialResult} />
