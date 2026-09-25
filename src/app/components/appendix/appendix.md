@@ -1,6 +1,6 @@
 # Appendix
 
-Open a section to see how a calculation works, why its assumptions were chosen, and where the evidence comes from. The model calculates expected output and costs analytically; it does not simulate individual nodes or randomly draw failures. Defaults below refer to the September 2026 reference scenario.
+Open a section to see how a calculation works, why its assumptions were chosen, and where the evidence comes from.
 
 
 ## How wave energy becomes electrical power

@@ -115,8 +115,5 @@
 .failureIntro p+p { margin-top:14px; }
 .failureTable tbody th { padding-left:16px; }
 .failureTable tbody td { padding-right:16px; }
-.failureTable .nodeFailureRow { background:#123e48; }
-.failureTable .nodeFailureRow th { color:#b4e6d5; }
-.failureTable .nodeFailureRow td { color:#c4dcdf; }
 .failureSection .failureAssumptions { margin-top:20px; }
 @media(max-width:719px) { .failureTable tbody tr { padding:14px 16px; } .failureTable tbody th,.failureTable tbody td { padding-left:0; padding-right:0; } }

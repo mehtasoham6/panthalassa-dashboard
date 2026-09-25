@@ -11,7 +11,7 @@ export function FailureSection() {
     </div>
     <table className={styles.failureTable} aria-label="Failure categories and their effects on the model">
       <thead><tr><th scope="col">Failure</th><th scope="col">What the model counts</th></tr></thead>
-      <tbody>{FAILURES.map(([title,body],index) => <tr key={title} className={index > 0 ? styles.nodeFailureRow : undefined}><th scope="row">{title}</th><td>{body}</td></tr>)}</tbody>
+      <tbody>{FAILURES.map(([title,body]) => <tr key={title}><th scope="row">{title}</th><td>{body}</td></tr>)}</tbody>
     </table>
     <aside className={styles.failureAssumptions} aria-labelledby="failure-assumptions-heading">
       <h3 id="failure-assumptions-heading">Where the failure assumptions come from</h3>
