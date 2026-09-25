@@ -96,9 +96,9 @@ export function OldDashboard() {
             className={`${styles.costComparison} ${costDifferencePercent < 0 ? styles.costPremium : ""}`}
             aria-live="polite"
           >
-            {roundedDifference === "0.0" ? "Same cost as terrestrial" : <>
+            {roundedDifference === "0.0" ? "Same cost as land-based" : <>
               <strong className="num">{roundedDifference}%</strong>
-              <span>{costDifferencePercent > 0 ? "less" : "more"} than terrestrial</span>
+              <span>{costDifferencePercent > 0 ? "less" : "more"} than land-based</span>
             </>}
           </div>
 
