@@ -5,6 +5,7 @@ import { Methodology } from "../components/methodology/Methodology.js";
 import { Appendix } from "../components/appendix/Appendix.js";
 import { Takeaways } from "../components/Takeaways.js";
 import { OldDashboard } from "./OldDashboard.js";
+import { PageProgress } from "../components/PageProgress.js";
 
 /**
  * Home page, option A: toned-down wireframe look. Mid-day sky above the
@@ -18,14 +19,15 @@ export function WireframeHome() {
 
   // React renders the target after initial navigation, including legacy /old links.
   useEffect(() => {
-    if (["#dashboard", "#appendix"].includes(window.location.hash)) {
+    if (["#intro", "#methodology", "#dashboard", "#takeaways", "#appendix"].includes(window.location.hash)) {
       document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: "instant" });
     }
   }, []);
 
   return (
     <div className={styles.page} style={pageStyle}>
-      <section className={styles.hero}>
+      <PageProgress heroHorizon={HORIZON_FRAC} />
+      <section id="intro" className={styles.hero}>
         <NodeWaveHero className={styles.canvas} />
 
         <div className={styles.title}>

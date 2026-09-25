@@ -35,8 +35,8 @@
   grid-area: ocean;
   min-width: 0;
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: var(--reading-bar-height, 0px);
+  height: calc(100vh - var(--reading-bar-height, 0px));
   border-right: 1px solid var(--border);
   background: var(--surface);
 }
@@ -45,8 +45,8 @@
   grid-area: land;
   min-width: 0;
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: var(--reading-bar-height, 0px);
+  height: calc(100vh - var(--reading-bar-height, 0px));
   border-left: 1px solid var(--border);
   background: var(--surface);
 }
